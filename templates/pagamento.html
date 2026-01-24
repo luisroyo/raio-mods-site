@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Métodos de Pagamento - RAIO MODS{% endblock %}
+
+{% block content %}
+    <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
+        <!-- Header da Página -->
+        <div class="text-center mb-8 md:mb-12" data-aos="fade-up">
+            <h1 class="section-title text-3xl md:text-5xl font-bold neon-cyan mb-4">💳 MÉTODOS DE PAGAMENTO</h1>
+            <p class="text-gray-300 text-base md:text-xl max-w-2xl mx-auto">
+                Escolha a forma de pagamento mais conveniente para você
+            </p>
+        </div>
+
+        <!-- Produto selecionado (via URL) -->
+        <div id="produtoBox" class="hidden max-w-2xl mx-auto mb-6 md:mb-8 px-2" data-aos="fade-up">
+            <div class="border-2 border-neon-cyan rounded-lg p-4 bg-black bg-opacity-50 backdrop-blur-sm text-center">
+                <p class="text-sm md:text-base text-gray-300">Você está finalizando:</p>
+                <p id="produtoNome" class="text-xl md:text-2xl font-bold neon-green mt-1"></p>
+            </div>
+        </div>
+
+        <!-- Payment Methods Section -->
+        <section class="mb-12 md:mb-20" data-aos="fade-up">
+            <div class="max-w-2xl mx-auto space-y-4 md:space-y-6 px-2">
+                <!-- Pix -->
+                <div class="payment-section border-2 border-neon-cyan rounded-lg p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold neon-green mb-3 md:mb-4">Chave Pix:</h3>
+                    <div class="bg-black border border-neon-cyan rounded-lg p-3 md:p-4 mb-3">
+                        <p class="text-sm md:text-lg font-mono text-neon-cyan break-all" id="pixKey">4aaea357-a542-4f9d-8866-df4adea50eec</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center mb-3">
+                        <div class="text-sm text-gray-300">
+                            <p class="neon-cyan font-semibold mb-1">QR Code (Pix)</p>
+                            <p class="text-gray-400 text-xs md:text-sm">Aponte a câmera do seu app do banco e pague na hora.</p>
+                            <p class="text-gray-500 text-xs mt-2">
+                                Obs: alguns bancos aceitam melhor o QR com “Copia e Cola” (payload). Se o seu app não aceitar, use o botão de copiar.
+                            </p>
+                        </div>
+                        <div class="flex justify-center md:justify-end">
+                            <div class="p-3 rounded-lg border border-neon-cyan bg-black bg-opacity-50" id="pixQr"></div>
+                        </div>
+                    </div>
+                    <button onclick="copyToClipboard('pixKey', this)" 
+                            class="w-full py-3 md:py-3 bg-neon-green text-black font-bold rounded-lg copy-btn text-base md:text-lg touch-manipulation">
+                        📋 Copiar Chave Pix
+                    </button>
+                </div>
+
+                <!-- Binance -->
+                <div class="payment-section border-2 border-neon-cyan rounded-lg p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold neon-green mb-3 md:mb-4">Transferir USDT (Binance ID):</h3>
+                    <div class="bg-black border border-neon-cyan rounded-lg p-3 md:p-4 mb-3">
+                        <p class="text-sm md:text-lg font-mono text-neon-cyan" id="binanceId">829625031</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="copyToClipboard('binanceId', this)" 
+                                class="flex-1 py-3 bg-neon-green text-black font-bold rounded-lg copy-btn text-base md:text-lg touch-manipulation">
+                            📋 Copiar ID
+                        </button>
+                        <a href="https://www.binance.com" target="_blank"
+                           class="flex-1 py-3 bg-neon-cyan text-black font-bold rounded-lg text-center hover:bg-opacity-80 active:bg-opacity-70 transition-all text-base md:text-lg touch-manipulation flex items-center justify-center">
+                            🔗 Abrir Binance
+                        </a>
+                    </div>
+                </div>
+
+                <div class="text-center p-3 md:p-4 bg-black border-2 border-neon-green rounded-lg mb-4">
+                    <p class="text-base md:text-lg neon-green font-semibold mb-3">📱 Após o pagamento, envie o comprovante no WhatsApp</p>
+                    <button onclick="contactWhatsApp()" 
+                            class="w-full sm:w-auto px-6 py-3 bg-neon-green text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation">
+                        💬 Entrar em Contato no WhatsApp
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Info Section -->
+        <section class="mb-12 md:mb-20" data-aos="fade-up">
+            <div class="max-w-3xl mx-auto">
+                <div class="border-2 border-neon-cyan rounded-lg p-4 md:p-6 bg-black bg-opacity-50 backdrop-blur-sm">
+                    <h3 class="text-xl md:text-2xl font-bold neon-cyan mb-4 md:mb-6 text-center">ℹ️ Informações Importantes</h3>
+                    <div class="space-y-3 md:space-y-4 text-sm md:text-base text-gray-300">
+                        <div class="flex items-start gap-3">
+                            <span class="text-neon-green text-xl md:text-2xl flex-shrink-0">✓</span>
+                            <p>O pagamento via Pix é processado instantaneamente</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-neon-green text-xl md:text-2xl flex-shrink-0">✓</span>
+                            <p>Para pagamentos em USDT, aguarde a confirmação da transação na blockchain</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-neon-green text-xl md:text-2xl flex-shrink-0">✓</span>
+                            <p>Envie o comprovante pelo WhatsApp para receber sua chave de ativação</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back to Products -->
+        <div class="text-center" data-aos="fade-up">
+            <a href="/" class="inline-block px-6 py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation">
+                ← Voltar para Produtos
+            </a>
+        </div>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        function getProdutoFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const produto = params.get('produto');
+            if (!produto) return null;
+            return produto.replace(/\+/g, ' '); // fallback caso venha com +
+        }
+
+        function renderProdutoSelecionado() {
+            const produto = getProdutoFromUrl();
+            if (!produto) return;
+            const box = document.getElementById('produtoBox');
+            const nome = document.getElementById('produtoNome');
+            nome.textContent = produto;
+            box.classList.remove('hidden');
+        }
+
+        function renderPixQr() {
+            const pixKeyEl = document.getElementById('pixKey');
+            const pixQrEl = document.getElementById('pixQr');
+            if (!pixKeyEl || !pixQrEl || typeof QRCode === 'undefined') return;
+
+            const pixText = (pixKeyEl.textContent || '').trim();
+            if (!pixText) return;
+
+            // limpar QR anterior
+            pixQrEl.innerHTML = '';
+
+            const size = window.matchMedia('(max-width: 640px)').matches ? 200 : 220;
+            new QRCode(pixQrEl, {
+                text: pixText,
+                width: size,
+                height: size,
+                colorDark: '#00f2ff',
+                colorLight: '#050505',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        // Função para copiar para área de transferência
+        function copyToClipboard(elementId, button) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent.trim();
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Feedback visual
+                const originalText = button.textContent;
+                button.textContent = '✅ Copiado!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                alert('Erro ao copiar. Tente novamente.');
+            });
+        }
+        
+        // Função para entrar em contato no WhatsApp
+        function contactWhatsApp() {
+            const phoneNumber = '5519989888909';
+            const produto = getProdutoFromUrl();
+            const baseMsg = produto
+                ? `Olá! Vi o pagamento do ${produto} e quero finalizar.`
+                : 'Olá! Gostaria de fazer uma compra. Já vi os métodos de pagamento.';
+            const message = encodeURIComponent(baseMsg);
+            const whatsappURL = `https://wa.me/${phoneNumber}?text=${message}`;
+            window.open(whatsappURL, '_blank');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProdutoSelecionado();
+            renderPixQr();
+        });
+    </script>
+{% endblock %}

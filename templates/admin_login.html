@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - RAIO MODS</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+        }
+        
+        .neon-cyan {
+            color: #00f2ff;
+            text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff;
+        }
+        
+        .border-neon-cyan {
+            border-color: #00f2ff;
+            box-shadow: 0 0 10px #00f2ff, inset 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+        
+        .bg-neon-cyan {
+            background-color: #00f2ff;
+            box-shadow: 0 0 20px #00f2ff;
+        }
+        
+        input:focus {
+            box-shadow: 0 0 15px #00f2ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center" style="background-image: linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px); background-size: 20px 20px;">
+    <div class="w-full max-w-md p-8">
+        <div class="border-2 border-neon-cyan rounded-lg p-8 bg-opacity-10 backdrop-blur-lg">
+            <div class="flex flex-col items-center mb-8">
+                <img src="/static/logo.png" alt="RAIO MODS Logo" class="h-20 w-20 mb-4" style="filter: drop-shadow(0 0 15px #00f2ff);">
+                <h1 class="text-3xl font-bold neon-cyan text-center">Área Administrativa</h1>
+                <p class="text-sm text-gray-400 mt-2">RAIO MODS - Sales Group</p>
+            </div>
+            
+            {% if error %}
+            <div class="bg-red-900 bg-opacity-50 border border-red-500 text-red-200 px-4 py-3 rounded mb-4">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="/admin">
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-semibold neon-cyan mb-2">Senha:</label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           required
+                           class="w-full px-4 py-3 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none focus:border-neon-cyan"
+                           placeholder="Digite a senha">
+                </div>
+                
+                <button type="submit" 
+                        class="w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 transition-all duration-300">
+                    Entrar
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <a href="/" class="text-gray-400 hover:text-white transition-colors">← Voltar para a loja</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

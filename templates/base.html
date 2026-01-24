@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>{% block title %}RAIO MODS - Sales Group{% endblock %}</title>
+
+    <!-- Open Graph / Social Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="RAIO MODS - Sales Group">
+    <meta property="og:title" content="RAIO MODS - Sales Group">
+    <meta property="og:description" content="Loja oficial RAIO MODS. Pagamento via Pix/USDT e suporte via WhatsApp.">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
+    <meta property="og:image:alt" content="Logo RAIO MODS">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RAIO MODS - Sales Group">
+    <meta name="twitter:description" content="Loja oficial RAIO MODS. Pagamento via Pix/USDT e suporte via WhatsApp.">
+    <meta name="twitter:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
+
+    <!-- Theme color (mobile) -->
+    <meta name="theme-color" content="#050505">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- AOS.js CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- AOS.js JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+        }
+        
+        .neon-cyan {
+            color: #00f2ff;
+            text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff, 0 0 30px #00f2ff;
+        }
+        
+        .neon-green {
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00;
+        }
+        
+        .border-neon-cyan {
+            border-color: #00f2ff;
+            box-shadow: 0 0 10px #00f2ff, inset 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+        
+        .bg-neon-cyan {
+            background-color: #00f2ff;
+            box-shadow: 0 0 20px #00f2ff, 0 0 40px rgba(0, 242, 255, 0.3);
+        }
+        
+        .bg-neon-green {
+            background-color: #00ff00;
+            box-shadow: 0 0 20px #00ff00, 0 0 40px rgba(0, 255, 0, 0.3);
+        }
+        
+        .circuit-pattern {
+            background-image: 
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.1) 0%, rgba(0, 255, 0, 0.1) 100%);
+        }
+        
+        .product-card {
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.15) 0%, rgba(0, 255, 0, 0.15) 100%);
+            border: 2px solid #00f2ff;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px #00f2ff, 0 0 60px rgba(0, 242, 255, 0.3);
+        }
+        
+        .badge-best {
+            background: linear-gradient(135deg, #00ff00 0%, #00f2ff 100%);
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .copy-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .copy-btn.copied {
+            background-color: #00ff00 !important;
+            color: #000 !important;
+        }
+        
+        /* Mobile First - Responsividade */
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 2.5rem !important;
+                line-height: 1.2;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem !important;
+            }
+            
+            .product-card {
+                margin-bottom: 1.5rem;
+            }
+            
+            .product-title {
+                font-size: 1.5rem !important;
+            }
+            
+            .product-price {
+                font-size: 2rem !important;
+            }
+            
+            .section-title {
+                font-size: 2rem !important;
+            }
+            
+            .benefit-card {
+                padding: 1.5rem 1rem !important;
+            }
+            
+            .benefit-icon {
+                font-size: 2.5rem !important;
+            }
+            
+            .payment-section {
+                padding: 1rem !important;
+            }
+            
+            .copy-btn, button {
+                min-height: 48px;
+                font-size: 1rem;
+            }
+            
+            .circuit-pattern {
+                background-size: 20px 20px;
+            }
+        }
+        
+        /* Touch-friendly buttons */
+        button, .copy-btn, a[class*="bg-"] {
+            -webkit-tap-highlight-color: rgba(0, 242, 255, 0.3);
+            touch-action: manipulation;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="circuit-pattern">
+    <!-- Header -->
+    <header class="py-3 md:py-4 mb-4 md:mb-8 sticky top-0 bg-[#050505] bg-opacity-95 backdrop-blur-sm z-50 border-b border-neon-cyan border-opacity-30">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="flex items-center gap-2 md:gap-3">
+                    <img src="/static/logo.png" alt="RAIO MODS Logo" class="h-10 w-10 md:h-12 md:w-12" style="filter: drop-shadow(0 0 10px #00f2ff);">
+                    <div>
+                        <h1 class="text-lg md:text-2xl font-bold neon-cyan">RAIO MODS</h1>
+                        <p class="text-[10px] md:text-xs text-gray-400">SALES GROUP</p>
+                    </div>
+                </a>
+                <nav class="flex items-center gap-3 md:gap-4">
+                    <a href="/" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors hidden sm:inline">Início</a>
+                    <a href="/pagamento" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors hidden sm:inline">Pagamento</a>
+                    <a href="/seguranca" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors hidden sm:inline">Segurança</a>
+                    <a href="/admin" class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1">Admin</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="border-t-2 border-neon-cyan py-6 md:py-8 mt-8 md:mt-12">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-4 md:mb-6">
+                <p class="neon-cyan mb-3 md:mb-4 text-sm md:text-base px-2">© 2026 <span class="neon-green">RAIO MODS</span> - Sales Group - Todos os direitos reservados</p>
+                <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 mb-4">
+                    <a href="https://chat.whatsapp.com/Dl4cVoFRvFALPLhGSxLlNY?mode=gi_t" 
+                       target="_blank"
+                       class="px-4 py-3 md:py-2 bg-neon-green text-black font-semibold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-sm md:text-base touch-manipulation">
+                        💬 Grupo WhatsApp
+                    </a>
+                    <a href="https://t.me/raiomods" 
+                       target="_blank"
+                       class="px-4 py-3 md:py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-all duration-300 text-sm md:text-base touch-manipulation">
+                        📱 Grupo Telegram
+                    </a>
+                </div>
+                <nav class="flex flex-wrap justify-center gap-3 md:gap-4 text-xs md:text-sm">
+                    <a href="/" class="text-gray-400 hover:text-neon-cyan transition-colors">Início</a>
+                    <span class="text-gray-600">|</span>
+                    <a href="/pagamento" class="text-gray-400 hover:text-neon-cyan transition-colors">Pagamento</a>
+                    <span class="text-gray-600">|</span>
+                    <a href="/seguranca" class="text-gray-400 hover:text-neon-cyan transition-colors">Segurança</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Inicializar AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

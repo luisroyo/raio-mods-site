@@ -1,0 +1,33 @@
+# --- Segurança (CRÍTICO) ---
+.env
+.env.local
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.manifest
+*.spec
+
+# --- Ambientes Virtuais ---
+venv/
+.venv/
+env/
+
+# --- Banco de Dados Local ---
+*.db
+*.sqlite3
+database.db
+
+# --- Uploads de Imagens (Não enviar para o Git) ---
+# Ignora o conteúdo da pasta uploads, mas mantém a pasta
+static/uploads/*
+!static/uploads/.gitkeep
+
+# --- IDEs e Editores ---
+.vscode/
+.idea/
+.DS_Store
+
+# --- Logs e Erros ---
+*.log

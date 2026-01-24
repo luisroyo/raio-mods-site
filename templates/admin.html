@@ -70,6 +70,25 @@
             background: linear-gradient(135deg, rgba(0, 242, 255, 0.1) 0%, rgba(0, 255, 0, 0.1) 100%);
             border: 2px solid #00f2ff;
         }
+        
+        #editModal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        #editModal.hidden {
+            display: none !important;
+        }
+        
+        @media (max-width: 640px) {
+            #editModal {
+                align-items: flex-start;
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -203,8 +222,8 @@
     </main>
 
     <!-- Modal de Edição -->
-    <div id="editModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-70 p-4 z-50">
-        <div class="w-full max-w-lg border-2 border-neon-cyan rounded-lg p-6 bg-[#050505]">
+    <div id="editModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-70 p-4 z-50 overflow-y-auto">
+        <div class="w-full max-w-lg border-2 border-neon-cyan rounded-lg p-6 bg-[#050505] my-8 max-h-[90vh] overflow-y-auto">
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <h3 class="text-2xl font-bold neon-cyan">Editar Produto</h3>
@@ -380,12 +399,18 @@
             const modal = document.getElementById('editModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            // Scroll para o topo do modal quando abrir
+            modal.scrollTop = 0;
+            // Prevenir scroll do body quando modal estiver aberto
+            document.body.style.overflow = 'hidden';
         }
 
         function closeEditModal() {
             const modal = document.getElementById('editModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            // Restaurar scroll do body
+            document.body.style.overflow = '';
         }
 
         // Submeter edição

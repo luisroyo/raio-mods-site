@@ -1,49 +1,49 @@
-import os
-
-import psycopg2
-from dotenv import load_dotenv
-
+import sqlite3
 
 def init_db():
-    """
-    Inicializa a tabela no PostgreSQL.
-    É idempotente (CREATE TABLE IF NOT EXISTS), então não quebra em reinícios.
-    """
-    load_dotenv()
-
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise RuntimeError("DATABASE_URL não configurada. Defina no .env (Neon PostgreSQL).")
-
-    conn = psycopg2.connect(database_url)
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS products (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    price TEXT NOT NULL,
-                    image TEXT NOT NULL,
-                    category TEXT NOT NULL
-                );
-                """
-            )
-
-            # Exemplo de inserção para teste (não duplica ao reiniciar)
-            cursor.execute(
-                """
-                INSERT INTO products (id, name, description, price, image, category)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (id) DO NOTHING;
-                """,
-                (1, "8 Ball Pool VIP", "Linhas longas e antecipação de jogada.", "R$ 49,90", "8ball.jpg", "Mod"),
-            )
-
-        conn.commit()
-    finally:
-        conn.close()
+    """Inicializa o banco de dados SQLite (cria o arquivo e tabelas se não existirem)"""
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    # 1. Criar tabela de Produtos
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            price TEXT NOT NULL,
+            image TEXT NOT NULL,
+            category TEXT NOT NULL
+        )
+    ''')
+    
+    # 2. Criar tabela de Links Independentes (NOVO)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            download_link TEXT,
+            video_link TEXT,
+            game TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Verificar se a tabela de produtos está vazia para inserir teste
+    cursor.execute('SELECT count(*) FROM products')
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        cursor.execute('''
+            INSERT INTO products (name, description, price, image, category)
+            VALUES (?, ?, ?, ?, ?)
+        ''', ('8 Ball Pool VIP', 'Linhas longas e antecipação.', 'R$ 49,90', '8ball.jpg', 'Mod'))
+        print("Dados de teste inseridos!")
+        
+    conn.commit()
+    conn.close()
+    print("Banco de dados SQLite inicializado com sucesso!")
 
 if __name__ == "__main__":
     init_db()

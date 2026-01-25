@@ -57,13 +57,24 @@
                 <!-- Descrição -->
                 <p class="text-gray-300 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm md:text-base">{{ product.description }}</p>
                 
-                <!-- Preço -->
+                <!-- Preço (apenas para produtos simples, não para catálogos) -->
+                {% if product.id not in catalog_ids %}
                 <div class="mb-4 md:mb-6">
                     <p class="product-price text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
                     {% if product.tagline %}
                     <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
                     {% endif %}
                 </div>
+                {% else %}
+                <!-- Para catálogos, mostrar apenas tagline se houver -->
+                {% if product.tagline %}
+                <div class="mb-4 md:mb-6">
+                    <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
+                </div>
+                {% else %}
+                <div class="mb-4 md:mb-6"></div>
+                {% endif %}
+                {% endif %}
                 
                 <!-- Botão: Ver opções (catálogo) ou Comprar -->
                 {% if product.id in catalog_ids %}

@@ -53,6 +53,7 @@ def index():
     return render_template('index.html', products=products, catalog_ids=catalog_ids)
 
 
+@app.route('/catalogo/<int:parent_id>')
 @app.route('/catalogo/<int:parent_id>/')
 def catalogo(parent_id):
     """Página do catálogo: lista sub-opções de um produto."""
@@ -93,12 +94,46 @@ def seguranca():
 def admin():
     if request.method == 'GET' and session.get('admin_logged_in'):
         conn = get_db_connection()
-        products = conn.execute('SELECT * FROM products ORDER BY parent_id IS NULL DESC, sort_order ASC, id ASC').fetchall()
+        all_products = conn.execute('SELECT * FROM products ORDER BY parent_id IS NULL DESC, sort_order ASC, id ASC').fetchall()
         parent_products = conn.execute(
             'SELECT id, name FROM products WHERE parent_id IS NULL ORDER BY sort_order ASC, id ASC'
         ).fetchall()
+        
+        # Separar catálogos (com subprodutos) e produtos simples (sem subprodutos)
+        catalog_ids = set(
+            r[0] for r in conn.execute(
+                'SELECT parent_id FROM products WHERE parent_id IS NOT NULL'
+            ).fetchall()
+        )
+        
+        catalogs = []
+        simple_products = []
+        subproducts_by_parent = {}
+        
+        for product in all_products:
+            if product['parent_id'] is None:
+                # É um produto principal
+                if product['id'] in catalog_ids:
+                    # Tem subprodutos, é um catálogo
+                    catalogs.append(product)
+                    subproducts_by_parent[product['id']] = []
+                else:
+                    # Não tem subprodutos, é produto simples
+                    simple_products.append(product)
+            else:
+                # É um subproduto
+                parent_id = product['parent_id']
+                if parent_id not in subproducts_by_parent:
+                    subproducts_by_parent[parent_id] = []
+                subproducts_by_parent[parent_id].append(product)
+        
         conn.close()
-        return render_template('admin.html', products=products, parent_products=parent_products)
+        return render_template('admin.html', 
+                             all_products=all_products,
+                             catalogs=catalogs,
+                             simple_products=simple_products,
+                             subproducts_by_parent=subproducts_by_parent,
+                             parent_products=parent_products)
     
     if request.method == 'POST':
         password = request.form.get('password')

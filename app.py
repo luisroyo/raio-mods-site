@@ -110,6 +110,7 @@ def add_product():
     description = request.form.get('description')
     price = request.form.get('price')
     category = request.form.get('category')
+    tagline = (request.form.get('tagline') or '').strip()
     image_url = request.form.get('image_url', '')
     
     image_filename = None
@@ -131,8 +132,8 @@ def add_product():
     
     conn = get_db_connection()
     conn.execute(
-        'INSERT INTO products (name, description, price, image, category) VALUES (?, ?, ?, ?, ?)',
-        (name, description, price, image, category)
+        'INSERT INTO products (name, description, price, image, category, tagline) VALUES (?, ?, ?, ?, ?, ?)',
+        (name, description, price, image, category, tagline)
     )
     conn.commit()
     conn.close()
@@ -177,6 +178,7 @@ def edit_product(product_id):
     description = (request.form.get('description') or existing['description']).strip()
     price = (request.form.get('price') or existing['price']).strip()
     category = (request.form.get('category') or existing['category']).strip()
+    tagline = (request.form.get('tagline') or (existing['tagline'] if 'tagline' in existing.keys() else '') or '').strip()
     image_url = (request.form.get('image_url') or '').strip()
 
     new_image = existing['image']
@@ -198,8 +200,8 @@ def edit_product(product_id):
         new_image = image_url
 
     conn.execute(
-        'UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ? WHERE id = ?',
-        (name, description, price, new_image, category, product_id)
+        'UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?, tagline = ? WHERE id = ?',
+        (name, description, price, new_image, category, tagline, product_id)
     )
     conn.commit()
     conn.close()

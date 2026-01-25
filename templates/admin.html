@@ -151,6 +151,16 @@
                               placeholder="Descreva o produto..."></textarea>
                 </div>
                 
+                <div>
+                    <label class="block text-sm font-semibold neon-cyan mb-2">Frase de destaque (opcional):</label>
+                    <input type="text" 
+                           id="tagline" 
+                           name="tagline" 
+                           class="w-full px-4 py-2 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none"
+                           placeholder="Ex: ⚡ Teste a potência por uma semana">
+                    <p class="text-xs text-gray-400 mt-1">Aparece abaixo do preço no card. Deixe vazio para não exibir.</p>
+                </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold neon-cyan mb-2">Preço:</label>
@@ -209,7 +219,7 @@
                     <p class="text-2xl font-bold neon-purple mb-4">{{ product.price }}</p>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick='openEditModal({{ product.id }}, {{ product.name|tojson }}, {{ product.description|tojson }}, {{ product.price|tojson }}, {{ product.category|tojson }}, {{ product.image|tojson }})'
+                        <button onclick='openEditModal({{ product.id }}, {{ product.name|tojson }}, {{ product.description|tojson }}, {{ product.price|tojson }}, {{ product.category|tojson }}, {{ product.image|tojson }}, {{ (product.tagline|default(""))|tojson }})'
                                 class="w-full py-2 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 transition-all duration-300">
                             ✏️ Editar
                         </button>
@@ -268,6 +278,14 @@
                            class="w-full px-4 py-2 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none" />
                 </div>
 
+                <div>
+                    <label class="block text-sm font-semibold neon-cyan mb-2">Frase de destaque (opcional):</label>
+                    <input type="text" id="edit_tagline"
+                           class="w-full px-4 py-2 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none"
+                           placeholder="Ex: ⚡ Teste a potência por uma semana" />
+                    <p class="text-xs text-gray-400 mt-1">Aparece abaixo do preço. Vazio = não exibe.</p>
+                </div>
+
                 <div class="border border-neon-cyan rounded-lg p-4">
                     <p class="text-sm neon-cyan font-semibold mb-3">Imagem</p>
                     <div class="flex gap-4 items-center mb-3">
@@ -320,6 +338,7 @@
             formData.append('description', document.getElementById('description').value);
             formData.append('price', document.getElementById('price').value);
             formData.append('category', document.getElementById('category').value);
+            formData.append('tagline', document.getElementById('tagline').value);
             
             // Adicionar arquivo de imagem se houver
             const imageFile = document.getElementById('image').files[0];
@@ -390,12 +409,13 @@
         }
 
         // Abrir modal de edição
-        function openEditModal(id, name, description, price, category, image) {
+        function openEditModal(id, name, description, price, category, image, tagline) {
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_name').value = name || '';
             document.getElementById('edit_description').value = description || '';
             document.getElementById('edit_price').value = price || '';
             document.getElementById('edit_category').value = category || '';
+            document.getElementById('edit_tagline').value = tagline || '';
             document.getElementById('edit_image_url').value = '';
             document.getElementById('edit_image').value = '';
             document.getElementById('edit_preview').src = image || '';
@@ -436,6 +456,7 @@
             formData.append('description', document.getElementById('edit_description').value);
             formData.append('price', document.getElementById('edit_price').value);
             formData.append('category', document.getElementById('edit_category').value);
+            formData.append('tagline', document.getElementById('edit_tagline').value);
 
             const imageFile = document.getElementById('edit_image').files[0];
             if (imageFile) formData.append('image', imageFile);

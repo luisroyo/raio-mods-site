@@ -60,12 +60,8 @@
                 <!-- Preço -->
                 <div class="mb-4 md:mb-6">
                     <p class="product-price text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
-                    {% if loop.index == 1 %}
-                    <p class="text-xs md:text-sm text-gray-400">⚡ Teste a potência por uma semana</p>
-                    {% elif loop.index == 2 %}
-                    <p class="text-xs md:text-sm text-gray-400">💎 Ótimo valor por duas semanas</p>
-                    {% elif loop.index == 3 %}
-                    <p class="text-xs md:text-sm text-gray-400">🏆 Melhor oferta mensal</p>
+                    {% if product.tagline %}
+                    <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
                     {% endif %}
                 </div>
                 

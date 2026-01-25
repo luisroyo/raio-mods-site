@@ -17,6 +17,12 @@ def init_db():
         )
     ''')
     
+    # 1.1. Migration: coluna tagline (frase de destaque opcional no card)
+    try:
+        cursor.execute('ALTER TABLE products ADD COLUMN tagline TEXT DEFAULT ""')
+    except sqlite3.OperationalError:
+        pass  # coluna já existe
+    
     # 2. Criar tabela de Links Independentes (NOVO)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS links (

@@ -43,11 +43,11 @@
                 </div>
                 {% endif %}
                 
-                <!-- Imagem do Produto -->
+                <!-- Imagem do Produto (sempre quadrada para proporção consistente) -->
                 {% if product.image %}
-                <div class="mb-3 md:mb-4 rounded-lg overflow-hidden">
+                <div class="mb-3 md:mb-4 rounded-lg overflow-hidden aspect-square border border-neon-cyan">
                     <img src="{{ product.image }}" alt="{{ product.name }}" 
-                         class="w-full h-32 md:h-40 object-cover border border-neon-cyan">
+                         class="w-full h-full object-cover">
                 </div>
                 {% endif %}
                 

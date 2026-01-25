@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ parent.name }} - RAIO MODS{% endblock %}
+
+{% block content %}
+    <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
+        <div class="mb-6 md:mb-8" data-aos="fade-up">
+            <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors text-sm md:text-base mb-4">
+                ← Voltar para a loja
+            </a>
+            <h1 class="section-title text-2xl md:text-4xl font-bold neon-cyan">{{ parent.name }}</h1>
+            <p class="text-gray-400 mt-2">Escolha uma opção abaixo</p>
+        </div>
+
+        {% if products %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-20">
+            {% for product in products %}
+            <div class="product-card rounded-xl p-4 md:p-6 relative" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                {% if product.image %}
+                <div class="mb-3 md:mb-4 rounded-lg overflow-hidden aspect-square border border-neon-cyan">
+                    <img src="{{ product.image }}" alt="{{ product.name }}" 
+                         class="w-full h-full object-cover">
+                </div>
+                {% endif %}
+                <h3 class="product-title text-xl md:text-2xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
+                <p class="text-gray-300 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm md:text-base">{{ product.description }}</p>
+                <div class="mb-4 md:mb-6">
+                    <p class="product-price text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
+                    {% if product.tagline %}
+                    <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
+                    {% endif %}
+                </div>
+                <a href="/pagamento?produto={{ product.name | urlencode }}" 
+                   class="block w-full py-3 md:py-4 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation text-center">
+                    💬 Comprar Agora
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 border-2 border-neon-cyan rounded-lg" data-aos="fade-up">
+            <p class="text-xl neon-cyan mb-4">Nenhuma opção neste catálogo ainda.</p>
+            <a href="{{ url_for('index') }}" class="inline-block px-6 py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 transition-colors">
+                ← Voltar para a loja
+            </a>
+        </div>
+        {% endif %}
+    </main>
+{% endblock %}

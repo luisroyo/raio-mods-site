@@ -23,7 +23,17 @@ def init_db():
     except sqlite3.OperationalError:
         pass  # coluna já existe
     
-    # 2. Criar tabela de Links Independentes (NOVO)
+    # 1.2. Migration: ordem de exibição e catálogo (sub-itens)
+    for col, sql in [
+        ('sort_order', 'ALTER TABLE products ADD COLUMN sort_order INTEGER DEFAULT 0'),
+        ('parent_id', 'ALTER TABLE products ADD COLUMN parent_id INTEGER NULL'),
+    ]:
+        try:
+            cursor.execute(sql)
+        except sqlite3.OperationalError:
+            pass
+    
+    # 2. Criar tabela de Links Independentes
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS links (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

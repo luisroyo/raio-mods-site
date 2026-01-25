@@ -65,11 +65,18 @@
                     {% endif %}
                 </div>
                 
-                <!-- Botão de Compra -->
+                <!-- Botão: Ver opções (catálogo) ou Comprar -->
+                {% if product.id in catalog_ids %}
+                <a href="{{ url_for('catalogo', parent_id=product.id) }}" 
+                   class="block w-full py-3 md:py-4 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation text-center">
+                    📂 Ver opções
+                </a>
+                {% else %}
                 <a href="/pagamento?produto={{ product.name | urlencode }}" 
                    class="block w-full py-3 md:py-4 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation text-center">
                     💬 Comprar Agora
                 </a>
+                {% endif %}
             </div>
             {% endfor %}
         </div>

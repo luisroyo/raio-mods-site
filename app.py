@@ -39,9 +39,34 @@ def get_db_connection():
 @app.route('/')
 def index():
     conn = get_db_connection()
-    products = conn.execute('SELECT * FROM products ORDER BY id DESC').fetchall()
+    # Só itens principais (sem pai), ordenados pela ordem de exibição
+    products = conn.execute(
+        'SELECT * FROM products WHERE parent_id IS NULL ORDER BY sort_order ASC, id ASC'
+    ).fetchall()
+    # Quais produtos são catálogos (têm sub-itens)
+    catalog_ids = set(
+        r[0] for r in conn.execute(
+            'SELECT parent_id FROM products WHERE parent_id IS NOT NULL'
+        ).fetchall()
+    )
     conn.close()
-    return render_template('index.html', products=products)
+    return render_template('index.html', products=products, catalog_ids=catalog_ids)
+
+
+@app.route('/catalogo/<int:parent_id>/')
+def catalogo(parent_id):
+    """Página do catálogo: lista sub-opções de um produto."""
+    conn = get_db_connection()
+    parent = conn.execute('SELECT * FROM products WHERE id = ?', (parent_id,)).fetchone()
+    if not parent:
+        conn.close()
+        return redirect(url_for('index'))
+    children = conn.execute(
+        'SELECT * FROM products WHERE parent_id = ? ORDER BY sort_order ASC, id ASC',
+        (parent_id,)
+    ).fetchall()
+    conn.close()
+    return render_template('catalogo.html', parent=parent, products=children)
 
 @app.route('/links')
 def links():
@@ -68,9 +93,12 @@ def seguranca():
 def admin():
     if request.method == 'GET' and session.get('admin_logged_in'):
         conn = get_db_connection()
-        products = conn.execute('SELECT * FROM products ORDER BY id DESC').fetchall()
+        products = conn.execute('SELECT * FROM products ORDER BY parent_id IS NULL DESC, sort_order ASC, id ASC').fetchall()
+        parent_products = conn.execute(
+            'SELECT id, name FROM products WHERE parent_id IS NULL ORDER BY sort_order ASC, id ASC'
+        ).fetchall()
         conn.close()
-        return render_template('admin.html', products=products)
+        return render_template('admin.html', products=products, parent_products=parent_products)
     
     if request.method == 'POST':
         password = request.form.get('password')
@@ -111,6 +139,18 @@ def add_product():
     price = request.form.get('price')
     category = request.form.get('category')
     tagline = (request.form.get('tagline') or '').strip()
+    try:
+        sort_order = int(request.form.get('sort_order') or 0)
+    except ValueError:
+        sort_order = 0
+    parent_id = request.form.get('parent_id') or None
+    if parent_id is not None and str(parent_id).strip() == '':
+        parent_id = None
+    else:
+        try:
+            parent_id = int(parent_id) if parent_id else None
+        except (ValueError, TypeError):
+            parent_id = None
     image_url = request.form.get('image_url', '')
     
     image_filename = None
@@ -132,8 +172,8 @@ def add_product():
     
     conn = get_db_connection()
     conn.execute(
-        'INSERT INTO products (name, description, price, image, category, tagline) VALUES (?, ?, ?, ?, ?, ?)',
-        (name, description, price, image, category, tagline)
+        'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        (name, description, price, image, category, tagline, sort_order, parent_id)
     )
     conn.commit()
     conn.close()
@@ -156,6 +196,7 @@ def delete_product(product_id):
             except:
                 pass
     
+    conn.execute('UPDATE products SET parent_id = NULL WHERE parent_id = ?', (product_id,))
     conn.execute('DELETE FROM products WHERE id = ?', (product_id,))
     conn.commit()
     conn.close()
@@ -179,6 +220,19 @@ def edit_product(product_id):
     price = (request.form.get('price') or existing['price']).strip()
     category = (request.form.get('category') or existing['category']).strip()
     tagline = (request.form.get('tagline') or (existing['tagline'] if 'tagline' in existing.keys() else '') or '').strip()
+    try:
+        sort_order = int(request.form.get('sort_order') or (existing['sort_order'] if 'sort_order' in existing.keys() else 0))
+    except (ValueError, TypeError):
+        sort_order = 0
+    raw_parent = request.form.get('parent_id') or (existing['parent_id'] if 'parent_id' in existing.keys() else None)
+    parent_id = None
+    if raw_parent is not None and str(raw_parent).strip() != '':
+        try:
+            parent_id = int(raw_parent)
+            if parent_id == product_id:
+                parent_id = None  # não pode ser pai de si mesmo
+        except (ValueError, TypeError):
+            parent_id = None
     image_url = (request.form.get('image_url') or '').strip()
 
     new_image = existing['image']
@@ -200,8 +254,8 @@ def edit_product(product_id):
         new_image = image_url
 
     conn.execute(
-        'UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?, tagline = ? WHERE id = ?',
-        (name, description, price, new_image, category, tagline, product_id)
+        'UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?, tagline = ?, sort_order = ?, parent_id = ? WHERE id = ?',
+        (name, description, price, new_image, category, tagline, sort_order, parent_id, product_id)
     )
     conn.commit()
     conn.close()

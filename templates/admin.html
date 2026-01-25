@@ -163,6 +163,26 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
+                        <label class="block text-sm font-semibold neon-cyan mb-2">Ordem de exibição:</label>
+                        <input type="number" id="sort_order" name="sort_order" value="0" min="0"
+                               class="w-full px-4 py-2 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none"
+                               placeholder="0 = primeiro">
+                        <p class="text-xs text-gray-400 mt-1">Número menor aparece antes.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold neon-cyan mb-2">Sub-item de qual catálogo:</label>
+                        <select id="parent_id" name="parent_id" class="w-full px-4 py-2 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none">
+                            <option value="">Nenhum (item na loja principal)</option>
+                            {% for p in parent_products %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Se escolher um, vira opção desse catálogo.</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                         <label class="block text-sm font-semibold neon-cyan mb-2">Preço:</label>
                         <input type="text" 
                                id="price" 
@@ -219,7 +239,7 @@
                     <p class="text-2xl font-bold neon-purple mb-4">{{ product.price }}</p>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick='openEditModal({{ product.id }}, {{ product.name|tojson }}, {{ product.description|tojson }}, {{ product.price|tojson }}, {{ product.category|tojson }}, {{ product.image|tojson }}, {{ (product.tagline|default(""))|tojson }})'
+                        <button onclick='openEditModal({{ product.id }}, {{ product.name|tojson }}, {{ product.description|tojson }}, {{ product.price|tojson }}, {{ product.category|tojson }}, {{ product.image|tojson }}, {{ (product.tagline|default(""))|tojson }}, {{ product.sort_order|default(0) }}, {{ (product.parent_id if product.parent_id is defined and product.parent_id is not none else "")|tojson }})'
                                 class="w-full py-2 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 transition-all duration-300">
                             ✏️ Editar
                         </button>
@@ -286,6 +306,22 @@
                     <p class="text-xs text-gray-400 mt-1">Aparece abaixo do preço. Vazio = não exibe.</p>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold neon-cyan mb-2">Ordem de exibição:</label>
+                        <input type="number" id="edit_sort_order" min="0" class="w-full px-4 py-2 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold neon-cyan mb-2">Sub-item de qual catálogo:</label>
+                        <select id="edit_parent_id" class="w-full px-4 py-2 bg-black border-2 border-neon-cyan rounded-lg text-white focus:outline-none">
+                            <option value="">Nenhum (item principal)</option>
+                            {% for p in parent_products %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
                 <div class="border border-neon-cyan rounded-lg p-4">
                     <p class="text-sm neon-cyan font-semibold mb-3">Imagem</p>
                     <div class="flex gap-4 items-center mb-3">
@@ -339,6 +375,8 @@
             formData.append('price', document.getElementById('price').value);
             formData.append('category', document.getElementById('category').value);
             formData.append('tagline', document.getElementById('tagline').value);
+            formData.append('sort_order', document.getElementById('sort_order').value);
+            formData.append('parent_id', document.getElementById('parent_id').value);
             
             // Adicionar arquivo de imagem se houver
             const imageFile = document.getElementById('image').files[0];
@@ -409,13 +447,18 @@
         }
 
         // Abrir modal de edição
-        function openEditModal(id, name, description, price, category, image, tagline) {
+        function openEditModal(id, name, description, price, category, image, tagline, sort_order, parent_id) {
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_name').value = name || '';
             document.getElementById('edit_description').value = description || '';
             document.getElementById('edit_price').value = price || '';
             document.getElementById('edit_category').value = category || '';
             document.getElementById('edit_tagline').value = tagline || '';
+            document.getElementById('edit_sort_order').value = sort_order !== undefined && sort_order !== null ? sort_order : 0;
+            const sel = document.getElementById('edit_parent_id');
+            [].forEach.call(sel.options, function(opt) { opt.disabled = false; });
+            sel.value = (parent_id !== undefined && parent_id !== null && parent_id !== '') ? String(parent_id) : '';
+            [].forEach.call(sel.options, function(opt) { if (opt.value === String(id)) opt.disabled = true; });
             document.getElementById('edit_image_url').value = '';
             document.getElementById('edit_image').value = '';
             document.getElementById('edit_preview').src = image || '';
@@ -457,6 +500,8 @@
             formData.append('price', document.getElementById('edit_price').value);
             formData.append('category', document.getElementById('edit_category').value);
             formData.append('tagline', document.getElementById('edit_tagline').value);
+            formData.append('sort_order', document.getElementById('edit_sort_order').value);
+            formData.append('parent_id', document.getElementById('edit_parent_id').value);
 
             const imageFile = document.getElementById('edit_image').files[0];
             if (imageFile) formData.append('image', imageFile);

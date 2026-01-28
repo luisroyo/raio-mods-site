@@ -1,11 +1,16 @@
 import sqlite3
+import os
+
+# --- Caminho Absoluto (Essencial para não criar bancos duplicados) ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+DB_PATH = os.path.join(basedir, 'database.db')
 
 def init_db():
-    """Inicializa o banco de dados SQLite (cria o arquivo e tabelas se não existirem)"""
-    conn = sqlite3.connect('database.db')
+    print(f"🔌 Conectando ao banco em: {DB_PATH}")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    # 1. Criar tabela de Produtos
+    # 1. Tabela de Produtos
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,23 +22,27 @@ def init_db():
         )
     ''')
     
-    # 1.1. Migration: coluna tagline (frase de destaque opcional no card)
-    try:
-        cursor.execute('ALTER TABLE products ADD COLUMN tagline TEXT DEFAULT ""')
-    except sqlite3.OperationalError:
-        pass  # coluna já existe
-    
-    # 1.2. Migration: ordem de exibição e catálogo (sub-itens)
-    for col, sql in [
-        ('sort_order', 'ALTER TABLE products ADD COLUMN sort_order INTEGER DEFAULT 0'),
-        ('parent_id', 'ALTER TABLE products ADD COLUMN parent_id INTEGER NULL'),
-    ]:
+    # 2. Migração de Colunas (Adiciona o que falta sem quebrar o que existe)
+    # is_catalog = 1 (É um Jogo/Capa) | is_catalog = 0 (É um produto/hack)
+    new_columns = [
+        ('tagline', 'TEXT DEFAULT ""'),
+        ('sort_order', 'INTEGER DEFAULT 0'),
+        ('parent_id', 'INTEGER NULL'),
+        ('is_catalog', 'INTEGER DEFAULT 0') 
+    ]
+
+    print("🛠️ Verificando estrutura da tabela Products...")
+    for col_name, col_type in new_columns:
         try:
-            cursor.execute(sql)
+            cursor.execute(f'SELECT {col_name} FROM products LIMIT 1')
         except sqlite3.OperationalError:
-            pass
+            print(f"   ➕ Adicionando coluna '{col_name}'...")
+            try:
+                cursor.execute(f'ALTER TABLE products ADD COLUMN {col_name} {col_type}')
+            except Exception as e:
+                print(f"   ❌ Erro ao adicionar {col_name}: {e}")
     
-    # 2. Criar tabela de Links Independentes
+    # 3. Tabela de Links Independentes (Mantendo sua funcionalidade de Links)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS links (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,20 +55,9 @@ def init_db():
         )
     ''')
     
-    # Verificar se a tabela de produtos está vazia para inserir teste
-    cursor.execute('SELECT count(*) FROM products')
-    count = cursor.fetchone()[0]
-    
-    if count == 0:
-        cursor.execute('''
-            INSERT INTO products (name, description, price, image, category)
-            VALUES (?, ?, ?, ?, ?)
-        ''', ('8 Ball Pool VIP', 'Linhas longas e antecipação.', 'R$ 49,90', '8ball.jpg', 'Mod'))
-        print("Dados de teste inseridos!")
-        
     conn.commit()
     conn.close()
-    print("Banco de dados SQLite inicializado com sucesso!")
+    print("✅ Banco de dados verificado e atualizado com sucesso!")
 
 if __name__ == "__main__":
     init_db()

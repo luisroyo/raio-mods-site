@@ -18,15 +18,26 @@
         .catalog-card { background: linear-gradient(135deg, rgba(112, 0, 255, 0.15), rgba(0, 242, 255, 0.15)); border: 2px solid #7000ff; }
         .product-card { background: linear-gradient(135deg, rgba(0, 242, 255, 0.1), rgba(0, 255, 0, 0.1)); border: 2px solid #00f2ff; }
         .subproduct-card { background: linear-gradient(135deg, rgba(0, 242, 255, 0.08), rgba(0, 255, 0, 0.08)); border: 1px solid #00f2ff; }
-        #editModal, #addSubproductModal, #editLinkModal { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .modal-hidden { display: none !important; }
+        
+        /* CORREÇÃO DO MODAL: Garante centralização e comportamento correto */
+        #editModal, #addSubproductModal, #editLinkModal, #configModal {
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh;
+            padding: 1rem; /* Espaço nas bordas para telas pequenas */
+        }
+        .modal-active { display: flex !important; }
     </style>
 </head>
 <body>
     <header class="border-b-2 border-neon-cyan py-6 mb-8">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <h1 class="text-4xl font-bold neon-cyan">Painel Admin</h1>
-            <div class="flex gap-4">
+            <div class="flex gap-4 items-center">
+                <button onclick="openConfigModal()" class="flex items-center gap-2 border border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-900 transition">
+                    ⚙️ Config Pagamentos
+                </button>
                 <a href="/" class="neon-purple hover:text-white">Ver Loja</a>
                 <a href="/links" class="neon-cyan hover:text-white">Ver Links</a>
                 <a href="/admin/logout" class="text-red-400">Sair</a>
@@ -47,8 +58,8 @@
                 <form id="addCatalogForm" class="space-y-4">
                     <input type="hidden" name="is_catalog" value="1">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="name" required placeholder="Nome do Jogo (Ex: Free Fire)" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
-                        <input type="text" name="category" required placeholder="Categoria (Ex: FPS)" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                        <input type="text" name="name" required placeholder="Nome do Jogo" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                        <input type="text" name="category" required placeholder="Categoria" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
                     </div>
                     <textarea name="description" required rows="2" placeholder="Descrição da Capa" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white"></textarea>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -66,13 +77,13 @@
                 {% if catalogs %}
                 {% for catalog in catalogs %}
                 {% set subproducts = subproducts_by_parent.get(catalog.id, []) %}
-                <div class="catalog-card rounded-lg p-6">
+                <div class="border border-neon-purple rounded-lg p-6 bg-gray-900 bg-opacity-30">
                     <div class="flex flex-col md:flex-row gap-6">
                         <div class="md:w-1/3 text-center">
                             <img src="{{ catalog.image }}" class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-neon-purple mb-4">
                             <h3 class="text-2xl font-bold neon-purple">{{ catalog.name }}</h3>
                             <div class="flex gap-2 justify-center mt-4">
-                                <button onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson }}, {{ catalog.description|tojson }}, {{ catalog.price|tojson }}, {{ catalog.category|tojson }}, {{ catalog.image|tojson }}, "", {{ catalog.sort_order }}, null, 1)' class="px-4 py-2 bg-neon-purple text-white rounded hover:bg-opacity-80">Editar</button>
+                                <button onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson }}, {{ catalog.description|tojson }}, {{ catalog.price|tojson }}, {{ catalog.category|tojson }}, {{ catalog.image|tojson }}, "", {{ catalog.sort_order }}, null, 1, "")' class="px-4 py-2 bg-neon-purple text-white rounded hover:bg-opacity-80">Editar</button>
                                 <button onclick='deleteProduct({{ catalog.id }})' class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Excluir</button>
                             </div>
                             <button onclick='openAddSubproductModal({{ catalog.id }}, {{ catalog.name|tojson }})' class="w-full mt-4 py-2 bg-green-600 text-black font-bold rounded hover:bg-green-500">➕ Add Produto Aqui</button>
@@ -81,29 +92,24 @@
                             <h4 class="font-bold mb-4">Produtos em {{ catalog.name }}:</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {% for sub in subproducts %}
-                                <div class="subproduct-card p-4 rounded">
+                                <div class="border border-neon-cyan p-4 rounded bg-black">
                                     <div class="flex justify-between items-start">
                                         <div>
                                             <span class="font-bold text-neon-cyan block">{{ sub.name }}</span>
                                             <span class="text-green-400 text-sm">{{ sub.price }}</span>
                                         </div>
                                         <div class="flex gap-1">
-                                            <button onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson }}, {{ sub.description|tojson }}, {{ sub.price|tojson }}, {{ sub.category|tojson }}, {{ sub.image|tojson }}, "", {{ sub.sort_order }}, {{ sub.parent_id }}, 0)' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
+                                            <button onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson }}, {{ sub.description|tojson }}, {{ sub.price|tojson }}, {{ sub.category|tojson }}, {{ sub.image|tojson }}, {{ (sub.tagline|default(""))|tojson }}, {{ sub.sort_order }}, {{ sub.parent_id }}, 0, {{ (sub.payment_url|default(""))|tojson }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
                                             <button onclick='deleteProduct({{ sub.id }})' class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
                                         </div>
                                     </div>
                                 </div>
                                 {% endfor %}
-                                {% if not subproducts %}
-                                <p class="text-gray-500 text-sm italic">Nenhum produto cadastrado.</p>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
-                {% else %}
-                <p class="text-gray-500 text-center py-8">Nenhum jogo criado.</p>
                 {% endif %}
             </div>
         </div>
@@ -122,6 +128,7 @@
                         <input type="number" name="sort_order" value="0" placeholder="Ordem" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                         <input type="text" name="price" required placeholder="Preço" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                     </div>
+                    <input type="text" name="payment_url" placeholder="Link Mercado Pago" class="w-full px-4 py-2 bg-black border border-green-500 rounded text-white">
                     <input type="file" name="image" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                     <button type="submit" class="w-full py-2 bg-neon-cyan text-black font-bold rounded hover:bg-opacity-80">Adicionar</button>
                 </form>
@@ -130,11 +137,11 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {% if simple_products %}
                 {% for p in simple_products %}
-                <div class="product-card p-6 rounded-lg relative">
+                <div class="border border-neon-cyan p-6 rounded-lg bg-black bg-opacity-50">
                     <h3 class="text-xl font-bold neon-cyan">{{ p.name }}</h3>
                     <p class="text-purple-400 font-bold mb-4">{{ p.price }}</p>
                     <div class="flex gap-2">
-                        <button onclick='openEditModal({{ p.id }}, {{ p.name|tojson }}, {{ p.description|tojson }}, {{ p.price|tojson }}, {{ p.category|tojson }}, {{ p.image|tojson }}, "", {{ p.sort_order }}, null, 0)' class="flex-1 py-2 bg-neon-cyan text-black font-bold rounded hover:bg-opacity-80">Editar</button>
+                        <button onclick='openEditModal({{ p.id }}, {{ p.name|tojson }}, {{ p.description|tojson }}, {{ p.price|tojson }}, {{ p.category|tojson }}, {{ p.image|tojson }}, {{ (p.tagline|default(""))|tojson }}, {{ p.sort_order }}, null, 0, {{ (p.payment_url|default(""))|tojson }})' class="flex-1 py-2 bg-neon-cyan text-black font-bold rounded hover:bg-opacity-80">Editar</button>
                         <button onclick='deleteProduct({{ p.id }})' class="flex-1 py-2 bg-red-600 text-white rounded hover:bg-red-700">Excluir</button>
                     </div>
                 </div>
@@ -162,42 +169,71 @@
                 {% if links %}
                 {% for link in links %}
                 <div class="border border-white p-4 rounded flex justify-between items-center">
-                    <div>
-                        <h4 class="font-bold text-white">{{ link.title }}</h4>
-                        <p class="text-sm text-gray-400">{{ link.description }}</p>
-                    </div>
+                    <div><h4 class="font-bold text-white">{{ link.title }}</h4></div>
                     <div class="flex gap-2">
-                        <button onclick='openEditLink({{ link.id }}, {{ link.title|tojson }}, {{ link.description|tojson }}, {{ link.download_link|tojson }}, {{ link.video_link|tojson }}, {{ link.game|tojson }})' class="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500">✏️</button>
                         <button onclick='deleteLink({{ link.id }})' class="px-3 py-1 bg-red-600 rounded hover:bg-red-500">🗑️</button>
                     </div>
                 </div>
                 {% endfor %}
-                {% else %}
-                <p class="text-gray-500">Nenhum link cadastrado.</p>
                 {% endif %}
             </div>
         </div>
     </main>
 
-    <div id="addSubproductModal" class="fixed inset-0 hidden bg-black bg-opacity-80 z-50 overflow-y-auto modal-hidden">
-        <div class="m-auto w-full max-w-md border-2 border-green-500 rounded-lg p-6 bg-black">
-            <h3 class="text-xl font-bold text-green-500 mb-4">Add em <span id="sub_cat_name"></span></h3>
+    <div id="addSubproductModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-green-500 rounded-lg p-6 bg-black relative">
+            <h3 class="text-xl font-bold text-green-500 mb-4">Adicionar Produto em <span id="sub_cat_name" class="text-white"></span></h3>
+            
             <form id="addSubproductForm" class="space-y-3">
                 <input type="hidden" id="sub_pid" name="parent_id">
                 <input type="hidden" name="is_catalog" value="0">
-                <input type="text" name="name" required placeholder="Nome" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                
+                <input type="text" name="name" required placeholder="Nome do Produto (ex: VIP 30 Dias)" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
                 <textarea name="description" required rows="2" placeholder="Descrição" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white"></textarea>
-                <input type="text" name="price" required placeholder="Preço" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
-                <input type="text" name="category" required placeholder="Categoria" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" name="price" required placeholder="Preço (R$)" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                    <input type="number" name="sort_order" value="0" placeholder="Ordem" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                </div>
+                <input type="text" name="category" required placeholder="Categoria (ex: Key)" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                <input type="text" name="payment_url" placeholder="Link Mercado Pago" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
                 <input type="file" name="image" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
-                <div class="flex gap-2 mt-4"><button type="button" onclick="closeModal('addSubproductModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button><button type="submit" class="flex-1 py-2 bg-green-600 text-black font-bold rounded">Salvar</button></div>
+                
+                <div class="flex gap-2 mt-4">
+                    <button type="button" onclick="closeModal('addSubproductModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button>
+                    <button type="submit" class="flex-1 py-2 bg-green-600 text-black font-bold rounded">Salvar</button>
+                </div>
             </form>
             <div id="subproduct_message" class="mt-2 hidden"></div>
         </div>
     </div>
 
-    <div id="editModal" class="fixed inset-0 hidden bg-black bg-opacity-80 z-50 overflow-y-auto modal-hidden">
-        <div class="m-auto w-full max-w-md border-2 border-blue-500 rounded-lg p-6 bg-black">
+    <div id="configModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black">
+            <h3 class="text-xl font-bold text-yellow-500 mb-4">⚙️ Configurações</h3>
+            <form id="configForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400">Chave Pix:</label>
+                    <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400">Carteira Binance:</label>
+                    <input type="text" name="binance_wallet" value="{{ config.binance_wallet if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400">WhatsApp:</label>
+                    <input type="text" name="whatsapp_number" value="{{ config.whatsapp_number if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button type="button" onclick="closeModal('configModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
+                    <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar</button>
+                </div>
+            </form>
+            <div id="config_message" class="mt-2 hidden"></div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-blue-500 rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-blue-500 mb-4">Editar</h3>
             <form id="editProductForm" class="space-y-3">
                 <input type="hidden" id="edit_id">
@@ -207,9 +243,10 @@
                 <textarea id="edit_description" name="description" rows="2" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Descrição"></textarea>
                 <input type="text" id="edit_price" name="price" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Preço">
                 <input type="text" id="edit_category" name="category" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Categoria">
+                <input type="text" id="edit_payment_url" name="payment_url" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white" placeholder="Link Mercado Pago">
                 
                 <div id="edit_parent_div">
-                    <label class="text-xs text-gray-400">Mover para outro jogo:</label>
+                    <label class="text-xs text-gray-400">Mover para:</label>
                     <select id="edit_parent_id" name="parent_id" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
                         <option value="">Nenhum (Solto)</option>
                         {% for cat in parent_products %}
@@ -217,21 +254,19 @@
                         {% endfor %}
                     </select>
                 </div>
-
                 <div class="border border-blue-500 p-2 rounded">
                     <img id="edit_preview" src="" class="w-16 h-16 object-cover mb-2 border border-white">
                     <input type="file" id="edit_image" name="image" class="text-xs text-gray-400">
                     <input type="text" id="edit_image_url" name="image_url" placeholder="Ou URL da imagem" class="w-full mt-2 p-1 bg-gray-900 border border-blue-500 rounded text-white text-xs">
                 </div>
-
                 <div class="flex gap-2 mt-4"><button type="button" onclick="closeModal('editModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded">Salvar</button></div>
             </form>
             <div id="edit_message" class="mt-2 hidden"></div>
         </div>
     </div>
 
-    <div id="editLinkModal" class="fixed inset-0 hidden bg-black bg-opacity-80 z-50 overflow-y-auto modal-hidden">
-        <div class="m-auto w-full max-w-md border-2 border-white rounded-lg p-6 bg-black">
+    <div id="editLinkModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-white rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-white mb-4">Editar Link</h3>
             <form id="editLinkForm" class="space-y-3">
                 <input type="hidden" id="link_edit_id">
@@ -247,6 +282,7 @@
 
     <script>
         AOS.init();
+        
         function showSection(id) {
             document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('[id^="tab-"]').forEach(el => { el.classList.remove('neon-cyan', 'border-b-2'); el.classList.add('text-gray-400'); });
@@ -255,6 +291,53 @@
             tab.classList.add('neon-cyan', 'border-b-2'); tab.classList.remove('text-gray-400');
         }
 
+        // --- FUNÇÕES DE MODAL (CORRIGIDAS) ---
+        function closeModal(id) { 
+            document.getElementById(id).classList.remove('modal-active'); 
+        }
+        
+        function openConfigModal() {
+            document.getElementById('configModal').classList.add('modal-active');
+        }
+
+        function openAddSubproductModal(pid, name) {
+            document.getElementById('sub_pid').value = pid;
+            document.getElementById('sub_cat_name').innerText = name;
+            document.getElementById('addSubproductModal').classList.add('modal-active');
+        }
+
+        function openEditModal(id, name, desc, price, cat, img, tagline, sort, pid, is_cat, pay_url) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_description').value = desc;
+            document.getElementById('edit_price').value = price;
+            document.getElementById('edit_category').value = cat;
+            document.getElementById('edit_is_catalog').value = is_cat;
+            document.getElementById('edit_payment_url').value = pay_url || "";
+            
+            document.getElementById('edit_image_url').value = ""; 
+            document.getElementById('edit_image').value = ""; 
+            if(img) document.getElementById('edit_preview').src = img;
+            else document.getElementById('edit_preview').src = "";
+
+            const parentDiv = document.getElementById('edit_parent_div');
+            const parentSel = document.getElementById('edit_parent_id');
+            if (is_cat == 1) { parentDiv.style.display = 'none'; parentSel.value = ""; } 
+            else { parentDiv.style.display = 'block'; parentSel.value = pid || ""; Array.from(parentSel.options).forEach(opt => { opt.disabled = (opt.value == id); }); }
+
+            document.getElementById('editModal').classList.add('modal-active');
+        }
+
+        function openEditLink(id, title, desc, down, vid, game) {
+            document.getElementById('link_edit_id').value = id;
+            document.getElementById('link_title').value = title;
+            document.getElementById('link_desc').value = desc;
+            document.getElementById('link_down').value = down;
+            document.getElementById('link_vid').value = vid;
+            document.getElementById('editLinkModal').classList.add('modal-active');
+        }
+
+        // ENVIO DE FORMULÁRIO (AJAX)
         async function sendData(e, url, msgId) {
             e.preventDefault();
             const msg = document.getElementById(msgId);
@@ -267,62 +350,13 @@
             } catch { msg.innerHTML = '❌ Erro'; }
         }
 
-        // Ligar Forms
         if(document.getElementById('addCatalogForm')) document.getElementById('addCatalogForm').onsubmit = (e) => sendData(e, '/admin/add', 'catalog_message');
         if(document.getElementById('addProductForm')) document.getElementById('addProductForm').onsubmit = (e) => sendData(e, '/admin/add', 'message');
         if(document.getElementById('addLinkForm')) document.getElementById('addLinkForm').onsubmit = (e) => sendData(e, '/admin/links/add', 'link_message');
         if(document.getElementById('addSubproductForm')) document.getElementById('addSubproductForm').onsubmit = (e) => sendData(e, '/admin/add', 'subproduct_message');
         if(document.getElementById('editProductForm')) document.getElementById('editProductForm').onsubmit = (e) => { e.preventDefault(); sendData(e, '/admin/edit/'+document.getElementById('edit_id').value, 'edit_message'); };
+        if(document.getElementById('configForm')) document.getElementById('configForm').onsubmit = (e) => sendData(e, '/admin/config/update', 'config_message');
         if(document.getElementById('editLinkForm')) document.getElementById('editLinkForm').onsubmit = (e) => { e.preventDefault(); sendData(e, '/admin/links/edit/'+document.getElementById('link_edit_id').value, 'link_edit_message'); };
-
-        function closeModal(id) { document.getElementById(id).classList.add('modal-hidden'); document.getElementById(id).classList.remove('flex'); }
-        
-        function openAddSubproductModal(pid, name) {
-            document.getElementById('sub_pid').value = pid;
-            document.getElementById('sub_cat_name').innerText = name;
-            const m = document.getElementById('addSubproductModal'); m.classList.remove('modal-hidden'); m.classList.add('flex');
-        }
-
-        function openEditModal(id, name, desc, price, cat, img, tagline, sort, pid, is_cat) {
-            document.getElementById('edit_id').value = id;
-            document.getElementById('edit_name').value = name;
-            document.getElementById('edit_description').value = desc;
-            document.getElementById('edit_price').value = price;
-            document.getElementById('edit_category').value = cat;
-            document.getElementById('edit_is_catalog').value = is_cat;
-            
-            document.getElementById('edit_image_url').value = ""; // Limpa campo URL
-            document.getElementById('edit_image').value = ""; // Limpa campo arquivo
-            if(img) document.getElementById('edit_preview').src = img;
-            else document.getElementById('edit_preview').src = "";
-
-            // Lógica Especial: Se for Capa de Jogo, não pode ter Pai (desativa o select)
-            const parentDiv = document.getElementById('edit_parent_div');
-            const parentSel = document.getElementById('edit_parent_id');
-            
-            if (is_cat == 1) {
-                parentDiv.style.display = 'none'; // Esconde opção de mover
-                parentSel.value = ""; 
-            } else {
-                parentDiv.style.display = 'block'; // Mostra opção de mover
-                parentSel.value = pid || "";
-                // Evita que o produto seja pai dele mesmo
-                Array.from(parentSel.options).forEach(opt => {
-                    opt.disabled = (opt.value == id);
-                });
-            }
-
-            const m = document.getElementById('editModal'); m.classList.remove('modal-hidden'); m.classList.add('flex');
-        }
-
-        function openEditLink(id, title, desc, down, vid, game) {
-            document.getElementById('link_edit_id').value = id;
-            document.getElementById('link_title').value = title;
-            document.getElementById('link_desc').value = desc;
-            document.getElementById('link_down').value = down;
-            document.getElementById('link_vid').value = vid;
-            const m = document.getElementById('editLinkModal'); m.classList.remove('modal-hidden'); m.classList.add('flex');
-        }
 
         async function deleteProduct(id) { if(confirm('Apagar?')) { await fetch('/admin/delete/'+id, {method:'POST'}); location.reload(); } }
         async function deleteLink(id) { if(confirm('Apagar Link?')) { await fetch('/admin/links/delete/'+id, {method:'POST'}); location.reload(); } }

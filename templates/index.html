@@ -1,110 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}RAIO MODS - Sales Group{% endblock %}
+{% block title %}RAIO MODS - Loja Oficial{% endblock %}
 
 {% block content %}
-    <!-- Hero Section -->
     <section class="text-center py-8 md:py-16 mb-8 md:mb-16 hero-gradient border-y-2 border-neon-cyan" data-aos="fade-up">
         <div class="container mx-auto px-4">
-            <div class="mb-3 md:mb-4">
-                <span class="inline-block px-3 py-1.5 md:px-4 md:py-2 bg-neon-green text-black font-bold rounded-full text-xs md:text-sm mb-3 md:mb-4">
-                    100% SEGURO ANTIBAN* (com uso cauteloso)
-                </span>
-                <p class="text-xs md:text-sm text-yellow-400 mt-2 px-2">
-                    ⚠️ A segurança antiban funciona apenas com uso responsável e cauteloso. Uso excessivo pode resultar em banimento. 
-                    <a href="/seguranca" class="underline hover:text-yellow-300 transition-colors">Consulte as dicas de segurança</a> para mais informações.
-                </p>
-            </div>
-            <h2 class="hero-title text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold neon-cyan mb-3 md:mb-4 px-2" data-aos="fade-up" data-aos-delay="100">
-                DOMINE A MESA
+            <h2 class="hero-title text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold neon-cyan mb-3 md:mb-4 px-2">
+                DOMINE O JOGO
             </h2>
-            <p class="hero-subtitle text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 px-2" data-aos="fade-up" data-aos-delay="200">
-                Obtenha a vantagem definitiva com a ferramenta mais segura do mercado
+            <p class="hero-subtitle text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 px-2">
+                Escolha seu jogo abaixo para ver os hacks disponíveis
             </p>
-            <div class="flex flex-wrap justify-center gap-2 md:gap-4 text-xs md:text-sm text-gray-400 px-2" data-aos="fade-up" data-aos-delay="300">
-                <span>✅ SEM ROOT</span>
-                <span>✅ SEM JAILBREAK</span>
-                <span>✅ INSTALAÇÃO SIMPLES</span>
-            </div>
         </div>
     </section>
 
-    <!-- Products Section -->
     <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
-        <h2 class="section-title text-2xl md:text-4xl font-bold neon-cyan text-center mb-6 md:mb-4" data-aos="fade-up">LOJA OFICIAL</h2>
+        <h2 class="section-title text-2xl md:text-4xl font-bold neon-cyan text-center mb-6 md:mb-8" data-aos="fade-up">SELECIONE O JOGO</h2>
         
         {% if products %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-20">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {% for product in products %}
-            <div class="product-card rounded-xl p-4 md:p-6 relative" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-                {% if loop.index == 3 %}
-                <div class="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2">
-                    <span class="badge-best px-3 py-1 md:px-4 rounded-full text-xs">MELHOR VALOR ✨</span>
-                </div>
-                {% endif %}
                 
-                <!-- Imagem do Produto (sempre quadrada para proporção consistente) -->
-                {% if product.image %}
-                <div class="mb-3 md:mb-4 rounded-lg overflow-hidden aspect-square border border-neon-cyan">
-                    <img src="{{ product.image }}" alt="{{ product.name }}" 
-                         class="w-full h-full object-cover">
-                </div>
-                {% endif %}
-                
-                <!-- Nome do Produto -->
-                <h3 class="product-title text-xl md:text-2xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
-                
-                <!-- Descrição -->
-                <p class="text-gray-300 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm md:text-base">{{ product.description }}</p>
-                
-                <!-- Preço (apenas para produtos simples, não para catálogos) -->
-                {% if product.id not in catalog_ids %}
-                <div class="mb-4 md:mb-6">
-                    <p class="product-price text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
-                    {% if product.tagline %}
-                    <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
-                    {% endif %}
-                </div>
-                {% else %}
-                <!-- Para catálogos, mostrar apenas tagline se houver -->
-                {% if product.tagline %}
-                <div class="mb-4 md:mb-6">
-                    <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
-                </div>
-                {% else %}
-                <div class="mb-4 md:mb-6"></div>
-                {% endif %}
-                {% endif %}
-                
-                <!-- Botão: Ver opções (catálogo) ou Comprar -->
                 {% if product.id in catalog_ids %}
                 <a href="{{ url_for('catalogo', parent_id=product.id) }}" 
-                   class="block w-full py-3 md:py-4 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation text-center">
-                    📂 Ver opções
+                   class="group block product-card rounded-xl p-6 relative hover:scale-105 transition-all duration-300 cursor-pointer border-2 border-neon-purple hover:shadow-[0_0_20px_rgba(112,0,255,0.4)]"
+                   data-aos="fade-up">
+                    
+                    {% if product.image %}
+                    <div class="mb-4 w-full aspect-square rounded-lg overflow-hidden border-2 border-neon-cyan bg-black shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+                        <img src="{{ product.image }}" alt="{{ product.name }}" class="w-full h-full object-contain">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-center">
+                        <h3 class="text-2xl md:text-3xl font-bold neon-cyan mb-2 group-hover:text-white transition-colors">{{ product.name }}</h3>
+                        <p class="text-gray-400 text-sm mb-4 min-h-[40px]">{{ product.description }}</p>
+                        
+                        <span class="inline-flex items-center gap-2 px-6 py-2 border border-neon-cyan rounded-full text-neon-cyan font-bold bg-black bg-opacity-50 group-hover:bg-neon-cyan group-hover:text-black transition-all">
+                            📂 ABRIR OPÇÕES
+                        </span>
+                    </div>
                 </a>
+
                 {% else %}
-                <a href="/pagamento?produto={{ product.name | urlencode }}" 
-                   class="block w-full py-3 md:py-4 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation text-center">
-                    💬 Comprar Agora
-                </a>
+                <div class="product-card rounded-xl p-6 relative flex flex-col border border-neon-cyan" data-aos="fade-up">
+                    {% if loop.index == 3 %} 
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span class="badge-best px-3 py-1 rounded-full text-xs font-bold shadow-lg">MELHOR VALOR ✨</span>
+                    </div>
+                    {% endif %}
+
+                    {% if product.image %}
+                    <div class="mb-4 w-full aspect-square rounded-lg overflow-hidden border border-neon-cyan bg-black">
+                        <img src="{{ product.image }}" alt="{{ product.name }}" class="w-full h-full object-contain">
+                    </div>
+                    {% endif %}
+                    
+                    <h3 class="text-xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
+                    <p class="text-gray-300 mb-4 text-sm flex-grow">{{ product.description }}</p>
+                    
+                    <div class="mt-auto">
+                        <p class="product-price text-3xl font-bold neon-green mb-1">{{ product.price }}</p>
+                        {% if product.tagline %}
+                        <p class="text-xs text-gray-400 mb-4">{{ product.tagline }}</p>
+                        {% endif %}
+                        
+                        <a href="/pagamento?produto={{ product.name | urlencode }}" 
+                           class="block w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 transition-all text-center shadow-[0_0_10px_rgba(0,242,255,0.3)]">
+                            💬 Comprar Agora
+                        </a>
+                    </div>
+                </div>
                 {% endif %}
-            </div>
+
             {% endfor %}
         </div>
         {% else %}
         <div class="text-center py-20" data-aos="fade-up">
-            <p class="text-2xl neon-cyan">Nenhum produto disponível no momento.</p>
+            <p class="text-2xl neon-cyan">Nenhum item disponível no momento.</p>
         </div>
         {% endif %}
 
-        <!-- Why Choose Us Section -->
         <section class="mb-12 md:mb-20" data-aos="fade-up">
             <h2 class="section-title text-2xl md:text-4xl font-bold neon-cyan text-center mb-6 md:mb-12 px-2">POR QUE NOS ESCOLHER?</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <div class="benefit-card text-center p-4 md:p-6 border-2 border-neon-cyan rounded-lg">
                     <div class="benefit-icon text-3xl md:text-4xl mb-3 md:mb-4">🛡️</div>
                     <h3 class="text-lg md:text-xl font-bold neon-cyan mb-2">Segurança Máxima</h3>
-                    <p class="text-gray-300 text-xs md:text-sm">Tecnologia Anti-Ban avançada (100% Seguro com uso cauteloso)</p>
+                    <p class="text-gray-300 text-xs md:text-sm">Tecnologia Anti-Ban avançada</p>
                 </div>
                 <div class="benefit-card text-center p-4 md:p-6 border-2 border-neon-cyan rounded-lg">
                     <div class="benefit-icon text-3xl md:text-4xl mb-3 md:mb-4">⚡</div>
@@ -114,34 +97,14 @@
                 <div class="benefit-card text-center p-4 md:p-6 border-2 border-neon-cyan rounded-lg">
                     <div class="benefit-icon text-3xl md:text-4xl mb-3 md:mb-4">🚀</div>
                     <h3 class="text-lg md:text-xl font-bold neon-cyan mb-2">Entrega Imediata</h3>
-                    <p class="text-gray-300 text-xs md:text-sm">Receba sua chave imediatamente após o pagamento</p>
+                    <p class="text-gray-300 text-xs md:text-sm">Receba sua chave na hora</p>
                 </div>
                 <div class="benefit-card text-center p-4 md:p-6 border-2 border-neon-cyan rounded-lg">
                     <div class="benefit-icon text-3xl md:text-4xl mb-3 md:mb-4">✨</div>
                     <h3 class="text-lg md:text-xl font-bold neon-cyan mb-2">Atualizado 2026</h3>
-                    <p class="text-gray-300 text-xs md:text-sm">Compatível com as últimas versões do jogo</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Call to Action -->
-        <section class="text-center mb-12 md:mb-20" data-aos="fade-up">
-            <div class="max-w-2xl mx-auto">
-                <h2 class="section-title text-2xl md:text-4xl font-bold neon-cyan mb-4 md:mb-6">Pronto para começar?</h2>
-                <p class="text-gray-300 mb-6 md:mb-8 text-sm md:text-base">Confira nossos métodos de pagamento e dicas de segurança</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="/pagamento" class="px-6 py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation">
-                        💳 Ver Métodos de Pagamento
-                    </a>
-                    <a href="/seguranca" class="px-6 py-3 border-2 border-neon-cyan text-neon-cyan font-bold rounded-lg hover:bg-neon-cyan hover:text-black active:bg-opacity-80 transition-all duration-300 text-base md:text-lg touch-manipulation">
-                        🛡️ Dicas de Segurança
-                    </a>
+                    <p class="text-gray-300 text-xs md:text-sm">Sempre na última versão</p>
                 </div>
             </div>
         </section>
     </main>
-{% endblock %}
-
-{% block extra_js %}
-    {# Função removida - agora redireciona para página de pagamento #}
 {% endblock %}

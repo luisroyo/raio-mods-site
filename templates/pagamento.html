@@ -3,6 +3,8 @@
 {% block title %}Métodos de Pagamento - RAIO MODS{% endblock %}
 
 {% block content %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
         <div class="text-center mb-8 md:mb-12" data-aos="fade-up">
             <h1 class="section-title text-3xl md:text-5xl font-bold neon-cyan mb-4">💳 PAGAMENTO</h1>
@@ -29,11 +31,18 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <section class="border border-green-500 p-6 rounded-lg bg-gray-900" data-aos="fade-right">
                 <h3 class="text-xl font-bold neon-green mb-4 text-center">Pix Manual</h3>
-                <p class="text-gray-400 text-center mb-4 text-sm">Transferência direta sem taxas.</p>
+                <p class="text-gray-400 text-center mb-4 text-sm">Escaneie o QR Code ou copie a chave.</p>
+                
+                <div class="flex justify-center mb-4">
+                    <div class="bg-white p-3 rounded-lg shadow-lg">
+                        <div id="qrcode"></div>
+                    </div>
+                </div>
+
                 <div class="bg-black p-4 rounded border border-gray-600 text-center mb-4">
                     <p class="text-sm text-gray-400 mb-1">Chave Pix:</p>
                     <p class="text-lg font-mono text-white select-all break-all" id="pixKey">{{ config.pix_key }}</p>
-                    <button onclick="copyText('pixKey')" class="mt-2 text-xs bg-gray-700 px-3 py-1 rounded hover:bg-gray-600">Copiar</button>
+                    <button onclick="copyText('pixKey')" class="mt-2 text-xs bg-gray-700 px-3 py-1 rounded hover:bg-gray-600">Copiar Chave</button>
                 </div>
             </section>
 
@@ -57,11 +66,32 @@
     </main>
 
     <script>
+        // Função de Copiar
         function copyText(elementId) {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text).then(() => {
                 alert('Copiado com sucesso!');
             });
         }
+
+        // --- GERADOR AUTOMÁTICO DE QR CODE ---
+        document.addEventListener("DOMContentLoaded", function() {
+            var pixKey = "{{ config.pix_key }}"; // Pega a chave do banco de dados
+            
+            if (pixKey && pixKey.trim() !== "") {
+                // Gera o QR Code dentro da div id="qrcode"
+                new QRCode(document.getElementById("qrcode"), {
+                    text: pixKey,
+                    width: 180,
+                    height: 180,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            } else {
+                // Se não tiver chave, esconde o quadrado branco
+                document.getElementById("qrcode").parentNode.style.display = 'none';
+            }
+        });
     </script>
 {% endblock %}

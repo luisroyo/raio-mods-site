@@ -2,65 +2,72 @@
 
 {% block title %}Dicas de Segurança - RAIO MODS{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/seguranca.css') }}">
+{% endblock %}
+
 {% block content %}
     <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
-        <!-- Header da Página -->
         <div class="text-center mb-8 md:mb-12" data-aos="fade-up">
-            <h1 class="section-title text-3xl md:text-5xl font-bold neon-cyan mb-4">🛡️ DICAS DE SEGURANÇA</h1>
+            <h1 class="text-3xl md:text-5xl font-bold neon-cyan mb-4">🛡️ DICAS DE SEGURANÇA</h1>
             <p class="text-gray-300 text-base md:text-xl max-w-2xl mx-auto">
                 Proteja sua conta e aproveite o jogo com segurança
             </p>
         </div>
 
-        <!-- Security Tips Section -->
         <section class="mb-12 md:mb-20" data-aos="fade-up">
             <div class="max-w-3xl mx-auto">
-                <div class="border-2 border-neon-cyan rounded-lg p-4 md:p-6 bg-black bg-opacity-50 backdrop-blur-sm">
+                <div class="security-card">
                     <h3 class="text-xl md:text-2xl font-bold neon-green mb-4 md:mb-6 text-center">Recomendações Importantes</h3>
-                    <div class="space-y-4 md:space-y-6 text-sm md:text-base">
-                        <div class="flex items-start gap-3 md:gap-4">
-                            <span class="text-neon-green text-xl md:text-2xl flex-shrink-0">•</span>
+                    
+                    <div class="recommendation-list">
+                        
+                        <div class="recommendation-item">
+                            <span class="bullet-point">•</span>
                             <div>
                                 <p class="text-gray-300 leading-relaxed">
                                     <span class="neon-cyan font-semibold">Jogue com moderação!</span> O uso excessivo das funções automáticas gera denúncias e atrai a atenção da Miniclip.
                                 </p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-3 md:gap-4">
-                            <span class="text-neon-green text-xl md:text-2xl flex-shrink-0">•</span>
+
+                        <div class="recommendation-item">
+                            <span class="bullet-point">•</span>
                             <div>
                                 <p class="text-gray-300 leading-relaxed">
                                     A <span class="neon-cyan font-semibold">segurança da sua conta depende do seu uso</span>. O sistema antiban é 100% seguro <span class="text-yellow-400 font-semibold">APENAS se usado com cautela</span>. Recomendamos uso responsável e moderado das funcionalidades.
                                 </p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-3 md:gap-4">
-                            <span class="text-neon-green text-xl md:text-2xl flex-shrink-0">•</span>
+
+                        <div class="recommendation-item">
+                            <span class="bullet-point">•</span>
                             <div>
                                 <p class="text-gray-300 leading-relaxed">
                                     Evite padrões de jogo muito óbvios ou repetitivos que possam chamar atenção.
                                 </p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-3 md:gap-4">
-                            <span class="text-neon-green text-xl md:text-2xl flex-shrink-0">•</span>
+
+                        <div class="recommendation-item">
+                            <span class="bullet-point">•</span>
                             <div>
                                 <p class="text-gray-300 leading-relaxed">
                                     Use as funcionalidades de forma estratégica e não abuse das vantagens oferecidas.
                                 </p>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Warning Section -->
         <section class="mb-12 md:mb-20" data-aos="fade-up">
             <div class="max-w-3xl mx-auto">
-                <div class="border-2 border-yellow-500 rounded-lg p-4 md:p-6 bg-yellow-900 bg-opacity-20 backdrop-blur-sm">
+                <div class="warning-card">
                     <h3 class="text-xl md:text-2xl font-bold text-yellow-400 mb-4 md:mb-6 text-center">⚠️ Aviso Importante</h3>
-                    <p class="text-gray-300 text-sm md:text-base leading-relaxed text-center">
+                    <p class="text-gray-300 text-sm md:text-base leading-relaxed">
                         Lembre-se: o uso de mods pode resultar em banimento da sua conta. Use por sua conta e risco. 
                         A RAIO MODS não se responsabiliza por banimentos ou perdas de conta.
                     </p>
@@ -68,11 +75,14 @@
             </div>
         </section>
 
-        <!-- Back to Products -->
         <div class="text-center" data-aos="fade-up">
-            <a href="/" class="inline-block px-6 py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-base md:text-lg touch-manipulation">
+            <a href="{{ url_for('public.index') }}" class="btn-back-primary">
                 ← Voltar para Produtos
             </a>
         </div>
     </main>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/seguranca.js') }}"></script>
 {% endblock %}

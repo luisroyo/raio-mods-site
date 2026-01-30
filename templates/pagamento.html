@@ -2,24 +2,28 @@
 
 {% block title %}Métodos de Pagamento - RAIO MODS{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pagamento.css') }}">
+{% endblock %}
+
 {% block content %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
         <div class="text-center mb-8 md:mb-12" data-aos="fade-up">
-            <h1 class="section-title text-3xl md:text-5xl font-bold neon-cyan mb-4">💳 PAGAMENTO</h1>
+            <h1 class="text-3xl md:text-5xl font-bold neon-cyan mb-4">💳 PAGAMENTO</h1>
             
             {% if product %}
-            <div class="border-2 border-neon-cyan rounded-lg p-4 bg-black bg-opacity-50 inline-block mb-6">
+            <div class="selected-product-box">
                 <p class="text-gray-300">Você escolheu:</p>
                 <p class="text-2xl font-bold neon-green">{{ product.name }}</p>
                 <p class="text-white">{{ product.price }}</p>
             </div>
             
             {% if product.payment_url %}
-            <div class="mb-8 p-6 border-2 border-blue-500 rounded-lg bg-blue-900 bg-opacity-20">
+            <div class="mercadopago-box">
                 <h3 class="text-xl font-bold text-blue-400 mb-4">Opção Recomendada: Cartão / Pix Automático</h3>
-                <a href="{{ product.payment_url }}" target="_blank" class="inline-block w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-lg transition-all shadow-lg shadow-blue-500/50">
+                <a href="{{ product.payment_url }}" target="_blank" class="btn-mercadopago">
                     💳 PAGAR AGORA (MERCADO PAGO)
                 </a>
                 <p class="text-gray-400 text-sm mt-2">Ambiente 100% seguro do Mercado Pago</p>
@@ -29,69 +33,43 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <section class="border border-green-500 p-6 rounded-lg bg-gray-900" data-aos="fade-right">
+            <section class="pix-manual-section" data-aos="fade-right">
                 <h3 class="text-xl font-bold neon-green mb-4 text-center">Pix Manual</h3>
                 <p class="text-gray-400 text-center mb-4 text-sm">Escaneie o QR Code ou copie a chave.</p>
                 
                 <div class="flex justify-center mb-4">
-                    <div class="bg-white p-3 rounded-lg shadow-lg">
-                        <div id="qrcode"></div>
+                    <div class="qrcode-container">
+                        <div id="qrcode" data-key="{{ config.pix_key }}"></div>
                     </div>
                 </div>
 
-                <div class="bg-black p-4 rounded border border-gray-600 text-center mb-4">
+                <div class="key-box">
                     <p class="text-sm text-gray-400 mb-1">Chave Pix:</p>
-                    <p class="text-lg font-mono text-white select-all break-all" id="pixKey">{{ config.pix_key }}</p>
-                    <button onclick="copyText('pixKey')" class="mt-2 text-xs bg-gray-700 px-3 py-1 rounded hover:bg-gray-600">Copiar Chave</button>
+                    <p class="key-text text-lg" id="pixKey">{{ config.pix_key }}</p>
+                    <button onclick="copyText('pixKey')" class="btn-copy">Copiar Chave</button>
                 </div>
             </section>
 
-            <section class="border border-yellow-500 p-6 rounded-lg bg-gray-900" data-aos="fade-left">
+            <section class="crypto-section" data-aos="fade-left">
                 <h3 class="text-xl font-bold text-yellow-400 mb-4 text-center">Binance Pay / Crypto</h3>
                 <p class="text-gray-400 text-center mb-4 text-sm">USDT (Rede BEP20 - BSC).</p>
-                <div class="bg-black p-4 rounded border border-gray-600 text-center mb-4">
+                <div class="key-box">
                     <p class="text-sm text-gray-400 mb-1">Carteira USDT (BEP20):</p>
-                    <p class="text-sm font-mono text-white select-all break-all" id="cryptoKey">{{ config.binance_wallet }}</p>
-                    <button onclick="copyText('cryptoKey')" class="mt-2 text-xs bg-gray-700 px-3 py-1 rounded hover:bg-gray-600">Copiar</button>
+                    <p class="key-text text-sm" id="cryptoKey">{{ config.binance_wallet }}</p>
+                    <button onclick="copyText('cryptoKey')" class="btn-copy">Copiar</button>
                 </div>
             </section>
         </div>
 
         <div class="text-center mt-12" data-aos="fade-up">
             <p class="text-gray-300 mb-4">Após o pagamento, envie o comprovante:</p>
-            <a href="https://wa.me/{{ config.whatsapp_number }}" target="_blank" class="inline-block px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-500 shadow-lg">
+            <a href="https://wa.me/{{ config.whatsapp_number }}" target="_blank" class="btn-whatsapp">
                 📲 Enviar Comprovante no WhatsApp
             </a>
         </div>
     </main>
+{% endblock %}
 
-    <script>
-        // Função de Copiar
-        function copyText(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Copiado com sucesso!');
-            });
-        }
-
-        // --- GERADOR AUTOMÁTICO DE QR CODE ---
-        document.addEventListener("DOMContentLoaded", function() {
-            var pixKey = "{{ config.pix_key }}"; // Pega a chave do banco de dados
-            
-            if (pixKey && pixKey.trim() !== "") {
-                // Gera o QR Code dentro da div id="qrcode"
-                new QRCode(document.getElementById("qrcode"), {
-                    text: pixKey,
-                    width: 180,
-                    height: 180,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            } else {
-                // Se não tiver chave, esconde o quadrado branco
-                document.getElementById("qrcode").parentNode.style.display = 'none';
-            }
-        });
-    </script>
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/pagamento.js') }}"></script>
 {% endblock %}

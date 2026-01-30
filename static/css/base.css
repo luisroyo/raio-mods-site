@@ -1,0 +1,46 @@
+body {
+    background-color: #050505;
+    color: #ffffff;
+}
+
+.neon-cyan {
+    color: #00f2ff;
+    text-shadow: 0 0 5px #00f2ff, 0 0 10px rgba(0, 242, 255, 0.5);
+}
+
+.neon-green {
+    color: #00ff00;
+    text-shadow: 0 0 5px #00ff00, 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.border-neon-cyan {
+    border-color: #00f2ff;
+    box-shadow: 0 0 5px rgba(0, 242, 255, 0.5), inset 0 0 5px rgba(0, 242, 255, 0.1);
+}
+
+.bg-neon-cyan {
+    background-color: #00f2ff;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.5), 0 0 20px rgba(0, 242, 255, 0.2);
+}
+
+.bg-neon-green {
+    background-color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5), 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+.circuit-pattern {
+    background-image: 
+        linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+}
+
+/* Responsividade e Botões */
+@media (max-width: 640px) {
+    .circuit-pattern { background-size: 20px 20px; }
+}
+
+button, .copy-btn, a[class*="bg-"] {
+    -webkit-tap-highlight-color: rgba(0, 242, 255, 0.3);
+    touch-action: manipulation;
+}

@@ -1,0 +1,90 @@
+/* Card do Link */
+.link-card {
+    border: 2px solid #7000ff; /* neon-purple */
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.link-card:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px rgba(112, 0, 255, 0.3);
+}
+
+/* Badge do Jogo */
+.game-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    background-color: #7000ff;
+    color: white;
+    border-radius: 9999px;
+    box-shadow: 0 0 5px rgba(112, 0, 255, 0.5);
+}
+
+/* Botão de Download (Cyan) */
+.btn-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #00f2ff;
+    color: black;
+    font-weight: bold;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s;
+    flex: 1;
+}
+
+.btn-download:hover {
+    background-color: rgba(0, 242, 255, 0.8);
+}
+
+/* Botão de Tutorial (Red Outline) */
+.btn-tutorial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ef4444; /* red-500 */
+    color: #ef4444;
+    font-weight: bold;
+    border-radius: 0.25rem;
+    transition: all 0.3s;
+    flex: 1;
+}
+
+.btn-tutorial:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* Estado Vazio */
+.empty-links {
+    text-align: center;
+    padding: 4rem 0;
+    border: 2px dashed #374151; /* gray-700 */
+    border-radius: 0.5rem;
+}
+
+/* Botão Voltar (Estilo Outline Simples) */
+.btn-back-outline {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    border: 1px solid #4b5563; /* gray-600 */
+    color: #d1d5db; /* gray-300 */
+    border-radius: 0.25rem;
+    transition: all 0.3s;
+}
+
+.btn-back-outline:hover {
+    border-color: white;
+    color: white;
+}

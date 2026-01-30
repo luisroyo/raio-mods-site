@@ -1,0 +1,109 @@
+/* Container de Seleção do Produto */
+.selected-product-box {
+    border: 2px solid #00f2ff; /* neon-cyan */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+/* Container do Mercado Pago */
+.mercadopago-box {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border: 2px solid #3b82f6; /* blue-500 */
+    border-radius: 0.5rem;
+    background-color: rgba(30, 58, 138, 0.2); /* blue-900 opacity */
+}
+
+.btn-mercadopago {
+    display: inline-block;
+    width: 100%;
+    padding: 1rem 2rem;
+    background-color: #2563eb; /* blue-600 */
+    color: white;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    font-size: 1.125rem;
+    transition: all 0.3s;
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5);
+}
+
+.btn-mercadopago:hover {
+    background-color: #3b82f6;
+}
+
+@media (min-width: 768px) {
+    .btn-mercadopago { width: auto; }
+}
+
+/* Seção Pix Manual */
+.pix-manual-section {
+    border: 1px solid #22c55e; /* green-500 */
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    background-color: #111827; /* gray-900 */
+}
+
+.qrcode-container {
+    background-color: white;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+}
+
+/* Seção Crypto */
+.crypto-section {
+    border: 1px solid #eab308; /* yellow-500 */
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    background-color: #111827; /* gray-900 */
+}
+
+/* Caixas de Chave (Copiar) */
+.key-box {
+    background-color: black;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #4b5563; /* gray-600 */
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.key-text {
+    font-family: monospace;
+    color: white;
+    user-select: all;
+    word-break: break-all;
+}
+
+.btn-copy {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    background-color: #374151; /* gray-700 */
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s;
+}
+
+.btn-copy:hover {
+    background-color: #4b5563; /* gray-600 */
+}
+
+/* Botão WhatsApp */
+.btn-whatsapp {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background-color: #16a34a; /* green-600 */
+    color: white;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.btn-whatsapp:hover {
+    background-color: #22c55e; /* green-500 */
+}

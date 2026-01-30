@@ -1,15 +1,18 @@
 import sqlite3
 import os
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join(basedir, 'database.db')
+def get_db_path():
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(basedir, '../database.db')
 
 def init_db():
-    print(f"🔌 Conectando ao banco em: {DB_PATH}")
-    conn = sqlite3.connect(DB_PATH)
+    db_path = get_db_path()
+    print(f"🔌 Verificando banco de dados em: {db_path}")
+    
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # 1. Tabelas Existentes (Produtos e Links)
+    # Tabelas Base
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,14 +29,22 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             description TEXT,
+            image TEXT,
             download_link TEXT,
             video_link TEXT,
             game TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Migração: coluna image em links
+    try:
+        cursor.execute('SELECT image FROM links LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            cursor.execute('ALTER TABLE links ADD COLUMN image TEXT')
+        except: pass
 
-    # --- 2. NOVA TABELA: Configurações Gerais (Pix, Binance) ---
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS config (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,12 +54,12 @@ def init_db():
         )
     ''')
 
-    # Cria a configuração inicial se não existir
+    # Seed Config
     cursor.execute('SELECT count(*) FROM config')
     if cursor.fetchone()[0] == 0:
-        cursor.execute('INSERT INTO config (id, pix_key, binance_wallet) VALUES (1, "Chave Pix Aqui", "Wallet Binance Aqui")')
+        cursor.execute('INSERT INTO config (id, pix_key, binance_wallet) VALUES (1, "", "")')
 
-    # --- 3. Migrações de Colunas (Produtos) ---
+    # Migrações (Adicionar colunas novas se não existirem)
     new_columns = [
         ('tagline', 'TEXT DEFAULT ""'),
         ('sort_order', 'INTEGER DEFAULT 0'),
@@ -67,7 +78,3 @@ def init_db():
     
     conn.commit()
     conn.close()
-    print("✅ Banco de dados atualizado com Configurações de Pagamento!")
-
-if __name__ == "__main__":
-    init_db()

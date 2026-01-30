@@ -1,0 +1,105 @@
+/* --- Estilos da Hero Section --- */
+.hero-section {
+    text-align: center;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-top: 2px solid #00f2ff;
+    border-bottom: 2px solid #00f2ff;
+    /* Hero Gradient que estava no HTML */
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0, 242, 255, 0.1) 50%, rgba(0,0,0,0) 100%);
+}
+
+@media (min-width: 768px) {
+    .hero-section { padding: 4rem 0; margin-bottom: 4rem; }
+}
+
+/* --- Cards de Produto (Base) --- */
+.card-base {
+    position: relative;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+/* Card de Catálogo (Roxo) */
+.card-catalog {
+    display: block;
+    cursor: pointer;
+    border: 2px solid #7000ff; /* neon-purple */
+}
+
+.card-catalog:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(112, 0, 255, 0.4);
+}
+
+.card-catalog .img-container {
+    border: 2px solid #00f2ff;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+}
+
+.catalog-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid #00f2ff;
+    border-radius: 9999px;
+    color: #00f2ff;
+    font-weight: bold;
+    background-color: rgba(0, 0, 0, 0.5);
+    transition: all 0.3s;
+}
+
+.card-catalog:hover .catalog-btn {
+    background-color: #00f2ff;
+    color: black;
+}
+
+/* Card de Produto Solto (Cyan) */
+.card-product {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #00f2ff;
+}
+
+.badge-best-value {
+    position: absolute;
+    top: -0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    background-color: #00f2ff;
+    color: black;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-buy {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 0;
+    background-color: #00f2ff;
+    color: black;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+    transition: opacity 0.3s;
+}
+
+.btn-buy:hover { opacity: 0.8; }
+
+/* --- Cards de Benefícios --- */
+.card-benefit {
+    text-align: center;
+    padding: 1rem;
+    border: 2px solid #00f2ff;
+    border-radius: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .card-benefit { padding: 1.5rem; }
+}

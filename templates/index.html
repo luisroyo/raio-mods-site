@@ -21,8 +21,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {% for product in products %}
                 
+                {# LÓGICA DE CATÁLOGO (PASTAS) #}
                 {% if product.id in catalog_ids %}
-                <a href="{{ url_for('catalogo', parent_id=product.id) }}" 
+                <a href="{{ url_for('public.catalogo', parent_id=product.id) }}" 
                    class="group block product-card rounded-xl p-6 relative hover:scale-105 transition-all duration-300 cursor-pointer border-2 border-neon-purple hover:shadow-[0_0_20px_rgba(112,0,255,0.4)]"
                    data-aos="fade-up">
                     
@@ -42,6 +43,7 @@
                     </div>
                 </a>
 
+                {# LÓGICA DE PRODUTOS SOLTOS #}
                 {% else %}
                 <div class="product-card rounded-xl p-6 relative flex flex-col border border-neon-cyan" data-aos="fade-up">
                     {% if loop.index == 3 %} 
@@ -65,7 +67,7 @@
                         <p class="text-xs text-gray-400 mb-4">{{ product.tagline }}</p>
                         {% endif %}
                         
-                        <a href="/pagamento?produto={{ product.name | urlencode }}" 
+                        <a href="{{ url_for('public.pagamento', produto=product.name) }}" 
                            class="block w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 transition-all text-center shadow-[0_0_10px_rgba(0,242,255,0.3)]">
                             💬 Comprar Agora
                         </a>

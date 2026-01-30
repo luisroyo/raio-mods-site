@@ -75,6 +75,14 @@ def init_db():
             try:
                 cursor.execute(f'ALTER TABLE products ADD COLUMN {col_name} {col_type}')
             except: pass
-    
+
+    # Migração config: PIX Copia e Cola (para QR Code que funciona ao escanear)
+    try:
+        cursor.execute('SELECT pix_copia_cola FROM config LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            cursor.execute('ALTER TABLE config ADD COLUMN pix_copia_cola TEXT DEFAULT ""')
+        except: pass
+
     conn.commit()
     conn.close()

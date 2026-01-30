@@ -160,11 +160,12 @@ def update_config():
     if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
     
     pix = request.form.get('pix_key')
+    pix_copia_cola = (request.form.get('pix_copia_cola') or '').strip()
     binance = request.form.get('binance_wallet')
     whatsapp = request.form.get('whatsapp_number')
     
     conn = get_db_connection()
-    conn.execute('UPDATE config SET pix_key=?, binance_wallet=?, whatsapp_number=? WHERE id=1', (pix, binance, whatsapp))
+    conn.execute('UPDATE config SET pix_key=?, pix_copia_cola=?, binance_wallet=?, whatsapp_number=? WHERE id=1', (pix, pix_copia_cola, binance, whatsapp))
     conn.commit(); conn.close()
     return jsonify({'success': True, 'message': 'Configurações salvas!'})
 

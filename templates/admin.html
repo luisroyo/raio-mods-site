@@ -195,6 +195,11 @@
                     <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>
                 <div>
+                    <label class="block text-sm text-gray-400">PIX Copia e Cola <span class="text-gray-500">(opcional — para o QR Code funcionar ao escanear)</span>:</label>
+                    <textarea name="pix_copia_cola" rows="3" placeholder="Cole aqui o código PIX Copia e Cola do seu banco (código longo que começa com 00020126...)" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Se vazio, o QR mostrará só a chave; muitos apps dão erro. Com o Copia e Cola, o cliente escaneia e paga direto.</p>
+                </div>
+                <div>
                     <label class="block text-sm text-gray-400">Carteira Binance:</label>
                     <input type="text" name="binance_wallet" value="{{ config.binance_wallet if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>

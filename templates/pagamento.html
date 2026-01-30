@@ -39,13 +39,14 @@
                 
                 <div class="flex justify-center mb-4">
                     <div class="qrcode-container">
-                        <div id="qrcode" data-key="{{ config.pix_key }}"></div>
+                        <div id="qrcode" data-key="{{ (config.pix_key if config else '')|e }}" data-copia-cola="{{ (config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '')|e }}"></div>
                     </div>
                 </div>
+                <p id="qrcode-aviso" class="text-yellow-400/90 text-center text-xs mt-2 hidden">Se ao escanear o app do banco der erro, use o botão <strong>Copiar Chave</strong> abaixo e pague por chave PIX.</p>
 
                 <div class="key-box">
                     <p class="text-sm text-gray-400 mb-1">Chave Pix:</p>
-                    <p class="key-text text-lg" id="pixKey">{{ config.pix_key }}</p>
+                    <p class="key-text text-lg" id="pixKey">{{ config['pix_key'] if config else '' }}</p>
                     <button onclick="copyText('pixKey')" class="btn-copy">Copiar Chave</button>
                 </div>
             </section>

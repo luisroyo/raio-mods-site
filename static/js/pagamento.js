@@ -16,28 +16,37 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log('Pagamento JS carregado.');
 
     const qrcodeElement = document.getElementById("qrcode");
-    
+    const avisoEl = document.getElementById("qrcode-aviso");
+
     if (qrcodeElement) {
-        // Pega a chave do atributo 'data-key'
-        const pixKey = qrcodeElement.getAttribute('data-key');
-        
-        if (pixKey && pixKey.trim() !== "") {
-            // Gera o QR Code
+        // PIX Copia e Cola funciona ao escanear; só a chave pode dar erro em muitos apps
+        const copiaCola = (qrcodeElement.getAttribute('data-copia-cola') || '').trim();
+        const pixKey = (qrcodeElement.getAttribute('data-key') || '').trim();
+        const textoQR = copiaCola || pixKey;
+
+        if (textoQR) {
             try {
+                if (typeof QRCode === 'undefined') {
+                    console.error("Biblioteca QRCode não carregada.");
+                    if (avisoEl) avisoEl.classList.remove('hidden');
+                    return;
+                }
                 new QRCode(qrcodeElement, {
-                    text: pixKey,
+                    text: textoQR,
                     width: 180,
                     height: 180,
                     colorDark : "#000000",
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.H
                 });
+                // Se o QR está só com a chave (não tem Copia e Cola), mostra aviso
+                if (!copiaCola && avisoEl) avisoEl.classList.remove('hidden');
             } catch (e) {
-                console.error("Erro ao gerar QR Code. Biblioteca qrcode.js carregada?", e);
+                console.error("Erro ao gerar QR Code.", e);
+                if (avisoEl) avisoEl.classList.remove('hidden');
             }
         } else {
-            // Esconde o container pai se não tiver chave
-            if(qrcodeElement.parentElement) {
+            if (qrcodeElement.parentElement) {
                 qrcodeElement.parentElement.style.display = 'none';
             }
         }

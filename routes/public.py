@@ -43,15 +43,22 @@ def pagamento():
     conn = get_db_connection()
     try:
         config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
-    except:
+    except Exception:
         config = None
-        
+
+    pix_key = ''
+    pix_copia_cola = ''
+    if config:
+        pix_key = (config['pix_key'] or '') if 'pix_key' in config.keys() else ''
+        pix_copia_cola = (config['pix_copia_cola'] or '').strip() if 'pix_copia_cola' in config.keys() and (config['pix_copia_cola'] or '').strip() else ''
+    pix_qr_data = {'pix_key': pix_key, 'pix_copia_cola': pix_copia_cola}
+
     produto_nome = request.args.get('produto')
     product_data = None
     if produto_nome:
         product_data = conn.execute('SELECT * FROM products WHERE name = ?', (produto_nome,)).fetchone()
     conn.close()
-    return render_template('pagamento.html', product=product_data, config=config)
+    return render_template('pagamento.html', product=product_data, config=config, pix_qr_data=pix_qr_data)
 
 @public_bp.route('/seguranca')
 def seguranca():

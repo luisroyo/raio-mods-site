@@ -16,39 +16,48 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log('Pagamento JS carregado.');
 
     const qrcodeElement = document.getElementById("qrcode");
-    const avisoEl = document.getElementById("qrcode-aviso");
+    if (!qrcodeElement) return;
 
-    if (qrcodeElement) {
-        // PIX Copia e Cola funciona ao escanear; só a chave pode dar erro em muitos apps
-        const copiaCola = (qrcodeElement.getAttribute('data-copia-cola') || '').trim();
-        const pixKey = (qrcodeElement.getAttribute('data-key') || '').trim();
-        const textoQR = copiaCola || pixKey;
-
-        if (textoQR) {
-            try {
-                if (typeof QRCode === 'undefined') {
-                    console.error("Biblioteca QRCode não carregada.");
-                    if (avisoEl) avisoEl.classList.remove('hidden');
-                    return;
-                }
-                new QRCode(qrcodeElement, {
-                    text: textoQR,
-                    width: 180,
-                    height: 180,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-                // Se o QR está só com a chave (não tem Copia e Cola), mostra aviso
-                if (!copiaCola && avisoEl) avisoEl.classList.remove('hidden');
-            } catch (e) {
-                console.error("Erro ao gerar QR Code.", e);
-                if (avisoEl) avisoEl.classList.remove('hidden');
-            }
-        } else {
-            if (qrcodeElement.parentElement) {
-                qrcodeElement.parentElement.style.display = 'none';
-            }
+    // Dados PIX vêm do JSON (evita truncar o Copia e Cola em data-attribute)
+    let pixKey = '';
+    let pixCopiaCola = '';
+    try {
+        const scriptEl = document.getElementById("pix-qr-data");
+        if (scriptEl && scriptEl.textContent) {
+            const data = JSON.parse(scriptEl.textContent);
+            pixKey = (data.pix_key || '').trim();
+            pixCopiaCola = (data.pix_copia_cola || '').trim();
         }
+    } catch (e) {
+        console.error("Erro ao ler dados PIX.", e);
+    }
+
+    // Só mostra o QR se tiver PIX Copia e Cola — senão dá erro no banco ao escanear. Sem sentido exibir.
+    if (!pixCopiaCola) {
+        const wrapper = document.getElementById('qrcode-wrapper');
+        if (wrapper) wrapper.style.display = 'none';
+        return;
+    }
+
+    // Tem Copia e Cola: mostra "Escaneie ou copie"
+    const intro = document.getElementById('pix-intro');
+    if (intro) intro.textContent = 'Escaneie o QR Code ou copie a chave.';
+
+    try {
+        if (typeof QRCode === 'undefined') {
+            console.error("Biblioteca QRCode não carregada.");
+            return;
+        }
+        const tamanho = pixCopiaCola.length > 100 ? 220 : 180;
+        new QRCode(qrcodeElement, {
+            text: pixCopiaCola,
+            width: tamanho,
+            height: tamanho,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    } catch (e) {
+        console.error("Erro ao gerar QR Code.", e);
     }
 });

@@ -8,6 +8,7 @@
 
 {% block content %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="application/json" id="pix-qr-data">{{ pix_qr_data | tojson }}</script>
 
     <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
         <div class="text-center mb-8 md:mb-12" data-aos="fade-up">
@@ -35,14 +36,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <section class="pix-manual-section" data-aos="fade-right">
                 <h3 class="text-xl font-bold neon-green mb-4 text-center">Pix Manual</h3>
-                <p class="text-gray-400 text-center mb-4 text-sm">Escaneie o QR Code ou copie a chave.</p>
+                <p id="pix-intro" class="text-gray-400 text-center mb-4 text-sm">Copie a chave abaixo para pagar via PIX.</p>
                 
-                <div class="flex justify-center mb-4">
+                <div id="qrcode-wrapper" class="flex justify-center mb-4">
                     <div class="qrcode-container">
-                        <div id="qrcode" data-key="{{ (config.pix_key if config else '')|e }}" data-copia-cola="{{ (config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '')|e }}"></div>
+                        <div id="qrcode"></div>
                     </div>
                 </div>
-                <p id="qrcode-aviso" class="text-yellow-400/90 text-center text-xs mt-2 hidden">Se ao escanear o app do banco der erro, use o botão <strong>Copiar Chave</strong> abaixo e pague por chave PIX.</p>
 
                 <div class="key-box">
                     <p class="text-sm text-gray-400 mb-1">Chave Pix:</p>

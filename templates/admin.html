@@ -150,7 +150,7 @@
                             <p class="font-bold text-white truncate">{{ link.title }}</p>
                             {% if link.game %}<p class="text-xs text-gray-400">{{ link.game }}</p>{% endif %}
                             <div class="flex gap-2 mt-2">
-                                <button type="button" onclick="openEditLink({{ link.id }}, {{ link.title|tojson }}, {{ (link.description or '')|tojson }}, {{ (link.image or '')|tojson }}, {{ (link.download_link or '')|tojson }}, {{ (link.video_link or '')|tojson }}, {{ (link.game or '')|tojson }})" class="text-xs px-2 py-1 bg-white text-black rounded hover:bg-gray-200">Editar</button>
+                                <button type="button" onclick='openEditLink({{ link.id }}, {{ link.title|tojson }}, {{ (link.description or '')|tojson }}, {{ (link.image or '')|tojson }}, {{ (link.download_link or '')|tojson }}, {{ (link.video_link or '')|tojson }}, {{ (link.game or '')|tojson }})' class="text-xs px-2 py-1 bg-white text-black rounded hover:bg-gray-200">Editar</button>
                                 <button type="button" onclick="deleteLink({{ link.id }})" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Remover</button>
                             </div>
                         </div>

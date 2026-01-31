@@ -19,8 +19,14 @@
         {% if products %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-20">
             {% for product in products %}
-            <div class="catalog-product-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-                
+            <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50 z-10">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="text-[10px] font-bold text-green-400 tracking-wider">ATUALIZADO</span>
+                </div>
                 {% if product.image %}
                 <div class="catalog-img-container">
                     <img src="{{ product.image }}" alt="{{ product.name }}" class="w-full h-full object-cover">
@@ -41,7 +47,7 @@
                 </div>
                 
                 <a href="{{ url_for('public.pagamento', produto=product.name) }}" 
-                   class="catalog-btn-buy">
+                   class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all">
                     💬 Comprar Agora
                 </a>
             </div>

@@ -28,11 +28,13 @@ body {
     box-shadow: 0 0 10px rgba(0, 255, 0, 0.5), 0 0 20px rgba(0, 255, 0, 0.2);
 }
 
+/* Grid Cibernético - fundo tecnológico com profundidade */
 .circuit-pattern {
+    background-color: #050505;
     background-image: 
-        linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px);
-    background-size: 30px 30px;
+        linear-gradient(90deg, rgba(0, 242, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(0, 242, 255, 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
 }
 
 /* Menu mobile - drawer lateral, fora do header para posicionar na viewport */
@@ -50,7 +52,7 @@ body {
 
 /* Responsividade e Botões */
 @media (max-width: 640px) {
-    .circuit-pattern { background-size: 20px 20px; }
+    .circuit-pattern { background-size: 28px 28px; }
 }
 
 button, .copy-btn, a[class*="bg-"] {

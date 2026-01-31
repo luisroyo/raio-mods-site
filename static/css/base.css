@@ -35,6 +35,19 @@ body {
     background-size: 30px 30px;
 }
 
+/* Menu mobile - drawer lateral, fora do header para posicionar na viewport */
+.menu-overlay,
+.menu-drawer {
+    display: none;
+}
+@media (max-width: 639px) {
+    .menu-overlay,
+    .menu-drawer {
+        display: block;
+    }
+    .menu-overlay.hidden { display: none !important; }
+}
+
 /* Responsividade e Botões */
 @media (max-width: 640px) {
     .circuit-pattern { background-size: 20px 20px; }
@@ -43,4 +56,12 @@ body {
 button, .copy-btn, a[class*="bg-"] {
     -webkit-tap-highlight-color: rgba(0, 242, 255, 0.3);
     touch-action: manipulation;
+}
+
+/* Área de toque mínima 44px no mobile (acessibilidade) */
+@media (max-width: 640px) {
+    button, .btn-copy, a.btn-download, a.btn-tutorial, a.btn-mercadopago, a.btn-whatsapp, a.btn-back-outline, .catalog-btn-buy, main a[class*="bg-"] {
+        min-height: 44px;
+        padding: 0.6rem 1rem;
+    }
 }

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <title>{% block title %}RAIO MODS - Sales Group{% endblock %}</title>
 
     <meta property="og:type" content="website">
@@ -29,7 +29,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="circuit-pattern">
-    <header class="py-3 md:py-4 mb-4 md:mb-8 sticky top-0 bg-[#050505] bg-opacity-95 backdrop-blur-sm z-50 border-b border-neon-cyan border-opacity-30">
+    <header class="pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pb-4 mb-4 md:mb-8 sticky top-0 bg-[#050505] bg-opacity-95 backdrop-blur-sm z-50 border-b border-neon-cyan border-opacity-30">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center">
                 <a href="{{ url_for('public.index') }}" class="flex items-center gap-2 md:gap-3">
@@ -41,15 +41,34 @@
                 </a>
                 
                 <nav class="flex items-center gap-3 md:gap-4">
-                    <a href="{{ url_for('public.index') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors hidden sm:inline">Início</a>
-                    <a href="{{ url_for('public.links') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors hidden sm:inline">Links</a>
-                    <a href="{{ url_for('public.pagamento') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors hidden sm:inline">Pagamento</a>
-                    <a href="{{ url_for('public.seguranca') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors hidden sm:inline">Segurança</a>
-                    <a href="{{ url_for('admin.admin') }}" class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1">Admin</a>
+                    <div class="hidden sm:flex items-center gap-3 md:gap-4">
+                        <a href="{{ url_for('public.index') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors">Início</a>
+                        <a href="{{ url_for('public.links') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors">Links</a>
+                        <a href="{{ url_for('public.pagamento') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors">Pagamento</a>
+                        <a href="{{ url_for('public.seguranca') }}" class="text-xs md:text-sm text-gray-300 hover:text-neon-cyan transition-colors">Segurança</a>
+                    </div>
+                    <a href="{{ url_for('admin.admin') }}" class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1.5">Admin</a>
+                    <button type="button" id="btn-menu-mobile" class="sm:hidden p-2 -mr-2 text-gray-300 hover:text-neon-cyan touch-manipulation" aria-label="Abrir menu">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
                 </nav>
             </div>
         </div>
     </header>
+
+    <!-- Menu mobile: fora do header para posicionar corretamente na tela inteira -->
+    <div id="menu-mobile-overlay" class="menu-overlay fixed inset-0 bg-black/80 z-[100] hidden" aria-hidden="true"></div>
+    <div id="menu-mobile" class="menu-drawer fixed top-0 right-0 h-full w-[280px] max-w-[85vw] bg-[#0a0a0a] border-l-2 border-neon-cyan z-[101] translate-x-full transition-transform duration-300 ease-out shadow-2xl">
+        <button type="button" id="btn-close-menu" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-lg touch-manipulation" aria-label="Fechar menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="flex flex-col pt-20 pb-6 px-4 gap-2">
+            <a href="{{ url_for('public.index') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan text-base font-medium">Início</a>
+            <a href="{{ url_for('public.links') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan text-base font-medium">Links</a>
+            <a href="{{ url_for('public.pagamento') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan text-base font-medium">Pagamento</a>
+            <a href="{{ url_for('public.seguranca') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan text-base font-medium">Segurança</a>
+        </div>
+    </div>
 
     {% block content %}{% endblock %}
 

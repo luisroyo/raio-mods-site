@@ -20,6 +20,20 @@
             <h1 class="text-3xl md:text-5xl font-bold neon-cyan mb-4">💳 PAGAMENTO</h1>
             
             {% if product %}
+            {% if product_stock is defined and product_stock <= 0 %}
+            <div class="rounded-xl border-2 border-amber-500/70 bg-amber-500/10 p-6 md:p-8 max-w-xl mx-auto text-center">
+                <p class="text-2xl font-bold neon-green mb-2">{{ product.name }}</p>
+                <p class="text-amber-400 font-semibold mb-2">Sem estoque no momento.</p>
+                <p class="text-gray-300 mb-4">Entre em contato com o administrador pelo WhatsApp para mais informações.</p>
+                {% if whatsapp_contact %}
+                <a href="https://wa.me/{{ whatsapp_contact }}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors">
+                    📲 Contatar no WhatsApp
+                </a>
+                {% else %}
+                <p class="text-gray-500 text-sm">WhatsApp não configurado. Contate o suporte.</p>
+                {% endif %}
+            </div>
+            {% else %}
             <div class="selected-product-box">
                 <p class="text-gray-300">Você escolheu:</p>
                 <p class="text-2xl font-bold neon-green">{{ product.name }}</p>
@@ -36,8 +50,10 @@
             </div>
             {% endif %}
             {% endif %}
+            {% endif %}
         </div>
 
+        {% if not product or (product_stock is defined and product_stock > 0) %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <section class="pix-manual-section" data-aos="fade-right">
                 <h3 class="text-xl font-bold neon-green mb-4 text-center">Pix Manual</h3>
@@ -69,10 +85,11 @@
 
         <div class="text-center mt-12" data-aos="fade-up">
             <p class="text-gray-300 mb-4">Após o pagamento, envie o comprovante:</p>
-            <a href="https://wa.me/{{ config.whatsapp_number }}" target="_blank" class="btn-whatsapp">
+            <a href="https://wa.me/{{ whatsapp_contact or (config.whatsapp_number if config else '') or '' }}" target="_blank" class="btn-whatsapp">
                 📲 Enviar Comprovante no WhatsApp
             </a>
         </div>
+        {% endif %}
     </main>
 {% endblock %}
 

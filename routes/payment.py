@@ -33,7 +33,7 @@ def create_payment():
     
     if not key_check:
         conn.close()
-        return jsonify({'error': 'Produto esgotado! Entre em contato com o suporte.'}), 409
+        return jsonify({'error': 'Produto esgotado! Entre em contato com o administrador pelo WhatsApp.'}), 409
 
     # 2. Busca dados do produto
     product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()

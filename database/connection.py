@@ -122,6 +122,14 @@ def init_db():
             cursor.execute('ALTER TABLE config ADD COLUMN mercado_pago_token TEXT DEFAULT ""')
         except: pass
 
+    # Migração config: WhatsApp Suporte
+    try:
+        cursor.execute('SELECT contact_whatsapp FROM config LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            cursor.execute('ALTER TABLE config ADD COLUMN contact_whatsapp TEXT DEFAULT ""')
+        except: pass
+
     # Migração links: Imagem
     try:
         cursor.execute('SELECT image FROM links LIMIT 1')

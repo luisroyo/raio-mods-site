@@ -279,6 +279,7 @@
                     <input type="password" name="mercado_pago_token" value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}" 
                            class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
                            placeholder="Cole seu Access Token (APP_USR-...)">
+                    <p class="text-xs text-gray-500 mt-1">Deixe em branco para não alterar o token já salvo.</p>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400">PIX Copia e Cola (opcional):</label>
@@ -288,6 +289,7 @@
                     <label class="block text-sm text-gray-400">WhatsApp Suporte:</label>
                     <input type="text" name="contact_whatsapp" value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>
+                <div id="config_message" class="mt-2 hidden"></div>
                 <div class="flex gap-2 mt-6">
                     <button type="button" onclick="closeModal('configModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
                     <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar</button>

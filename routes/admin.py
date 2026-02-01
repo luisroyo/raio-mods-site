@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug.utils import secure_filename
 from database.models import get_db_connection
 from database.connection import init_db # Necessário para o fallback
+from utils.image_utils import process_upload_image, get_base_filename
 import os
 import sqlite3
 import time
@@ -82,17 +83,23 @@ def add_product():
     
     image = request.form.get('image_url', '')
     
-    # Upload Logic
+    # Upload Logic (redimensiona para 800x800 e converte para .webp)
     if 'image' in request.files:
         file = request.files['image']
         if file and allowed_file(file.filename):
-            fname = secure_filename(file.filename)
-            fname = f"{int(time.time())}_{fname}"
-            # Caminho absoluto para salvar (dentro do app: static/uploads)
-            save_path = os.path.join(current_app.root_path, 'static', 'uploads', fname)
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            file.save(save_path)
-            image = f"/static/uploads/{fname}"
+            base_name = get_base_filename(secure_filename(file.filename))
+            uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+            img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
+            if ok:
+                image = img_path
+            else:
+                # Fallback se Pillow não disponível ou imagem inválida
+                fname = f"{int(time.time())}_{secure_filename(file.filename)}"
+                save_path = os.path.join(uploads_dir, fname)
+                os.makedirs(uploads_dir, exist_ok=True)
+                file.seek(0)
+                file.save(save_path)
+                image = f"/static/uploads/{fname}"
     
     if not all([name, desc, price, image, cat]): return jsonify({'error': 'Faltam dados'}), 400
     
@@ -144,11 +151,17 @@ def edit_product(pid):
     if 'image' in request.files:
         file = request.files['image']
         if file and allowed_file(file.filename):
-            fname = secure_filename(file.filename)
-            fname = f"{int(time.time())}_{fname}"
-            save_path = os.path.join(current_app.root_path, 'static', 'uploads', fname)
-            file.save(save_path)
-            img = f"/static/uploads/{fname}"
+            base_name = get_base_filename(secure_filename(file.filename))
+            uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+            img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
+            if ok:
+                img = img_path
+            else:
+                fname = f"{int(time.time())}_{secure_filename(file.filename)}"
+                save_path = os.path.join(uploads_dir, fname)
+                file.seek(0)
+                file.save(save_path)
+                img = f"/static/uploads/{fname}"
 
     conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=? WHERE id=?',
                  (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, pid))
@@ -187,12 +200,18 @@ def add_link():
     if 'image' in request.files:
         file = request.files['image']
         if file and file.filename and allowed_file(file.filename):
-            fname = secure_filename(file.filename)
-            fname = f"{int(time.time())}_{fname}"
-            save_path = os.path.join(current_app.root_path, 'static', 'uploads', fname)
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            file.save(save_path)
-            image = f"/static/uploads/{fname}"
+            base_name = get_base_filename(secure_filename(file.filename))
+            uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+            img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
+            if ok:
+                image = img_path
+            else:
+                fname = f"{int(time.time())}_{secure_filename(file.filename)}"
+                save_path = os.path.join(uploads_dir, fname)
+                os.makedirs(uploads_dir, exist_ok=True)
+                file.seek(0)
+                file.save(save_path)
+                image = f"/static/uploads/{fname}"
     
     conn = get_db_connection()
     conn.execute('INSERT INTO links (title, description, image, download_link, video_link, game) VALUES (?,?,?,?,?,?)',
@@ -228,11 +247,17 @@ def edit_link(lid):
     if 'image' in request.files:
         file = request.files['image']
         if file and file.filename and allowed_file(file.filename):
-            fname = secure_filename(file.filename)
-            fname = f"{int(time.time())}_{fname}"
-            save_path = os.path.join(current_app.root_path, 'static', 'uploads', fname)
-            file.save(save_path)
-            image = f"/static/uploads/{fname}"
+            base_name = get_base_filename(secure_filename(file.filename))
+            uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+            img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
+            if ok:
+                image = img_path
+            else:
+                fname = f"{int(time.time())}_{secure_filename(file.filename)}"
+                save_path = os.path.join(uploads_dir, fname)
+                file.seek(0)
+                file.save(save_path)
+                image = f"/static/uploads/{fname}"
     elif image_url:
         image = image_url
     

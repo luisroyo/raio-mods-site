@@ -4,9 +4,18 @@ from database.models import get_db_connection
 
 public_bp = Blueprint('public', __name__)
 
+
+def _safe_page_param():
+    """Retorna o parâmetro page da URL como int, ou 1 se inválido."""
+    try:
+        return max(1, int(request.args.get('page', 1)))
+    except (ValueError, TypeError):
+        return 1
+
+
 @public_bp.route('/')
 def index():
-    page = max(1, int(request.args.get('page', 1)))
+    page = _safe_page_param()
     per_page = 20
     offset = (page - 1) * per_page
 
@@ -54,7 +63,7 @@ def busca():
 
 @public_bp.route('/catalogo/<int:parent_id>')
 def catalogo(parent_id):
-    page = max(1, int(request.args.get('page', 1)))
+    page = _safe_page_param()
     per_page = 20
     offset = (page - 1) * per_page
 
@@ -75,7 +84,7 @@ def catalogo(parent_id):
 
 @public_bp.route('/links')
 def links():
-    page = max(1, int(request.args.get('page', 1)))
+    page = _safe_page_param()
     per_page = 20
     offset = (page - 1) * per_page
 

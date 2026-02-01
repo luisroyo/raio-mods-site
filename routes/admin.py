@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, current_app
 from werkzeug.utils import secure_filename
 from database.models import get_db_connection
-from database.connection import init_db # Necessário para o fallback
+from database.connection import init_db
 from utils.image_utils import process_upload_image, get_base_filename
 import os
 import sqlite3
@@ -9,7 +9,6 @@ import time
 
 admin_bp = Blueprint('admin', __name__)
 
-# Helper function local
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
@@ -18,33 +17,44 @@ def admin():
     if request.method == 'GET' and session.get('admin_logged_in'):
         conn = get_db_connection()
         try:
+            # Busca produtos
             all_products = conn.execute('SELECT * FROM products ORDER BY sort_order ASC, id ASC').fetchall()
             all_links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
             config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
+            
+            # --- NOVO: CONTAGEM DE ESTOQUE ---
+            # Conta quantas chaves livres (is_used=0) cada produto tem
+            stock_query = conn.execute('SELECT product_id, COUNT(*) as total FROM product_keys WHERE is_used = 0 GROUP BY product_id').fetchall()
+            stock_map = {row['product_id']: row['total'] for row in stock_query}
+            
         except sqlite3.OperationalError:
             conn.close(); init_db(); return redirect(url_for('admin.admin'))
 
-        # Lógica de processamento de catálogos
+        # Lógica de Catálogos vs Produtos Simples
         legacy_rows = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
         legacy_catalog_ids = set(r[0] for r in legacy_rows)
         
         catalogs, simple_products, subproducts_by_parent, parent_products = [], [], {}, []
         
         for p in all_products:
+            # Adiciona a contagem de estoque ao objeto do produto
+            p_dict = dict(p)
+            p_dict['stock'] = stock_map.get(p['id'], 0) # Se não tiver chave, é 0
+            
             keys = p.keys()
             pid = p['parent_id'] if 'parent_id' in keys else None
             is_cat = p['is_catalog'] if 'is_catalog' in keys else 0
 
-            if pid is None and (is_cat == 1 or p['id'] in legacy_catalog_ids): parent_products.append(p)
+            if pid is None and (is_cat == 1 or p['id'] in legacy_catalog_ids): parent_products.append(p_dict)
 
             if pid is None:
                 if is_cat == 1 or p['id'] in legacy_catalog_ids:
-                    catalogs.append(p)
+                    catalogs.append(p_dict)
                     if p['id'] not in subproducts_by_parent: subproducts_by_parent[p['id']] = []
-                else: simple_products.append(p) 
+                else: simple_products.append(p_dict) 
             else:
                 if pid not in subproducts_by_parent: subproducts_by_parent[pid] = []
-                subproducts_by_parent[pid].append(p)
+                subproducts_by_parent[pid].append(p_dict)
         
         stats = {
             'total_products': len(all_products),
@@ -58,7 +68,6 @@ def admin():
                              links=all_links, config=config, stats=stats)
     
     if request.method == 'POST':
-        # Pega a senha do Config global
         if request.form.get('password') == current_app.config['ADMIN_PASSWORD']:
             session['admin_logged_in'] = True
             return redirect(url_for('admin.admin'))
@@ -69,6 +78,8 @@ def admin():
 def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('admin.admin'))
+
+# --- ROTAS DE PRODUTOS ---
 
 @admin_bp.route('/admin/add', methods=['POST'])
 def add_product():
@@ -88,23 +99,16 @@ def add_product():
     if parent_id and str(parent_id).strip() == '': parent_id = None
     
     image = request.form.get('image_url', '')
-    
-    # Upload Logic (redimensiona para 800x800 e converte para .webp)
     if 'image' in request.files:
         file = request.files['image']
         if file and allowed_file(file.filename):
             base_name = get_base_filename(secure_filename(file.filename))
             uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
             img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
-            if ok:
-                image = img_path
+            if ok: image = img_path
             else:
-                # Fallback se Pillow não disponível ou imagem inválida
                 fname = f"{int(time.time())}_{secure_filename(file.filename)}"
-                save_path = os.path.join(uploads_dir, fname)
-                os.makedirs(uploads_dir, exist_ok=True)
-                file.seek(0)
-                file.save(save_path)
+                file.seek(0); file.save(os.path.join(uploads_dir, fname))
                 image = f"/static/uploads/{fname}"
     
     if not all([name, desc, price, image, cat]): return jsonify({'error': 'Faltam dados'}), 400
@@ -137,34 +141,24 @@ def edit_product(pid):
     cat = request.form.get('category') or existing.get('category', '')
     tagline = request.form.get('tagline', existing.get('tagline', '')).strip()
     payment_url = request.form.get('payment_url', existing.get('payment_url', '')).strip()
-    
-    is_catalog = existing.get('is_catalog', 0)
-    if 'is_catalog' in request.form:
-        try: is_catalog = int(request.form.get('is_catalog'))
-        except: pass
-
+    is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
     try: sort = int(request.form.get('sort_order') or existing.get('sort_order', 0))
     except: sort = 0
-        
     pid_val = request.form.get('parent_id')
-    if pid_val == str(pid) or not pid_val or pid_val == '': pid_val = None
+    if pid_val == str(pid) or not pid_val: pid_val = None
     
     img = request.form.get('image_url') or ''
     if not img: img = existing.get('image', '')
-    
     if 'image' in request.files:
         file = request.files['image']
         if file and allowed_file(file.filename):
             base_name = get_base_filename(secure_filename(file.filename))
             uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
             img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
-            if ok:
-                img = img_path
+            if ok: img = img_path
             else:
                 fname = f"{int(time.time())}_{secure_filename(file.filename)}"
-                save_path = os.path.join(uploads_dir, fname)
-                file.seek(0)
-                file.save(save_path)
+                file.seek(0); file.save(os.path.join(uploads_dir, fname))
                 img = f"/static/uploads/{fname}"
 
     conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=? WHERE id=?',
@@ -172,19 +166,17 @@ def edit_product(pid):
     conn.commit(); conn.close()
     return jsonify({'success': True, 'message': 'Atualizado!'})
 
-# Esta é a rota correta para salvar as configurações (substitui a antiga)
+# --- ROTA DE CONFIGURAÇÃO ---
+
 @admin_bp.route('/admin/config', methods=['POST'])
 def update_config():
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('admin.login'))
-        
+    if not session.get('admin_logged_in'): return redirect(url_for('admin.login'))
     pix_key = request.form.get('pix_key')
     pix_copia_cola = request.form.get('pix_copia_cola')
     contact_whatsapp = request.form.get('contact_whatsapp')
-    mercado_pago_token = request.form.get('mercado_pago_token') # Campo novo
+    mercado_pago_token = request.form.get('mercado_pago_token')
     
     conn = get_db_connection()
-    # Verifica se já existe config, senão cria
     config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
     if not config:
         conn.execute('INSERT INTO config (id, pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token) VALUES (1, ?, ?, ?, ?)',
@@ -192,16 +184,46 @@ def update_config():
     else:
         conn.execute('UPDATE config SET pix_key = ?, pix_copia_cola = ?, contact_whatsapp = ?, mercado_pago_token = ? WHERE id = 1',
                      (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token))
+    conn.commit(); conn.close()
+    return redirect(url_for('admin.admin'))
+
+# --- ROTAS DE CHAVES (ESTOQUE) --- NOVO! ---
+
+@admin_bp.route('/admin/keys/add', methods=['POST'])
+def add_keys():
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
     
+    product_id = request.form.get('product_id')
+    keys_text = request.form.get('keys_list') # Texto com várias chaves
+    
+    if not product_id or not keys_text:
+        return jsonify({'error': 'Dados inválidos'}), 400
+        
+    # Separa por quebra de linha
+    key_list = [k.strip() for k in keys_text.splitlines() if k.strip()]
+    
+    if not key_list:
+        return jsonify({'error': 'Nenhuma chave válida encontrada'}), 400
+        
+    conn = get_db_connection()
+    count = 0
+    for key in key_list:
+        # Verifica duplicidade simples antes de inserir
+        exists = conn.execute('SELECT id FROM product_keys WHERE key_value = ?', (key,)).fetchone()
+        if not exists:
+            conn.execute('INSERT INTO product_keys (product_id, key_value, is_used) VALUES (?, ?, 0)', (product_id, key))
+            count += 1
+            
     conn.commit()
     conn.close()
     
-    return redirect(url_for('admin.admin'))
+    return jsonify({'success': True, 'message': f'{count} chaves adicionadas com sucesso!'})
+
+# --- ROTAS DE LINKS ---
 
 @admin_bp.route('/admin/links/add', methods=['POST'])
 def add_link():
     if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
-    
     title = (request.form.get('title') or '').strip()
     description = (request.form.get('description') or '').strip()
     download_link = (request.form.get('download_link') or '').strip()
@@ -209,29 +231,25 @@ def add_link():
     game = (request.form.get('game') or '').strip()
     image_url = (request.form.get('image_url') or '').strip()
     
-    if not title: return jsonify({'error': 'Título é obrigatório'}), 400
-    if not download_link and not video_link: return jsonify({'error': 'Pelo menos um link (download ou vídeo)'}), 400
+    if not title: return jsonify({'error': 'Título obrigatório'}), 400
+    if not download_link and not video_link: return jsonify({'error': 'Pelo menos um link necessário'}), 400
     
     image = image_url
     if 'image' in request.files:
         file = request.files['image']
-        if file and file.filename and allowed_file(file.filename):
+        if file and allowed_file(file.filename):
             base_name = get_base_filename(secure_filename(file.filename))
             uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
             img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
-            if ok:
-                image = img_path
+            if ok: image = img_path
             else:
                 fname = f"{int(time.time())}_{secure_filename(file.filename)}"
-                save_path = os.path.join(uploads_dir, fname)
-                os.makedirs(uploads_dir, exist_ok=True)
-                file.seek(0)
-                file.save(save_path)
+                file.seek(0); file.save(os.path.join(uploads_dir, fname))
                 image = f"/static/uploads/{fname}"
     
     conn = get_db_connection()
     conn.execute('INSERT INTO links (title, description, image, download_link, video_link, game) VALUES (?,?,?,?,?,?)',
-                 (title, description or None, image or None, download_link or None, video_link or None, game or None))
+                 (title, description, image, download_link, video_link, game))
     conn.commit(); conn.close()
     return jsonify({'success': True})
 
@@ -244,12 +262,11 @@ def delete_link(lid):
 @admin_bp.route('/admin/links/edit/<int:lid>', methods=['POST'])
 def edit_link(lid):
     if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
-    
     conn = get_db_connection()
     existing = conn.execute('SELECT * FROM links WHERE id = ?', (lid,)).fetchone()
     if not existing: conn.close(); return jsonify({'error': '404'}), 404
-    existing = dict(existing)
     
+    existing = dict(existing)
     title = (request.form.get('title') or existing.get('title', '')).strip()
     description = (request.form.get('description') or '').strip()
     download_link = (request.form.get('download_link') or '').strip()
@@ -262,22 +279,18 @@ def edit_link(lid):
     image = existing.get('image')
     if 'image' in request.files:
         file = request.files['image']
-        if file and file.filename and allowed_file(file.filename):
+        if file and allowed_file(file.filename):
             base_name = get_base_filename(secure_filename(file.filename))
             uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
             img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
-            if ok:
-                image = img_path
+            if ok: image = img_path
             else:
                 fname = f"{int(time.time())}_{secure_filename(file.filename)}"
-                save_path = os.path.join(uploads_dir, fname)
-                file.seek(0)
-                file.save(save_path)
+                file.seek(0); file.save(os.path.join(uploads_dir, fname))
                 image = f"/static/uploads/{fname}"
-    elif image_url:
-        image = image_url
+    elif image_url: image = image_url
     
     conn.execute('UPDATE links SET title=?, description=?, image=?, download_link=?, video_link=?, game=? WHERE id=?',
-                 (title, description or None, image, download_link or None, video_link or None, game or None, lid))
+                 (title, description, image, download_link, video_link, game, lid))
     conn.commit(); conn.close()
     return jsonify({'success': True})

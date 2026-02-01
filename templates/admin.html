@@ -97,8 +97,18 @@
                                         <div>
                                             <span class="font-bold text-neon-cyan block">{{ sub.name }}</span>
                                             <span class="text-green-400 text-sm">{{ sub.price }}</span>
+                                            
+                                            <div class="mt-1 text-xs">
+                                                {% if sub.stock > 0 %}
+                                                    <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
+                                                {% else %}
+                                                    <span class="text-red-500">🔴 Sem estoque</span>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                         <div class="flex gap-1">
+                                            <button onclick="openKeyModal({{ sub.id }}, '{{ sub.name }}')" class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500" title="Gerenciar Chaves">🔑</button>
+                                            
                                             <button onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson }}, {{ sub.description|tojson }}, {{ sub.price|tojson }}, {{ sub.category|tojson }}, {{ sub.image|tojson }}, {{ (sub.tagline|default(""))|tojson }}, {{ sub.sort_order }}, {{ sub.parent_id }}, 0, {{ (sub.payment_url|default(""))|tojson }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
                                             <button onclick='deleteProduct({{ sub.id }})' class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
                                         </div>
@@ -128,13 +138,41 @@
                         <input type="number" name="sort_order" value="0" placeholder="Ordem" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                         <input type="text" name="price" required placeholder="Preço" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                     </div>
-                    <input type="text" name="payment_url" placeholder="Link Mercado Pago" class="w-full px-4 py-2 bg-black border border-green-500 rounded text-white">
+                    <input type="text" name="payment_url" placeholder="Link Mercado Pago (Opcional se usar automático)" class="w-full px-4 py-2 bg-black border border-green-500 rounded text-white">
                     <input type="file" name="image" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                     <button type="submit" class="w-full py-2 bg-neon-cyan text-black font-bold rounded hover:bg-opacity-80">Adicionar</button>
                 </form>
                 <div id="message" class="mt-4 hidden"></div>
             </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for prod in simple_products %}
+                <div class="border border-neon-cyan rounded p-4 bg-gray-900/50">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-white">{{ prod.name }}</h4>
+                            <p class="text-neon-green font-bold">{{ prod.price }}</p>
+                            <div class="mt-2 text-sm">
+                                {% if prod.stock > 0 %}
+                                    <span class="text-green-400">🟢 {{ prod.stock }} chaves</span>
+                                {% else %}
+                                    <span class="text-red-400">🔴 Sem estoque</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if prod.image %}
+                        <img src="{{ prod.image }}" class="w-12 h-12 object-contain rounded">
+                        {% endif %}
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="openKeyModal({{ prod.id }}, '{{ prod.name }}')" class="flex-1 bg-yellow-600 text-white text-xs py-2 rounded hover:bg-yellow-500">🔑 Chaves</button>
+                        <button onclick='openEditModal({{ prod.id }}, {{ prod.name|tojson }}, {{ prod.description|tojson }}, {{ prod.price|tojson }}, {{ prod.category|tojson }}, {{ prod.image|tojson }}, {{ (prod.tagline|default(""))|tojson }}, {{ prod.sort_order }}, null, 0, {{ (prod.payment_url|default(""))|tojson }})' class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-500">Editar</button>
+                        <button onclick='deleteProduct({{ prod.id }})' class="flex-1 bg-red-600 text-white text-xs py-2 rounded hover:bg-red-500">Excluir</button>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
+        </div>
 
         <div id="section-links" class="section-content hidden">
             <div class="mb-8 border-2 border-white rounded-lg p-8">
@@ -178,8 +216,31 @@
                 </div>
             </div>
             {% endif %}
-            </div>
+        </div>
     </main>
+
+    <div id="keyModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden">
+        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black relative">
+            <h3 class="text-xl font-bold text-yellow-500 mb-2">Gerenciar Chaves</h3>
+            <p id="keyProductName" class="text-white text-sm mb-4">Produto...</p>
+            
+            <form id="addKeyForm" class="space-y-4">
+                <input type="hidden" id="keyProductId" name="product_id">
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Adicionar chaves (uma por linha):</label>
+                    <textarea name="keys_list" rows="10" placeholder="KHJ-123-ASD&#10;QWE-456-RTY&#10;ZXC-789-VBN" 
+                              class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white font-mono text-sm"></textarea>
+                </div>
+                
+                <div class="flex gap-2 mt-4">
+                    <button type="button" onclick="closeModal('keyModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button>
+                    <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar Chaves</button>
+                </div>
+            </form>
+            <div id="key_message" class="mt-2 hidden text-center font-bold"></div>
+        </div>
+    </div>
 
     <div id="addSubproductModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
         <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-green-500 rounded-lg p-6 bg-black relative">
@@ -209,36 +270,29 @@
         <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-yellow-500 mb-4">⚙️ Configurações</h3>
             <form id="configForm" class="space-y-4" data-url="{{ url_for('admin.update_config') }}">
-                
                 <div>
                     <label class="block text-sm text-gray-400">Chave Pix (Manual):</label>
-                    <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white" placeholder="Sua chave pix (email, cpf...)">
+                    <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>
-
                 <div class="border-t border-b border-gray-800 py-4 my-2">
                     <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado Pago):</label>
                     <input type="password" name="mercado_pago_token" value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}" 
                            class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
                            placeholder="Cole seu Access Token (APP_USR-...)">
-                    <p class="text-[10px] text-gray-500 mt-1">Necessário para gerar QR Code automático e liberar chaves.</p>
                 </div>
-
                 <div>
-                    <label class="block text-sm text-gray-400">PIX Copia e Cola <span class="text-gray-500">(opcional)</span>:</label>
-                    <textarea name="pix_copia_cola" rows="3" placeholder="Cole aqui o código PIX Copia e Cola do seu banco..." class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
+                    <label class="block text-sm text-gray-400">PIX Copia e Cola (opcional):</label>
+                    <textarea name="pix_copia_cola" rows="3" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
                 </div>
-
                 <div>
                     <label class="block text-sm text-gray-400">WhatsApp Suporte:</label>
-                    <input type="text" name="whatsapp_number" value="{{ config.whatsapp_number if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                    <input type="text" name="contact_whatsapp" value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>
-
                 <div class="flex gap-2 mt-6">
                     <button type="button" onclick="closeModal('configModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
                     <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar</button>
                 </div>
             </form>
-            <div id="config_message" class="mt-2 hidden"></div>
         </div>
     </div>
 
@@ -255,8 +309,8 @@
                 <input type="text" id="edit_tagline" name="tagline" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Tagline (ex: 30 dias de acesso)">
                 <input type="text" id="edit_payment_url" name="payment_url" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white" placeholder="Link Mercado Pago">
                 <div>
-                    <label class="text-xs text-gray-400 block mb-1">Ordem/Posição (número menor = aparece primeiro)</label>
-                    <input type="number" id="edit_sort_order" name="sort_order" min="0" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="0">
+                    <label class="text-xs text-gray-400 block mb-1">Ordem:</label>
+                    <input type="number" id="edit_sort_order" name="sort_order" min="0" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
                 </div>
                 <div id="edit_parent_div">
                     <label class="text-xs text-gray-400">Mover para:</label>
@@ -277,7 +331,7 @@
             <div id="edit_message" class="mt-2 hidden"></div>
         </div>
     </div>
-
+    
     <div id="editLinkModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
         <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-white rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-white mb-4">Editar Link</h3>

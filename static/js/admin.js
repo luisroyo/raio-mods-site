@@ -173,3 +173,55 @@ async function deleteLink(id) {
         location.reload(); 
     } 
 }
+
+// --- LÓGICA DE ESTOQUE (CHAVES) ---
+
+function openKeyModal(productId, productName) {
+    document.getElementById('keyProductId').value = productId;
+    document.getElementById('keyProductName').innerText = productName;
+    document.getElementById('key_message').classList.add('hidden');
+    document.getElementById('addKeyForm').reset();
+    
+    document.getElementById('keyModal').classList.remove('modal-hidden');
+    document.getElementById('keyModal').classList.remove('hidden'); // Fallback
+}
+
+// Enviar chaves via AJAX
+document.getElementById('addKeyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const btn = this.querySelector('button[type="submit"]');
+    const msg = document.getElementById('key_message');
+    
+    btn.disabled = true;
+    btn.innerText = "Salvando...";
+    
+    try {
+        const response = await fetch('/admin/keys/add', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        msg.classList.remove('hidden');
+        if (data.success) {
+            msg.className = "mt-2 text-center font-bold text-green-500";
+            msg.innerText = data.message;
+            setTimeout(() => {
+                location.reload(); // Recarrega para atualizar contador
+            }, 1000);
+        } else {
+            msg.className = "mt-2 text-center font-bold text-red-500";
+            msg.innerText = data.error || "Erro desconhecido";
+            btn.disabled = false;
+            btn.innerText = "Salvar Chaves";
+        }
+    } catch (error) {
+        msg.classList.remove('hidden');
+        msg.innerText = "Erro ao conectar.";
+        btn.disabled = false;
+        btn.innerText = "Salvar Chaves";
+    }
+});

@@ -43,6 +43,8 @@ function openEditModal(id, name, desc, price, cat, img, tagline, sort, pid, is_c
     document.getElementById('edit_description').value = desc;
     document.getElementById('edit_price').value = price;
     document.getElementById('edit_category').value = cat;
+    document.getElementById('edit_tagline').value = tagline || '';
+    document.getElementById('edit_sort_order').value = sort !== undefined && sort !== null ? sort : 0;
     document.getElementById('edit_is_catalog').value = is_cat;
     document.getElementById('edit_payment_url').value = pay_url || "";
     

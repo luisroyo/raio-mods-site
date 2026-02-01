@@ -226,8 +226,12 @@
                 <textarea id="edit_description" name="description" rows="2" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Descrição"></textarea>
                 <input type="text" id="edit_price" name="price" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Preço">
                 <input type="text" id="edit_category" name="category" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Categoria">
+                <input type="text" id="edit_tagline" name="tagline" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Tagline (ex: 30 dias de acesso)">
                 <input type="text" id="edit_payment_url" name="payment_url" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white" placeholder="Link Mercado Pago">
-                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Ordem/Posição (número menor = aparece primeiro)</label>
+                    <input type="number" id="edit_sort_order" name="sort_order" min="0" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="0">
+                </div>
                 <div id="edit_parent_div">
                     <label class="text-xs text-gray-400">Mover para:</label>
                     <select id="edit_parent_id" name="parent_id" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">

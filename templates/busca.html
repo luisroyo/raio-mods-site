@@ -28,16 +28,18 @@
                 <h3 class="text-xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
                 <p class="text-gray-300 text-sm mb-3 line-clamp-2">{{ product.description }}</p>
                 <p class="text-2xl font-bold neon-green mb-4">{{ product.price }}</p>
+                
+                {# Se for item de catálogo, manda pra pasta. Se for produto solto, abre checkout #}
                 {% if product.parent_id and product.parent_id in parents %}
                 <a href="{{ url_for('public.catalogo', parent_id=product.parent_id) }}" 
-                   class="block w-full py-3 bg-neon-purple text-white font-bold rounded-lg hover:bg-opacity-80 text-center">
+                   class="block w-full py-3 bg-neon-purple text-white font-bold rounded-lg hover:bg-opacity-80 text-center shadow-[0_0_15px_rgba(112,0,255,0.3)]">
                     📂 Ver em {{ parents[product.parent_id] }}
                 </a>
                 {% else %}
-                <a href="{{ url_for('public.pagamento', produto=product.name) }}" 
-                   class="block w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:bg-opacity-80 text-center">
-                    💬 Comprar Agora
-                </a>
+                <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ product.price }}')" 
+                        class="block w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:opacity-90 transition-all text-center shadow-[0_0_10px_rgba(0,242,255,0.3)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] flex items-center justify-center gap-2">
+                    <span>💬 Comprar Agora</span>
+                </button>
                 {% endif %}
             </div>
             {% endfor %}

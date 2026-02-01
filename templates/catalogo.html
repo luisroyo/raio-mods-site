@@ -46,10 +46,10 @@
                     {% endif %}
                 </div>
                 
-                <a href="{{ url_for('public.pagamento', produto=product.name) }}" 
-                   class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all">
-                    💬 Comprar Agora
-                </a>
+                <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ product.price }}')" 
+                        class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 cursor-pointer">
+                    <span>🛒 Comprar Agora</span>
+                </button>
             </div>
             {% endfor %}
         </div>

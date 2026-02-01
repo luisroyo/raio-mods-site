@@ -62,6 +62,18 @@
         </div>
         {% endif %}
 
+        {% if total_pages > 1 %}
+        <nav class="flex justify-center gap-2 mt-8 mb-8" data-aos="fade-up">
+            {% if page > 1 %}
+            <a href="{{ url_for('public.links', page=page-1) }}" class="px-4 py-2 border border-neon-cyan rounded-lg text-neon-cyan hover:bg-neon-cyan hover:text-black transition">← Anterior</a>
+            {% endif %}
+            <span class="px-4 py-2 text-gray-400">Página {{ page }} de {{ total_pages }}</span>
+            {% if page < total_pages %}
+            <a href="{{ url_for('public.links', page=page+1) }}" class="px-4 py-2 border border-neon-cyan rounded-lg text-neon-cyan hover:bg-neon-cyan hover:text-black transition">Próxima →</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
         <div class="text-center mt-12">
             <a href="{{ url_for('public.index') }}" class="btn-back-outline">
                 ← Voltar ao Início

@@ -6,37 +6,90 @@ public_bp = Blueprint('public', __name__)
 
 @public_bp.route('/')
 def index():
+    page = max(1, int(request.args.get('page', 1)))
+    per_page = 20
+    offset = (page - 1) * per_page
+
     conn = get_db_connection()
-    products = conn.execute('SELECT * FROM products WHERE parent_id IS NULL ORDER BY sort_order ASC, id ASC').fetchall()
-    
+    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id IS NULL').fetchone()[0]
+    products = conn.execute(
+        'SELECT * FROM products WHERE parent_id IS NULL ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
+        (per_page, offset)
+    ).fetchall()
+
     catalog_ids = set()
     for p in products:
         is_cat = p['is_catalog'] if 'is_catalog' in p.keys() else 0
         if is_cat == 1: catalog_ids.add(p['id'])
-            
+
     legacy = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
     for r in legacy: catalog_ids.add(r[0])
-    
+
+    total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
     conn.close()
-    return render_template('index.html', products=products, catalog_ids=catalog_ids)
+    return render_template('index.html', products=products, catalog_ids=catalog_ids,
+                          page=page, total_pages=total_pages, total=total)
+
+
+@public_bp.route('/busca')
+def busca():
+    q = (request.args.get('q') or '').strip()
+    if not q:
+        return redirect(url_for('public.index'))
+    term = f'%{q}%'
+    conn = get_db_connection()
+    results = conn.execute(
+        'SELECT * FROM products WHERE (name LIKE ? OR description LIKE ? OR category LIKE ?) ORDER BY sort_order ASC, name ASC',
+        (term, term, term)
+    ).fetchall()
+    # Buscar nomes das capas para produtos que têm parent_id
+    parent_ids = set(p['parent_id'] for p in results if p['parent_id'] is not None)
+    parents = {}
+    if parent_ids:
+        for pid in parent_ids:
+            row = conn.execute('SELECT id, name FROM products WHERE id = ?', (pid,)).fetchone()
+            if row: parents[pid] = row['name']
+    conn.close()
+    return render_template('busca.html', q=q, results=results, parents=parents)
 
 @public_bp.route('/catalogo/<int:parent_id>')
 def catalogo(parent_id):
+    page = max(1, int(request.args.get('page', 1)))
+    per_page = 20
+    offset = (page - 1) * per_page
+
     conn = get_db_connection()
     parent = conn.execute('SELECT * FROM products WHERE id = ?', (parent_id,)).fetchone()
     if not parent:
-        conn.close(); return redirect(url_for('public.index'))
-    children = conn.execute('SELECT * FROM products WHERE parent_id = ? ORDER BY sort_order ASC, id ASC', (parent_id,)).fetchall()
+        conn.close()
+        return redirect(url_for('public.index'))
+    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id = ?', (parent_id,)).fetchone()[0]
+    children = conn.execute(
+        'SELECT * FROM products WHERE parent_id = ? ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
+        (parent_id, per_page, offset)
+    ).fetchall()
+    total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
     conn.close()
-    return render_template('catalogo.html', parent=parent, products=children)
+    return render_template('catalogo.html', parent=parent, products=children,
+                          page=page, total_pages=total_pages, total=total)
 
 @public_bp.route('/links')
 def links():
+    page = max(1, int(request.args.get('page', 1)))
+    per_page = 20
+    offset = (page - 1) * per_page
+
     conn = get_db_connection()
-    links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
+    total = conn.execute('SELECT COUNT(*) FROM links').fetchone()[0]
+    links_data = conn.execute(
+        'SELECT * FROM links ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        (per_page, offset)
+    ).fetchall()
     products = conn.execute('SELECT * FROM products ORDER BY id DESC').fetchall()
+    total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
     conn.close()
-    return render_template('links.html', links=links, products=products)
+    return render_template('links.html', links=links_data, products=products,
+                          page=page, total_pages=total_pages, total=total)
 
 @public_bp.route('/pagamento')
 def pagamento():

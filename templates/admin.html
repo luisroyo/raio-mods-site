@@ -27,6 +27,26 @@
     </header>
 
     <main class="container mx-auto px-4 pb-12">
+        <!-- Dashboard: contadores -->
+        <div class="mb-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="border border-neon-cyan rounded-lg p-4 text-center bg-black/30">
+                <div class="text-2xl md:text-3xl font-bold neon-cyan">{{ stats.total_products }}</div>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">Total de Produtos</p>
+            </div>
+            <div class="border border-neon-purple rounded-lg p-4 text-center bg-black/30">
+                <div class="text-2xl md:text-3xl font-bold neon-purple">{{ stats.total_catalogs }}</div>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">Jogos (Capas)</p>
+            </div>
+            <div class="border border-neon-green rounded-lg p-4 text-center bg-black/30">
+                <div class="text-2xl md:text-3xl font-bold neon-green">{{ stats.total_links }}</div>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">Links Úteis</p>
+            </div>
+            <div class="border border-yellow-500 rounded-lg p-4 text-center bg-black/30">
+                <div class="text-2xl md:text-3xl font-bold text-yellow-500">{{ stats.total_simple }}</div>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">Produtos Soltos</p>
+            </div>
+        </div>
+
         <div class="mb-8 flex flex-wrap gap-4 border-b-2 border-neon-cyan pb-2">
             <button onclick="showSection('catalog')" id="tab-catalog" class="px-6 py-2 font-bold neon-cyan border-b-2 border-neon-cyan">📂 Jogos (Capas)</button>
             <button onclick="showSection('product')" id="tab-product" class="px-6 py-2 font-bold text-gray-400">🛍️ Produtos Soltos</button>

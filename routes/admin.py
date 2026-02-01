@@ -46,10 +46,16 @@ def admin():
                 if pid not in subproducts_by_parent: subproducts_by_parent[pid] = []
                 subproducts_by_parent[pid].append(p)
         
+        stats = {
+            'total_products': len(all_products),
+            'total_catalogs': len(catalogs),
+            'total_links': len(all_links),
+            'total_simple': len(simple_products),
+        }
         conn.close()
         return render_template('admin.html', catalogs=catalogs, simple_products=simple_products, 
                              subproducts_by_parent=subproducts_by_parent, parent_products=parent_products, 
-                             links=all_links, config=config)
+                             links=all_links, config=config, stats=stats)
     
     if request.method == 'POST':
         # Pega a senha do Config global

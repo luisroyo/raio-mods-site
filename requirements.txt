@@ -2,3 +2,4 @@ Flask==3.0.0
 Werkzeug==3.0.1
 python-dotenv
 Pillow>=10.0.0
+mercadopago>=2.2.0

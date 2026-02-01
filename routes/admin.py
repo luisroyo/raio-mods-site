@@ -119,8 +119,6 @@ def add_product():
 def delete_product(pid):
     if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
     conn = get_db_connection()
-    p = conn.execute('SELECT image FROM products WHERE id = ?', (pid,)).fetchone()
-    # A lógica de remover arquivo físico foi simplificada para evitar erros de path, mantendo apenas DB
     conn.execute('UPDATE products SET parent_id = NULL WHERE parent_id = ?', (pid,))
     conn.execute('DELETE FROM products WHERE id = ?', (pid,)); conn.commit(); conn.close()
     return jsonify({'success': True, 'message': 'Removido!'})
@@ -174,19 +172,31 @@ def edit_product(pid):
     conn.commit(); conn.close()
     return jsonify({'success': True, 'message': 'Atualizado!'})
 
-@admin_bp.route('/admin/config/update', methods=['POST'])
+# Esta é a rota correta para salvar as configurações (substitui a antiga)
+@admin_bp.route('/admin/config', methods=['POST'])
 def update_config():
-    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
-    
-    pix = request.form.get('pix_key')
-    pix_copia_cola = (request.form.get('pix_copia_cola') or '').strip()
-    binance = request.form.get('binance_wallet')
-    whatsapp = request.form.get('whatsapp_number')
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.login'))
+        
+    pix_key = request.form.get('pix_key')
+    pix_copia_cola = request.form.get('pix_copia_cola')
+    contact_whatsapp = request.form.get('contact_whatsapp')
+    mercado_pago_token = request.form.get('mercado_pago_token') # Campo novo
     
     conn = get_db_connection()
-    conn.execute('UPDATE config SET pix_key=?, pix_copia_cola=?, binance_wallet=?, whatsapp_number=? WHERE id=1', (pix, pix_copia_cola, binance, whatsapp))
-    conn.commit(); conn.close()
-    return jsonify({'success': True, 'message': 'Configurações salvas!'})
+    # Verifica se já existe config, senão cria
+    config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
+    if not config:
+        conn.execute('INSERT INTO config (id, pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token) VALUES (1, ?, ?, ?, ?)',
+                     (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token))
+    else:
+        conn.execute('UPDATE config SET pix_key = ?, pix_copia_cola = ?, contact_whatsapp = ?, mercado_pago_token = ? WHERE id = 1',
+                     (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token))
+    
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('admin.admin'))
 
 @admin_bp.route('/admin/links/add', methods=['POST'])
 def add_link():

@@ -27,7 +27,6 @@
     </header>
 
     <main class="container mx-auto px-4 pb-12">
-        <!-- Dashboard: contadores -->
         <div class="mb-8 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="border border-neon-cyan rounded-lg p-4 text-center bg-black/30">
                 <div class="text-2xl md:text-3xl font-bold neon-cyan">{{ stats.total_products }}</div>
@@ -210,23 +209,30 @@
         <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-yellow-500 mb-4">⚙️ Configurações</h3>
             <form id="configForm" class="space-y-4" data-url="{{ url_for('admin.update_config') }}">
+                
                 <div>
-                    <label class="block text-sm text-gray-400">Chave Pix:</label>
-                    <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                    <label class="block text-sm text-gray-400">Chave Pix (Manual):</label>
+                    <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white" placeholder="Sua chave pix (email, cpf...)">
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-400">PIX Copia e Cola <span class="text-gray-500">(opcional — para o QR Code funcionar ao escanear)</span>:</label>
-                    <textarea name="pix_copia_cola" rows="3" placeholder="Cole aqui o código PIX Copia e Cola do seu banco (código longo que começa com 00020126...)" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
-                    <p class="text-xs text-gray-500 mt-1">Se vazio, o QR mostrará só a chave; muitos apps dão erro. Com o Copia e Cola, o cliente escaneia e paga direto.</p>
+
+                <div class="border-t border-b border-gray-800 py-4 my-2">
+                    <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado Pago):</label>
+                    <input type="password" name="mercado_pago_token" value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}" 
+                           class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
+                           placeholder="Cole seu Access Token (APP_USR-...)">
+                    <p class="text-[10px] text-gray-500 mt-1">Necessário para gerar QR Code automático e liberar chaves.</p>
                 </div>
+
                 <div>
-                    <label class="block text-sm text-gray-400">Carteira Binance:</label>
-                    <input type="text" name="binance_wallet" value="{{ config.binance_wallet if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                    <label class="block text-sm text-gray-400">PIX Copia e Cola <span class="text-gray-500">(opcional)</span>:</label>
+                    <textarea name="pix_copia_cola" rows="3" placeholder="Cole aqui o código PIX Copia e Cola do seu banco..." class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
                 </div>
+
                 <div>
-                    <label class="block text-sm text-gray-400">WhatsApp:</label>
+                    <label class="block text-sm text-gray-400">WhatsApp Suporte:</label>
                     <input type="text" name="whatsapp_number" value="{{ config.whatsapp_number if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>
+
                 <div class="flex gap-2 mt-6">
                     <button type="button" onclick="closeModal('configModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
                     <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar</button>

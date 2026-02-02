@@ -48,6 +48,15 @@ function openCheckout(id, name, price) {
     document.getElementById('step-success').classList.add('hidden');
     document.getElementById('customerEmail').value = '';
     
+    // Reseta visualização do QR Code/Aviso
+    document.getElementById('qrImage').style.display = 'block';
+    if(document.getElementById('pixCopyPaste').parentNode) {
+        document.getElementById('pixCopyPaste').parentNode.style.display = 'block';
+    }
+    // Remove mensagens de cartão anteriores se houver
+    const msgCard = document.getElementById('msg-card-warning');
+    if(msgCard) msgCard.remove();
+    
     // Mostra o modal
     document.getElementById('checkoutModal').classList.remove('hidden');
 }
@@ -61,20 +70,25 @@ function closeCheckout() {
     }
 }
 
-// Inicia o pagamento (Envia dados para o Python)
-async function startPayment() {
+// Inicia o pagamento (chama o backend)
+async function startPayment(type) {
     const email = document.getElementById('customerEmail').value;
-    const btn = document.getElementById('btnPay');
+    const btnPix = document.getElementById('btnPayPix');
+    const btnCard = document.getElementById('btnPayCard');
     
     if (!email || !email.includes('@')) {
         alert('Por favor, digite um e-mail válido.');
         return;
     }
 
-    // Efeito de carregamento
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '🔄 Gerando...';
-    btn.disabled = true;
+    // Bloqueia botões e mostra loading
+    btnPix.disabled = true; 
+    btnCard.disabled = true;
+    const originalPix = btnPix.innerHTML;
+    const originalCard = btnCard.innerHTML;
+    
+    if(type === 'pix') btnPix.innerHTML = '🔄 Gerando Pix...';
+    else btnCard.innerHTML = '🔄 Redirecionando...';
 
     try {
         const response = await fetch('/api/checkout', {
@@ -82,7 +96,8 @@ async function startPayment() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 product_id: currentProductId,
-                email: email
+                email: email,
+                type: type // 'pix' ou 'card'
             })
         });
 
@@ -90,27 +105,64 @@ async function startPayment() {
 
         if (data.error) {
             alert('Erro: ' + data.error);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            resetButtons();
             return;
         }
 
-        // Sucesso: Mostra o QR Code
-        document.getElementById('step-email').classList.add('hidden');
-        document.getElementById('step-payment').classList.remove('hidden');
-        
-        // Insere a imagem e o código copia-e-cola
-        document.getElementById('qrImage').src = `data:image/png;base64,${data.qr_code_base64}`;
-        document.getElementById('pixCopyPaste').value = data.qr_code;
+        // SE FOR PIX (MOSTRA QR CODE NA TELA)
+        if (data.type === 'pix') {
+            document.getElementById('step-email').classList.add('hidden');
+            document.getElementById('step-payment').classList.remove('hidden');
+            
+            document.getElementById('qrImage').src = `data:image/png;base64,${data.qr_code_base64}`;
+            document.getElementById('pixCopyPaste').value = data.qr_code;
 
-        // Inicia verificação de status (Polling)
-        startPolling(data.order_id);
+            // Inicia verificação
+            startPolling(data.order_ref);
+        }
+        
+        // SE FOR CARTÃO (ABRE NOVA ABA E ESPERA PAGAMENTO)
+        else if (data.type === 'card') {
+            // Abre o checkout do Mercado Pago em outra aba
+            window.open(data.checkout_url, '_blank');
+            
+            // Muda a tela do modal para "Aguardando Pagamento"
+            document.getElementById('step-email').classList.add('hidden');
+            document.getElementById('step-payment').classList.remove('hidden');
+            
+            // Esconde QR Code (já que é cartão) e mostra aviso
+            document.getElementById('qrImage').style.display = 'none';
+            document.getElementById('pixCopyPaste').parentNode.style.display = 'none'; // Esconde text area
+            
+            // Cria aviso visual (se já não existir)
+            if(!document.getElementById('msg-card-warning')) {
+                const msgDiv = document.createElement('div');
+                msgDiv.id = 'msg-card-warning';
+                msgDiv.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-xl text-white mb-2">Aba de Pagamento Aberta!</p>
+                        <p class="text-sm text-gray-400">Conclua o pagamento na aba do Mercado Pago.</p>
+                        <p class="text-xs text-yellow-500 mt-4">Assim que pagar, sua chave aparecerá aqui.</p>
+                    </div>
+                `;
+                const container = document.getElementById('step-payment');
+                container.insertBefore(msgDiv, container.firstChild);
+            }
+
+            // Inicia verificação
+            startPolling(data.order_ref);
+        }
 
     } catch (error) {
         console.error(error);
         alert('Erro ao conectar com o servidor.');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        resetButtons();
+    }
+
+    function resetButtons() {
+        btnPix.disabled = false; btnCard.disabled = false;
+        btnPix.innerHTML = originalPix;
+        btnCard.innerHTML = originalCard;
     }
 }
 

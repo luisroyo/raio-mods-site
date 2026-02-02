@@ -127,16 +127,26 @@
 
             <div id="step-email" class="p-6 space-y-4">
                 <div class="text-center mb-4">
-                    <p class="text-gray-300 text-sm">Digite seu e-mail para receber a chave e gerar o Pix.</p>
+                    <p class="text-gray-300 text-sm">Digite seu e-mail para receber a chave:</p>
                 </div>
                 <input type="email" id="customerEmail" placeholder="seu@email.com" 
                        class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
-                <button onclick="startPayment()" id="btnPay" 
-                        class="w-full bg-neon-cyan text-black font-bold py-3 rounded-lg hover:bg-white transition-all flex justify-center items-center gap-2">
-                    <span>Gerar PIX</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </button>
-                <p class="text-[10px] text-gray-500 text-center">Pagamento seguro via Mercado Pago 🔒</p>
+                
+                <div class="grid grid-cols-1 gap-3 mt-4">
+                    <button onclick="startPayment('pix')" id="btnPayPix" 
+                            class="w-full bg-neon-cyan text-black font-bold py-3 rounded-lg hover:bg-white transition-all flex justify-center items-center gap-2">
+                        <img src="https://logopng.com.br/logos/pix-106.svg" class="h-5 w-5" alt="Pix">
+                        <span>PIX (Preço Normal)</span>
+                    </button>
+    
+                    <button onclick="startPayment('card')" id="btnPayCard" 
+                            class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-700 border border-gray-600 transition-all flex justify-center items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        <span>Cartão / Outros (+7% Taxa)</span>
+                    </button>
+                </div>
+                
+                <p class="text-[10px] text-gray-500 text-center mt-2">Pagamento seguro via Mercado Pago 🔒</p>
             </div>
 
             <div id="step-payment" class="p-6 hidden text-center">

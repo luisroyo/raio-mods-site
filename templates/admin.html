@@ -219,26 +219,43 @@
         </div>
     </main>
 
-    <div id="keyModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden">
-        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black relative">
-            <h3 class="text-xl font-bold text-yellow-500 mb-2">Gerenciar Chaves</h3>
-            <p id="keyProductName" class="text-white text-sm mb-4">Produto...</p>
+    <div id="keyModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-black border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
             
-            <form id="addKeyForm" class="space-y-4">
-                <input type="hidden" id="keyProductId" name="product_id">
-                
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1">Adicionar chaves (uma por linha):</label>
-                    <textarea name="keys_list" rows="10" placeholder="KHJ-123-ASD&#10;QWE-456-RTY&#10;ZXC-789-VBN" 
-                              class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white font-mono text-sm"></textarea>
+                    <h3 class="text-xl font-bold text-yellow-500">Gerenciar Chaves</h3>
+                    <p id="keyProductName" class="text-gray-400 text-sm">Produto...</p>
                 </div>
+                <button onclick="closeModal('keyModal')" class="text-gray-500 hover:text-white text-2xl">&times;</button>
+            </div>
+
+            <div class="flex border-b border-gray-800">
+                <button onclick="switchKeyTab('add')" id="tab-key-add" class="flex-1 py-3 font-bold text-yellow-500 border-b-2 border-yellow-500 bg-gray-900">➕ Adicionar</button>
+                <button onclick="switchKeyTab('list')" id="tab-key-list" class="flex-1 py-3 font-bold text-gray-500 hover:text-white">📋 Lista / Excluir</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4">
                 
-                <div class="flex gap-2 mt-4">
-                    <button type="button" onclick="closeModal('keyModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button>
-                    <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar Chaves</button>
+                <div id="view-key-add">
+                    <form id="addKeyForm" class="space-y-4">
+                        <input type="hidden" id="keyProductId" name="product_id">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Cole as chaves (uma por linha):</label>
+                            <textarea name="keys_list" rows="8" placeholder="XXXX-YYYY-ZZZZ&#10;AAAA-BBBB-CCCC" 
+                                    class="w-full p-3 bg-gray-900 border border-yellow-500 rounded text-white font-mono text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-yellow-600 text-black font-bold rounded hover:bg-yellow-500 transition">Salvar Chaves</button>
+                    </form>
+                    <div id="key_message" class="mt-2 hidden text-center font-bold"></div>
                 </div>
-            </form>
-            <div id="key_message" class="mt-2 hidden text-center font-bold"></div>
+
+                <div id="view-key-list" class="hidden">
+                    <div id="keys-loading" class="text-center text-gray-500 py-4">Carregando...</div>
+                    <ul id="keys-list-ul" class="space-y-2">
+                        </ul>
+                </div>
+            </div>
         </div>
     </div>
 

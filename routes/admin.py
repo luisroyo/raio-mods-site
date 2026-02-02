@@ -303,3 +303,27 @@ def edit_link(lid):
                  (title, description, image, download_link, video_link, game, lid))
     conn.commit(); conn.close()
     return jsonify({'success': True})
+
+# --- ROTAS DE GERENCIAMENTO DE CHAVES (NOVO) ---
+
+@admin_bp.route('/admin/keys/list/<int:product_id>', methods=['GET'])
+def list_keys(product_id):
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    # Pega chaves não usadas primeiro, depois as usadas
+    keys = conn.execute('SELECT * FROM product_keys WHERE product_id = ? ORDER BY is_used ASC, id DESC', (product_id,)).fetchall()
+    conn.close()
+    
+    return jsonify([dict(k) for k in keys])
+
+@admin_bp.route('/admin/keys/delete/<int:key_id>', methods=['POST'])
+def delete_key(key_id):
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    conn.execute('DELETE FROM product_keys WHERE id = ?', (key_id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})

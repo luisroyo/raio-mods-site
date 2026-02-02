@@ -57,9 +57,9 @@ function showSection(id) {
 function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.add('modal-active'); // Remove a classe ativa se usar CSS puro
-        modal.classList.add('modal-hidden'); // Garante compatibilidade
+        modal.classList.add('hidden');        // Esconde visualmente (Tailwind)
+        modal.classList.remove('modal-active'); // Remove o status de ativo
+        modal.classList.add('modal-hidden');    // Garante compatibilidade
     }
 }
 

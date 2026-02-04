@@ -37,7 +37,12 @@
             <div class="selected-product-box">
                 <p class="text-gray-300">Você escolheu:</p>
                 <p class="text-2xl font-bold neon-green">{{ product.name }}</p>
+                {% if product.promo_price %}
+                <p class="text-gray-500 line-through text-lg">{{ product.price }}</p>
+                <p class="text-white text-2xl font-bold">{{ product.promo_price }}</p>
+                {% else %}
                 <p class="text-white">{{ product.price }}</p>
+                {% endif %}
             </div>
             
             {% if product.payment_url %}

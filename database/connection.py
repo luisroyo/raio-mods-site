@@ -93,7 +93,9 @@ def init_db():
         ('sort_order', 'INTEGER DEFAULT 0'),
         ('parent_id', 'INTEGER NULL'),
         ('is_catalog', 'INTEGER DEFAULT 0'),
-        ('payment_url', 'TEXT DEFAULT ""')
+        ('payment_url', 'TEXT DEFAULT ""'),
+        ('promo_price', 'TEXT DEFAULT ""'),
+        ('promo_label', 'TEXT DEFAULT ""')
     ]
 
     for col_name, col_type in new_columns_products:

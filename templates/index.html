@@ -72,16 +72,27 @@
                         <img src="{{ product.image }}" alt="{{ product.name }}" class="w-full h-full object-contain p-2 hover:scale-105 transition-transform duration-500">
                     </div>
                     {% endif %}
+                    {% if product.promo_price or product.promo_label %}
+                    <div class="absolute top-3 left-3 z-10">
+                        <span class="px-2 py-1 rounded text-xs font-bold bg-amber-500 text-black border border-amber-400">{{ product.promo_label or 'PROMO' }}</span>
+                    </div>
+                    {% endif %}
                     <h3 class="text-xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
                     <p class="text-gray-300 mb-4 text-sm flex-grow">{{ product.description }}</p>
                     <div class="mt-auto">
+                        {% if product.promo_price %}
+                        <p class="text-lg text-gray-500 line-through mb-0.5">{{ product.price }}</p>
+                        <p class="product-price text-3xl font-bold neon-green mb-1">{{ product.promo_price }}</p>
+                        {% else %}
                         <p class="product-price text-3xl font-bold neon-green mb-1">{{ product.price }}</p>
+                        {% endif %}
                         {% if product.tagline %}
                         <p class="text-xs text-gray-400 mb-4">{{ product.tagline }}</p>
                         {% endif %}
                         
+                        {% set display_price = product.promo_price or product.price %}
                         {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
-                        <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ product.price }}')" 
+                        <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')" 
                                 class="block w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:opacity-90 transition-all text-center shadow-[0_0_10px_rgba(0,242,255,0.3)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] flex items-center justify-center gap-2">
                             <span>🛒 Comprar Agora</span>
                         </button>

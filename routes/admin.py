@@ -91,6 +91,8 @@ def add_product():
     cat = request.form.get('category')
     tagline = (request.form.get('tagline') or '').strip()
     payment_url = (request.form.get('payment_url') or '').strip()
+    promo_price = (request.form.get('promo_price') or '').strip()
+    promo_label = (request.form.get('promo_label') or '').strip()
     try: is_catalog = int(request.form.get('is_catalog', 0))
     except: is_catalog = 0
     try: sort_order = int(request.form.get('sort_order') or 0)
@@ -114,9 +116,18 @@ def add_product():
     if not all([name, desc, price, image, cat]): return jsonify({'error': 'Faltam dados'}), 400
     
     conn = get_db_connection()
-    conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url) VALUES (?,?,?,?,?,?,?,?,?,?)',
-                 (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url))
-    conn.commit(); conn.close()
+    try:
+        conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                     (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label))
+        conn.commit()
+    except sqlite3.OperationalError as e:
+        conn.close()
+        init_db()
+        conn = get_db_connection()
+        conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                     (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label))
+        conn.commit()
+    conn.close()
     return jsonify({'success': True, 'message': 'Adicionado!'})
 
 @admin_bp.route('/admin/delete/<int:pid>', methods=['POST'])
@@ -141,6 +152,8 @@ def edit_product(pid):
     cat = request.form.get('category') or existing.get('category', '')
     tagline = request.form.get('tagline', existing.get('tagline', '')).strip()
     payment_url = request.form.get('payment_url', existing.get('payment_url', '')).strip()
+    promo_price = (request.form.get('promo_price') or existing.get('promo_price') or '').strip()
+    promo_label = (request.form.get('promo_label') or existing.get('promo_label') or '').strip()
     is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
     try: sort = int(request.form.get('sort_order') or existing.get('sort_order', 0))
     except: sort = 0
@@ -161,9 +174,22 @@ def edit_product(pid):
                 file.seek(0); file.save(os.path.join(uploads_dir, fname))
                 img = f"/static/uploads/{fname}"
 
-    conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=? WHERE id=?',
-                 (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, pid))
-    conn.commit(); conn.close()
+    try:
+        conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=? WHERE id=?',
+                     (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, pid))
+        conn.commit()
+    except sqlite3.OperationalError:
+        conn.close()
+        init_db()
+        conn = get_db_connection()
+        row = conn.execute('SELECT * FROM products WHERE id = ?', (pid,)).fetchone()
+        if not row:
+            conn.close()
+            return jsonify({'error': '404'}), 404
+        conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=? WHERE id=?',
+                     (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, pid))
+        conn.commit()
+    conn.close()
     return jsonify({'success': True, 'message': 'Atualizado!'})
 
 # --- ROTA DE CONFIGURAÇÃO ---

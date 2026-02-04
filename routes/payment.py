@@ -42,9 +42,10 @@ def create_payment():
     if not sdk:
         return jsonify({'error': 'Configuração de pagamento ausente.'}), 500
 
-    # Limpa o preço base
+    # Preço: usa promo_price se houver promoção, senão price
+    price_str = (product.get('promo_price') or product.get('price') or product['price']) or ''
     try:
-        base_price = float(str(product['price']).lower().replace('r$', '').replace(',', '.').strip())
+        base_price = float(str(price_str).lower().replace('r$', '').replace(',', '.').strip())
     except:
         base_price = 1.00
 

@@ -27,6 +27,11 @@
                     </span>
                     <span class="text-[10px] font-bold text-green-400 tracking-wider">ATUALIZADO</span>
                 </div>
+                {% if product.promo_price or product.promo_label %}
+                <div class="absolute top-3 left-3 z-10">
+                    <span class="px-2 py-1 rounded text-xs font-bold bg-amber-500 text-black border border-amber-400">{{ product.promo_label or 'PROMO' }}</span>
+                </div>
+                {% endif %}
                 {% if product.image %}
                 <div class="catalog-img-container">
                     <img src="{{ product.image }}" alt="{{ product.name }}" class="w-full h-full object-cover">
@@ -40,14 +45,20 @@
                 </p>
                 
                 <div class="mb-4 md:mb-6 mt-auto">
+                    {% if product.promo_price %}
+                    <p class="text-lg md:text-xl text-gray-500 line-through mb-0.5">{{ product.price }}</p>
+                    <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.promo_price }}</p>
+                    {% else %}
                     <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
+                    {% endif %}
                     {% if product.tagline %}
                     <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
                     {% endif %}
                 </div>
                 
+                {% set display_price = product.promo_price or product.price %}
                 {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
-                <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ product.price }}')" 
+                <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')" 
                         class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 cursor-pointer">
                     <span>🛒 Comprar Agora</span>
                 </button>

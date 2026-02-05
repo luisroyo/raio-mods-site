@@ -44,7 +44,17 @@ cursor.execute('''
 ''')
 print("✅ Tabela 'orders' verificada.")
 
-# 3. Garante colunas na tabela CONFIG
+# 3. Garante colunas na tabela PRODUCTS
+try:
+    cursor.execute('ALTER TABLE products ADD COLUMN cost_usd REAL DEFAULT 0.0')
+    print("✅ Coluna 'cost_usd' adicionada à tabela 'products'.")
+except Exception as e:
+    if 'duplicate column' in str(e).lower():
+        print("✅ Coluna 'cost_usd' já existe na tabela 'products'.")
+    else:
+        print(f"⚠️ Aviso ao adicionar 'cost_usd': {e}")
+
+# 4. Garante colunas na tabela CONFIG
 try:
     cursor.execute('ALTER TABLE config ADD COLUMN mercado_pago_token TEXT DEFAULT ""')
 except: pass

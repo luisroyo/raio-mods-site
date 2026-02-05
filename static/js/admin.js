@@ -118,7 +118,7 @@ function openAddSubproductModal(pid, name) {
 function openEditModal(
     id, name, desc, price, cat, img,
     tagline, sort, pid, isCat,
-    payUrl, promoPrice, promoLabel
+    payUrl, promoPrice, promoLabel, costUsd
 ) {
     setVal('edit_id', id);
     setVal('edit_name', name);
@@ -131,6 +131,7 @@ function openEditModal(
     setVal('edit_payment_url', payUrl);
     setVal('edit_promo_price', promoPrice);
     setVal('edit_promo_label', promoLabel);
+    setVal('edit_cost_usd', costUsd || 0);
     setVal('edit_image_url', '');
 
     const preview = document.getElementById('edit_preview');

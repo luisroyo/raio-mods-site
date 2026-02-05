@@ -6,11 +6,31 @@ from utils.image_utils import process_upload_image, get_base_filename
 import os
 import sqlite3
 import time
+import requests
 
 admin_bp = Blueprint('admin', __name__)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+def get_dolar_hoje():
+    """
+    Consulta a cotação atual do dólar em tempo real via API AwesomeAPI.
+    Retorna o valor 'bid' (compra) como float.
+    Em caso de erro, retorna valor padrão de segurança (5.50).
+    """
+    try:
+        response = requests.get('https://economia.awesomeapi.com.br/last/USD-BRL', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if 'USDBRL' in data:
+                bid = float(data['USDBRL']['bid'])
+                return bid
+    except Exception as e:
+        print(f"⚠️ Erro ao consultar dólar: {e}")
+    
+    # Valor padrão de segurança
+    return 5.50
 
 @admin_bp.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -32,6 +52,54 @@ def admin():
                 conn.close()
                 init_db()
                 return redirect(url_for('admin.admin'))
+
+            # --- CÁLCULOS FINANCEIROS ---
+            dolar_hoje = get_dolar_hoje()
+            IOF = 1.0638  # 6.38%
+            CUSTO_FIXO_PAINEL_USD = 50.0
+            
+            # Busca todas as vendas aprovadas com join para pegar cost_usd
+            approved_orders = conn.execute('''
+                SELECT o.*, p.cost_usd, p.price
+                FROM orders o
+                JOIN products p ON o.product_id = p.id
+                WHERE o.status = 'approved'
+            ''').fetchall()
+            
+            faturamento_total = 0.0
+            custo_vendas_total = 0.0
+            
+            for order in approved_orders:
+                # Faturamento em BRL
+                try:
+                    amount = float(str(order['amount']).replace('R$', '').replace(',', '.').strip())
+                    faturamento_total += amount
+                except:
+                    pass
+                
+                # Custo das vendas em BRL (USD * cotação * IOF)
+                try:
+                    cost_usd = float(order['cost_usd'] or 0)
+                    if cost_usd > 0:
+                        custo_vendas_total += (cost_usd * dolar_hoje * IOF)
+                except:
+                    pass
+            
+            # Custo fixo do painel (50 USD * cotação * IOF)
+            custo_fixo_painel_brl = CUSTO_FIXO_PAINEL_USD * dolar_hoje * IOF
+            
+            # Lucro líquido final
+            lucro_liquido = faturamento_total - custo_vendas_total - custo_fixo_painel_brl
+            
+            financeiro = {
+                'dolar_hoje': round(dolar_hoje, 2),
+                'faturamento_total': round(faturamento_total, 2),
+                'custo_vendas_total': round(custo_vendas_total, 2),
+                'custo_fixo_painel_brl': round(custo_fixo_painel_brl, 2),
+                'lucro_liquido': round(lucro_liquido, 2),
+                'total_vendas': len(approved_orders),
+                'iof': IOF,
+            }
 
             # Lógica de Catálogos vs Produtos Simples
             legacy_rows = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
@@ -87,7 +155,7 @@ def admin():
             conn.close()
             return render_template('admin.html', catalogs=catalogs, simple_products=simple_products, 
                                  subproducts_by_parent=subproducts_by_parent, subproducts_by_category=subproducts_by_category,
-                                 parent_products=parent_products, links=all_links, config=config, stats=stats)
+                                 parent_products=parent_products, links=all_links, config=config, stats=stats, financeiro=financeiro)
         except Exception as e:
             print(f"Erro ao carregar página admin: {e}")
             return jsonify({'error': f'Erro interno: {str(e)}'}), 500
@@ -119,6 +187,12 @@ def add_product():
     promo_price = (request.form.get('promo_price') or '').strip()
     promo_label = (request.form.get('promo_label') or '').strip()
     
+    # Novo: Recebe cost_usd
+    try:
+        cost_usd = float(request.form.get('cost_usd', 0) or 0)
+    except:
+        cost_usd = 0.0
+    
     try: is_catalog = int(request.form.get('is_catalog', 0))
     except: is_catalog = 0
     try: sort_order = int(request.form.get('sort_order') or 0)
@@ -145,8 +219,8 @@ def add_product():
     
     conn = get_db_connection()
     try:
-        conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-                     (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label))
+        conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                     (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd))
         conn.commit()
     except sqlite3.OperationalError as e:
         conn.close()
@@ -182,6 +256,12 @@ def edit_product(pid):
         promo_price = (request.form.get('promo_price') or existing.get('promo_price') or '').strip()
         promo_label = (request.form.get('promo_label') or existing.get('promo_label') or '').strip()
         
+        # Novo: Recebe cost_usd
+        try:
+            cost_usd = float(request.form.get('cost_usd') or existing.get('cost_usd', 0) or 0)
+        except:
+            cost_usd = float(existing.get('cost_usd', 0) or 0)
+        
         try: is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
         except: is_catalog = 0
         try: sort = int(request.form.get('sort_order') or existing.get('sort_order', 0))
@@ -211,8 +291,8 @@ def edit_product(pid):
                     file.seek(0); file.save(os.path.join(uploads_dir, fname))
                     img = f"/static/uploads/{fname}"
 
-        conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=? WHERE id=?',
-                     (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, pid))
+        conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=? WHERE id=?',
+                     (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, pid))
         conn.commit()
         conn.close()
         return jsonify({'success': True, 'message': 'Atualizado!'})

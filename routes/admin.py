@@ -8,17 +8,38 @@ import sqlite3
 import time
 import requests
 import logging
-
-# Configure logging to file
-logging.basicConfig(
-    filename=os.path.join(os.path.dirname(__file__), '..', 'dolar.log'),
-    level=logging.INFO,
-    format='%(asctime)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+import json
 
 admin_bp = Blueprint('admin', __name__)
+
+# Cache file for dolar rate
+CACHE_PATH = os.path.join(os.path.dirname(__file__), '..', 'dolar_cache.json')
+
+def get_dolar_logger():
+    logger = logging.getLogger('dolar')
+    if not logger.handlers:
+        log_path = os.path.join(os.path.dirname(__file__), '..', 'dolar.log')
+        handler = logging.FileHandler(log_path)
+        formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+    return logger
+
+def _read_cache():
+    try:
+        with open(CACHE_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return None
+
+def _write_cache(rate):
+    try:
+        payload = {'rate': float(rate), 'ts': time.time()}
+        with open(CACHE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(payload, f)
+    except Exception:
+        pass
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
@@ -27,14 +48,26 @@ def get_dolar_hoje():
     """
     Consulta a cotação atual do dólar em tempo real via API AwesomeAPI.
     Retorna o valor 'bid' (compra) como float.
-    Em caso de erro, tenta APIs alternativas.
-    Valor padrão de segurança: 5.50
+    Em caso de erro, retorna valor padrão de segurança (5.50).
     """
+    logger = get_dolar_logger()
+
+    # Try cache first (valid for 10 minutes)
+    try:
+        cached = _read_cache()
+        if cached and 'rate' in cached and 'ts' in cached:
+            age = time.time() - float(cached['ts'])
+            if age < 600:  # 10 minutes
+                logger.info(f"Usando cotacao em cache (age={int(age)}s): R$ {float(cached['rate']):.4f}")
+                return float(cached['rate'])
+    except Exception:
+        pass
+
     apis = [
         ('https://economia.awesomeapi.com.br/last/USD-BRL', 'USDBRL', 'bid'),
         ('https://api.exchangerate-api.com/v4/latest/USD', 'rates', 'BRL'),
     ]
-    
+
     for api_url, key1, key2 in apis:
         try:
             response = requests.get(api_url, timeout=5)
@@ -43,34 +76,35 @@ def get_dolar_hoje():
                 if key1 in data:
                     if isinstance(data[key1], dict) and key2 in data[key1]:
                         bid = float(data[key1][key2])
-                        msg = f"[OK] Dolar atualizado via {api_url}: R$ {bid:.2f}"
-                        print(msg)
+                        msg = f"[OK] Dolar atualizado via {api_url}: R$ {bid:.4f}"
                         logger.info(msg)
+                        _write_cache(bid)
                         return bid
         except Exception as e:
-            msg = f"[ERRO] Falha ao consultar dolar em {api_url}: {e}"
-            print(msg)
-            logger.error(msg)
+            logger.error(f"[ERRO] Falha ao consultar dolar em {api_url}: {e}")
             continue
-    
-    # Se todas as APIs falharem, usar valor padrão
-    msg = f"[AVISO] Todas as APIs falharam. Usando valor padrao: R$ 5.50"
-    print(msg)
-    logger.warning(msg)
+
+    # Se todas as APIs falharem, tentar retornar cache mesmo que velho
+    cached = _read_cache()
+    if cached and 'rate' in cached:
+        logger.warning("Todas as APIs falharam; usando cache existente")
+        return float(cached['rate'])
+
+    logger.warning("Todas as APIs falharam e nao ha cache; usando valor padrao: 5.50")
     return 5.50
+
 
 @admin_bp.route('/admin/debug/dolar', methods=['GET'])
 def debug_dolar():
     """Endpoint para debugar a cotação do dólar em tempo real"""
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
-    
-    dolar = get_dolar_hoje()
-    return jsonify({
-        'dolar_rate': round(dolar, 4),
-        'timestamp': time.time(),
-        'note': 'Se o valor for 5.50, a API pode estar falhando. Verifique os logs do servidor.'
-    })
+
+    rate = get_dolar_hoje()
+    # read cache timestamp if available
+    cached = _read_cache()
+    ts = cached.get('ts') if cached else time.time()
+    return jsonify({'dolar_rate': round(rate, 4), 'timestamp': ts})
 
 @admin_bp.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -161,9 +195,28 @@ def admin():
                 'iof': IOF,
             }
 
-            # Lógica de Catálogos vs Produtos Simples
-            legacy_rows = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
-            legacy_catalog_ids = set(r[0] for r in legacy_rows)
+            try:
+                cached = _read_cache()
+                if cached and 'ts' in cached:
+                    financeiro['dolar_updated'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cached['ts']))
+                else:
+                    financeiro['dolar_updated'] = '---'
+            except Exception:
+                financeiro['dolar_updated'] = '---'
+
+            # Setup file logger for dolar API calls
+            def get_dolar_logger():
+                logger = logging.getLogger('dolar')
+                if not logger.handlers:
+                    log_path = os.path.join(os.path.dirname(__file__), '..', 'dolar.log')
+                    handler = logging.FileHandler(log_path)
+                    formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+                    handler.setFormatter(formatter)
+                    logger.addHandler(handler)
+                    logger.setLevel(logging.INFO)
+                return logger
+
+            admin_bp = Blueprint('admin', __name__)
             
             catalogs, simple_products, subproducts_by_parent, subproducts_by_category, parent_products = [], [], {}, {}, []
             

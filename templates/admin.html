@@ -34,8 +34,10 @@
                 <!-- Cotação Atual -->
                 <div class="border border-blue-500 rounded-lg p-4 bg-black/50">
                     <p class="text-xs text-gray-400 mb-2">📊 Cotação USD-BRL</p>
-                    <p class="text-3xl font-bold text-blue-500">{{ financeiro.dolar_hoje }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Atualizado em tempo real</p>
+                    <p id="dolar_value" class="text-3xl font-bold text-blue-500">{{ financeiro.dolar_hoje }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Atualizado: <span id="dolar_updated">{{ financeiro.dolar_updated }}</span>
+                        <button id="refresh_dolar" type="button" class="ml-2 text-xs px-2 py-1 border border-blue-500 rounded">Atualizar</button>
+                    </p>
                 </div>
                 
                 <!-- Faturamento Bruto -->
@@ -643,6 +645,35 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            const btn = document.getElementById('refresh_dolar')
+            if(!btn) return
+            btn.addEventListener('click', async function(){
+                btn.disabled = true
+                btn.textContent = 'Atualizando...'
+                try{
+                    const resp = await fetch('{{ url_for("admin.debug_dolar") }}')
+                    if(resp.ok){
+                        const data = await resp.json()
+                        document.getElementById('dolar_value').textContent = parseFloat(data.dolar_rate).toFixed(2)
+                        const d = new Date(data.timestamp * 1000)
+                        document.getElementById('dolar_updated').textContent = d.toLocaleString()
+                    } else if(resp.status === 401){
+                        alert('Você precisa estar logado como admin para atualizar a cotação.')
+                    } else {
+                        alert('Erro ao buscar cotação')
+                    }
+                }catch(e){
+                    console.error(e)
+                    alert('Erro ao atualizar cotação')
+                }finally{
+                    btn.disabled = false
+                    btn.textContent = 'Atualizar'
+                }
+            })
+        })
+    </script>
     <script src="{{ url_for('static', filename='js/admin.js') }}?v=5" defer></script>
 </body>
 </html>

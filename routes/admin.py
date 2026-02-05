@@ -59,12 +59,22 @@ def admin():
             CUSTO_FIXO_PAINEL_USD = 50.0
             
             # Busca todas as vendas aprovadas com join para pegar cost_usd e flag apply_iof
-            approved_orders = conn.execute('''
-                SELECT o.*, p.cost_usd, p.price, p.apply_iof
-                FROM orders o
-                JOIN products p ON o.product_id = p.id
-                WHERE o.status = 'approved'
-            ''').fetchall()
+            # Backwards compatible: tenta usar apply_iof, cai de volta para 1 se coluna não existe
+            try:
+                approved_orders = conn.execute('''
+                    SELECT o.*, p.cost_usd, p.price, p.apply_iof
+                    FROM orders o
+                    JOIN products p ON o.product_id = p.id
+                    WHERE o.status = 'approved'
+                ''').fetchall()
+            except sqlite3.OperationalError:
+                # Coluna apply_iof ainda não existe; usar 1 como padrão
+                approved_orders = conn.execute('''
+                    SELECT o.*, p.cost_usd, p.price, 1 as apply_iof
+                    FROM orders o
+                    JOIN products p ON o.product_id = p.id
+                    WHERE o.status = 'approved'
+                ''').fetchall()
             
             faturamento_total = 0.0
             custo_vendas_total = 0.0

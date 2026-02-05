@@ -1,0 +1,191 @@
+{% extends 'admin/_base_admin.html' %}
+
+{% block title %}Vendas{% endblock %}
+{% block page_title %}💰 Gerenciamento de Vendas{% endblock %}
+{% block page_subtitle %}Vendas manuais, recargas de painel e relatórios{% endblock %}
+
+{% block content %}
+<!-- Resumo de Vendas em Tempo Real -->
+<div class="mb-8 border-2 border-cyan-500 rounded-lg p-6 bg-cyan-500/5">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-cyan-400">📊 Resumo de Vendas</h2>
+        <button type="button" onclick="loadSalesReport()"
+            class="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-500">🔄 Atualizar</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" id="salesSummary">
+        <div class="border border-blue-500 rounded-lg p-4 bg-gray-800/50">
+            <p class="text-xs text-gray-400 mb-2">🌐 Vendas Online</p>
+            <p class="text-2xl font-bold text-blue-500" id="onlineRevenue">R$ 0,00</p>
+            <p class="text-xs text-gray-500" id="onlineCount">0 vendas</p>
+        </div>
+        <div class="border border-purple-500 rounded-lg p-4 bg-gray-800/50">
+            <p class="text-xs text-gray-400 mb-2">🛒 Vendas Manuais</p>
+            <p class="text-2xl font-bold text-purple-500" id="manualRevenue">R$ 0,00</p>
+            <p class="text-xs text-gray-500" id="manualCount">0 vendas</p>
+        </div>
+        <div class="border border-green-500 rounded-lg p-4 bg-gray-800/50">
+            <p class="text-xs text-gray-400 mb-2">💰 Faturamento Total</p>
+            <p class="text-2xl font-bold text-green-500" id="totalRevenue">R$ 0,00</p>
+            <p class="text-xs text-gray-500" id="totalCount">0 vendas</p>
+        </div>
+        <div class="border border-red-500 rounded-lg p-4 bg-gray-800/50">
+            <p class="text-xs text-gray-400 mb-2">📉 Custos Totais</p>
+            <p class="text-2xl font-bold text-red-500" id="totalCosts">R$ 0,00</p>
+            <p class="text-xs text-gray-500">Produtos + Recargas</p>
+        </div>
+        <div class="border border-emerald-500 rounded-lg p-4 bg-gray-800/50">
+            <p class="text-xs text-gray-400 mb-2">🎯 Lucro Total</p>
+            <p class="text-2xl font-bold text-emerald-500" id="totalProfit">R$ 0,00</p>
+            <p class="text-xs text-gray-500" id="marginProfit">0%</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="mb-6 border-b border-gray-700">
+    <nav class="flex gap-4">
+        <button type="button" onclick="showSalesTab('manual')" id="tab-manual"
+            class="px-6 py-3 font-bold text-purple-400 border-b-2 border-purple-400">
+            🛒 Vendas Manuais
+        </button>
+        <button type="button" onclick="showSalesTab('recargas')" id="tab-recargas"
+            class="px-6 py-3 font-bold text-gray-400 border-b-2 border-transparent hover:text-orange-400">
+            📦 Recargas de Painel
+        </button>
+    </nav>
+</div>
+
+<!-- Vendas Manuais -->
+<div id="section-manual" class="sales-tab-content">
+    <div class="mb-8 border-2 border-purple-500 rounded-lg p-6 bg-purple-500/5">
+        <h3 class="text-xl font-bold text-purple-400 mb-4">🛒 Registrar Venda Manual</h3>
+        <form id="manualSaleForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <select name="product_id" required
+                    class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+                    <option value="">Selecione um Produto</option>
+                    {% for p in simple_products %}
+                    <option value="{{ p.id }}">{{ p.name }} - {{ p.price }}</option>
+                    {% endfor %}
+                    {% for c in catalogs %}
+                    <optgroup label="📁 {{ c.name }}">
+                        {% for sub in subproducts_by_parent.get(c.id, []) %}
+                        <option value="{{ sub.id }}">&nbsp;&nbsp;{{ sub.name }} - {{ sub.price }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+                <input type="number" name="quantity" value="1" min="1" placeholder="Quantidade" required
+                    class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" name="unit_price" placeholder="Preço de Venda (R$)" required
+                    class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+                <input type="text" name="cost_per_unit_brl" placeholder="Custo Unitário (R$)" required
+                    class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+            </div>
+            <textarea name="notes" placeholder="Notas (opcional)" rows="2"
+                class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white"></textarea>
+            <button type="submit"
+                class="w-full py-3 bg-purple-600 text-white font-bold rounded hover:bg-purple-500">💾 Registrar Venda</button>
+        </form>
+        <div id="manualSaleMessage" class="mt-4 hidden"></div>
+    </div>
+
+    <!-- Histórico de Vendas Manuais -->
+    <div class="border-2 border-purple-500 rounded-lg p-6 bg-purple-500/5">
+        <h3 class="text-xl font-bold text-purple-400 mb-4">📋 Histórico de Vendas Manuais</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-gray-400">
+                <thead class="bg-purple-900/30 text-purple-400">
+                    <tr>
+                        <th class="p-3 text-left">Produto</th>
+                        <th class="p-3 text-center">Qtd</th>
+                        <th class="p-3 text-right">Preço Unit.</th>
+                        <th class="p-3 text-right">Custo Unit.</th>
+                        <th class="p-3 text-right">Total</th>
+                        <th class="p-3 text-right">Lucro</th>
+                        <th class="p-3 text-center">Data</th>
+                        <th class="p-3 text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="manualSalesTable">
+                    <tr><td colspan="8" class="p-4 text-center text-gray-500">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recargas de Painel -->
+<div id="section-recargas" class="sales-tab-content hidden">
+    <div class="mb-8 border-2 border-orange-500 rounded-lg p-6 bg-orange-500/5">
+        <h3 class="text-xl font-bold text-orange-400 mb-4">📦 Registrar Recarga de Painel</h3>
+        <form id="panelRechargeForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="number" name="quantity" min="1" placeholder="Quantidade de Painéis" required
+                    class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
+                <input type="number" name="cost_per_unit_usd" step="0.01" placeholder="Custo Unitário (USD)" required
+                    class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
+                <input type="number" name="dolar_rate" step="0.01" placeholder="Cotação USD-BRL"
+                    value="{{ financeiro.dolar_hoje }}"
+                    class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
+            </div>
+            <textarea name="notes" placeholder="Notas (ex: Fornecedor, data de recebimento)" rows="2"
+                class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white"></textarea>
+            <button type="submit"
+                class="w-full py-3 bg-orange-600 text-white font-bold rounded hover:bg-orange-500">📦 Registrar Recarga</button>
+        </form>
+        <div id="panelRechargeMessage" class="mt-4 hidden"></div>
+    </div>
+
+    <!-- Histórico de Recargas -->
+    <div class="border-2 border-orange-500 rounded-lg p-6 bg-orange-500/5">
+        <h3 class="text-xl font-bold text-orange-400 mb-4">📋 Histórico de Recargas</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-gray-400">
+                <thead class="bg-orange-900/30 text-orange-400">
+                    <tr>
+                        <th class="p-3 text-center">Qtd</th>
+                        <th class="p-3 text-right">Custo Unit. (USD)</th>
+                        <th class="p-3 text-right">Total (USD)</th>
+                        <th class="p-3 text-right">Cotação</th>
+                        <th class="p-3 text-right">Total (BRL)</th>
+                        <th class="p-3 text-left">Notas</th>
+                        <th class="p-3 text-center">Data</th>
+                        <th class="p-3 text-center">Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="panelRechargesTable">
+                    <tr><td colspan="8" class="p-4 text-center text-gray-500">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function showSalesTab(tab) {
+    document.querySelectorAll('.sales-tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="tab-"]').forEach(el => {
+        el.classList.remove('text-purple-400', 'text-orange-400', 'border-purple-400', 'border-orange-400');
+        el.classList.add('text-gray-400', 'border-transparent');
+    });
+    
+    document.getElementById('section-' + tab).classList.remove('hidden');
+    const activeTab = document.getElementById('tab-' + tab);
+    activeTab.classList.remove('text-gray-400', 'border-transparent');
+    if (tab === 'manual') {
+        activeTab.classList.add('text-purple-400', 'border-purple-400');
+    } else {
+        activeTab.classList.add('text-orange-400', 'border-orange-400');
+    }
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=2" defer></script>
+<script src="{{ url_for('static', filename='js/admin/recharges.js') }}?v=2" defer></script>
+<script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=2" defer></script>
+{% endblock %}

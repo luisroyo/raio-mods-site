@@ -24,143 +24,162 @@ from . import config as config_module
 admin_bp = Blueprint('admin', __name__)
 
 
-# --- ROTA PRINCIPAL ---
+# --- FUNÇÃO AUXILIAR PARA DADOS ADMIN ---
+
+def _get_admin_data():
+    """Retorna todos os dados necessários para as páginas admin"""
+    conn = get_db_connection()
+    try:
+        all_products = conn.execute('SELECT * FROM products ORDER BY sort_order ASC, id ASC').fetchall()
+        all_links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
+        config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
+        
+        stock_query = conn.execute('SELECT product_id, COUNT(*) as total FROM product_keys WHERE is_used = 0 GROUP BY product_id').fetchall()
+        stock_map = {row['product_id']: row['total'] for row in stock_query}
+        
+    except sqlite3.OperationalError:
+        conn.close()
+        init_db()
+        return None
+
+    # Cálculos financeiros
+    dolar_hoje = get_dolar_hoje()
+    
+    try:
+        approved_orders = conn.execute('''
+            SELECT o.*, p.cost_usd, p.price, p.apply_iof
+            FROM orders o
+            JOIN products p ON o.product_id = p.id
+            WHERE o.status = 'approved'
+        ''').fetchall()
+    except sqlite3.OperationalError:
+        approved_orders = conn.execute('''
+            SELECT o.*, p.cost_usd, p.price, 1 as apply_iof
+            FROM orders o
+            JOIN products p ON o.product_id = p.id
+            WHERE o.status = 'approved'
+        ''').fetchall()
+    
+    faturamento_total = 0.0
+    custo_vendas_total = 0.0
+    
+    for order in approved_orders:
+        try:
+            amount = float(str(order['amount']).replace('R$', '').replace(',', '.').strip())
+            faturamento_total += amount
+        except:
+            pass
+        
+        try:
+            cost_usd = float(order['cost_usd'] or 0)
+            if cost_usd > 0:
+                apply_iof = 1
+                try:
+                    apply_iof = int(order['apply_iof']) if 'apply_iof' in order.keys() else 1
+                except:
+                    apply_iof = 1
+
+                if apply_iof == 1:
+                    custo_vendas_total += (cost_usd * dolar_hoje * IOF)
+                else:
+                    custo_vendas_total += (cost_usd * dolar_hoje)
+        except:
+            pass
+    
+    custo_fixo_painel_brl = CUSTO_FIXO_PAINEL_USD * dolar_hoje * IOF
+    lucro_liquido = faturamento_total - custo_vendas_total - custo_fixo_painel_brl
+    
+    financeiro = {
+        'dolar_hoje': round(dolar_hoje, 2),
+        'faturamento_total': round(faturamento_total, 2),
+        'custo_vendas_total': round(custo_vendas_total, 2),
+        'custo_fixo_painel_brl': round(custo_fixo_painel_brl, 2),
+        'lucro_liquido': round(lucro_liquido, 2),
+        'total_vendas': len(approved_orders),
+        'iof': IOF,
+    }
+
+    try:
+        cached = _read_cache()
+        if cached and 'ts' in cached:
+            financeiro['dolar_updated'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cached['ts']))
+        else:
+            financeiro['dolar_updated'] = '---'
+    except Exception:
+        financeiro['dolar_updated'] = '---'
+    
+    catalogs, simple_products, subproducts_by_parent, subproducts_by_category, parent_products = [], [], {}, {}, []
+    
+    for p in all_products:
+        p_dict = dict(p)
+        p_dict['stock'] = stock_map.get(p['id'], 0)
+        
+        keys = p.keys()
+        pid = p['parent_id'] if 'parent_id' in keys else None
+        is_cat = p['is_catalog'] if 'is_catalog' in keys else 0
+
+        if pid is None and (is_cat == 1 or p['id'] in legacy_catalog_ids):
+            parent_products.append(p_dict)
+
+        if pid is None:
+            if is_cat == 1 or p['id'] in legacy_catalog_ids:
+                catalogs.append(p_dict)
+                if p['id'] not in subproducts_by_parent:
+                    subproducts_by_parent[p['id']] = []
+                if p['id'] not in subproducts_by_category:
+                    subproducts_by_category[p['id']] = {}
+            else:
+                simple_products.append(p_dict) 
+        else:
+            if pid not in subproducts_by_parent:
+                subproducts_by_parent[pid] = []
+            subproducts_by_parent[pid].append(p_dict)
+            
+            if pid not in subproducts_by_category:
+                subproducts_by_category[pid] = {}
+            try:
+                category = p.get('category', 'Sem categoria') if 'category' in keys else 'Sem categoria'
+                if not category or category.strip() == '':
+                    category = 'Sem categoria'
+                if category not in subproducts_by_category[pid]:
+                    subproducts_by_category[pid][category] = []
+                subproducts_by_category[pid][category].append(p_dict)
+            except Exception as e:
+                if 'Sem categoria' not in subproducts_by_category[pid]:
+                    subproducts_by_category[pid]['Sem categoria'] = []
+                subproducts_by_category[pid]['Sem categoria'].append(p_dict)
+    
+    stats = {
+        'total_products': len(all_products),
+        'total_catalogs': len(catalogs),
+        'total_links': len(all_links),
+        'total_simple': len(simple_products),
+    }
+    conn.close()
+    
+    return {
+        'catalogs': catalogs,
+        'simple_products': simple_products,
+        'subproducts_by_parent': subproducts_by_parent,
+        'subproducts_by_category': subproducts_by_category,
+        'parent_products': parent_products,
+        'links': all_links,
+        'config': config,
+        'stats': stats,
+        'financeiro': financeiro
+    }
+
+
+# --- ROTA PRINCIPAL (DASHBOARD) ---
 
 @admin_bp.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'GET' and session.get('admin_logged_in'):
         try:
-            conn = get_db_connection()
-            try:
-                all_products = conn.execute('SELECT * FROM products ORDER BY sort_order ASC, id ASC').fetchall()
-                all_links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
-                config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
-                
-                stock_query = conn.execute('SELECT product_id, COUNT(*) as total FROM product_keys WHERE is_used = 0 GROUP BY product_id').fetchall()
-                stock_map = {row['product_id']: row['total'] for row in stock_query}
-                
-            except sqlite3.OperationalError:
-                conn.close()
-                init_db()
+            data = _get_admin_data()
+            if data is None:
                 return redirect(url_for('admin.admin'))
-
-            # Cálculos financeiros
-            dolar_hoje = get_dolar_hoje()
-            
-            try:
-                approved_orders = conn.execute('''
-                    SELECT o.*, p.cost_usd, p.price, p.apply_iof
-                    FROM orders o
-                    JOIN products p ON o.product_id = p.id
-                    WHERE o.status = 'approved'
-                ''').fetchall()
-            except sqlite3.OperationalError:
-                approved_orders = conn.execute('''
-                    SELECT o.*, p.cost_usd, p.price, 1 as apply_iof
-                    FROM orders o
-                    JOIN products p ON o.product_id = p.id
-                    WHERE o.status = 'approved'
-                ''').fetchall()
-            
-            faturamento_total = 0.0
-            custo_vendas_total = 0.0
-            
-            for order in approved_orders:
-                try:
-                    amount = float(str(order['amount']).replace('R$', '').replace(',', '.').strip())
-                    faturamento_total += amount
-                except:
-                    pass
-                
-                try:
-                    cost_usd = float(order['cost_usd'] or 0)
-                    if cost_usd > 0:
-                        apply_iof = 1
-                        try:
-                            apply_iof = int(order['apply_iof']) if 'apply_iof' in order.keys() else 1
-                        except:
-                            apply_iof = 1
-
-                        if apply_iof == 1:
-                            custo_vendas_total += (cost_usd * dolar_hoje * IOF)
-                        else:
-                            custo_vendas_total += (cost_usd * dolar_hoje)
-                except:
-                    pass
-            
-            custo_fixo_painel_brl = CUSTO_FIXO_PAINEL_USD * dolar_hoje * IOF
-            lucro_liquido = faturamento_total - custo_vendas_total - custo_fixo_painel_brl
-            
-            financeiro = {
-                'dolar_hoje': round(dolar_hoje, 2),
-                'faturamento_total': round(faturamento_total, 2),
-                'custo_vendas_total': round(custo_vendas_total, 2),
-                'custo_fixo_painel_brl': round(custo_fixo_painel_brl, 2),
-                'lucro_liquido': round(lucro_liquido, 2),
-                'total_vendas': len(approved_orders),
-                'iof': IOF,
-            }
-
-            try:
-                cached = _read_cache()
-                if cached and 'ts' in cached:
-                    financeiro['dolar_updated'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cached['ts']))
-                else:
-                    financeiro['dolar_updated'] = '---'
-            except Exception:
-                financeiro['dolar_updated'] = '---'
-            
-            catalogs, simple_products, subproducts_by_parent, subproducts_by_category, parent_products = [], [], {}, {}, []
-            
-            for p in all_products:
-                p_dict = dict(p)
-                p_dict['stock'] = stock_map.get(p['id'], 0)
-                
-                keys = p.keys()
-                pid = p['parent_id'] if 'parent_id' in keys else None
-                is_cat = p['is_catalog'] if 'is_catalog' in keys else 0
-
-                if pid is None and (is_cat == 1 or p['id'] in legacy_catalog_ids):
-                    parent_products.append(p_dict)
-
-                if pid is None:
-                    if is_cat == 1 or p['id'] in legacy_catalog_ids:
-                        catalogs.append(p_dict)
-                        if p['id'] not in subproducts_by_parent:
-                            subproducts_by_parent[p['id']] = []
-                        if p['id'] not in subproducts_by_category:
-                            subproducts_by_category[p['id']] = {}
-                    else:
-                        simple_products.append(p_dict) 
-                else:
-                    if pid not in subproducts_by_parent:
-                        subproducts_by_parent[pid] = []
-                    subproducts_by_parent[pid].append(p_dict)
-                    
-                    if pid not in subproducts_by_category:
-                        subproducts_by_category[pid] = {}
-                    try:
-                        category = p.get('category', 'Sem categoria') if 'category' in keys else 'Sem categoria'
-                        if not category or category.strip() == '':
-                            category = 'Sem categoria'
-                        if category not in subproducts_by_category[pid]:
-                            subproducts_by_category[pid][category] = []
-                        subproducts_by_category[pid][category].append(p_dict)
-                    except Exception as e:
-                        if 'Sem categoria' not in subproducts_by_category[pid]:
-                            subproducts_by_category[pid]['Sem categoria'] = []
-                        subproducts_by_category[pid]['Sem categoria'].append(p_dict)
-            
-            stats = {
-                'total_products': len(all_products),
-                'total_catalogs': len(catalogs),
-                'total_links': len(all_links),
-                'total_simple': len(simple_products),
-            }
-            conn.close()
-            return render_template('admin.html', catalogs=catalogs, simple_products=simple_products, 
-                                 subproducts_by_parent=subproducts_by_parent, subproducts_by_category=subproducts_by_category,
-                                 parent_products=parent_products, links=all_links, config=config, stats=stats, financeiro=financeiro)
+            return render_template('admin/dashboard.html', **data)
         except Exception as e:
             print(f"Erro ao carregar página admin: {e}")
             return jsonify({'error': f'Erro interno: {str(e)}'}), 500
@@ -171,6 +190,54 @@ def admin():
             return redirect(url_for('admin.admin'))
         return render_template('admin_login.html', error='Senha incorreta!')
     return render_template('admin_login.html')
+
+
+# --- ROTA DE PRODUTOS ---
+
+@admin_bp.route('/admin/produtos')
+def admin_produtos():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    try:
+        data = _get_admin_data()
+        if data is None:
+            return redirect(url_for('admin.admin'))
+        return render_template('admin/produtos.html', **data)
+    except Exception as e:
+        print(f"Erro ao carregar produtos: {e}")
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
+
+# --- ROTA DE VENDAS ---
+
+@admin_bp.route('/admin/vendas')
+def admin_vendas():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    try:
+        data = _get_admin_data()
+        if data is None:
+            return redirect(url_for('admin.admin'))
+        return render_template('admin/vendas.html', **data)
+    except Exception as e:
+        print(f"Erro ao carregar vendas: {e}")
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
+
+# --- ROTA DE LINKS ---
+
+@admin_bp.route('/admin/links')
+def admin_links():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    try:
+        data = _get_admin_data()
+        if data is None:
+            return redirect(url_for('admin.admin'))
+        return render_template('admin/links_page.html', **data)
+    except Exception as e:
+        print(f"Erro ao carregar links: {e}")
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
 @admin_bp.route('/admin/logout')

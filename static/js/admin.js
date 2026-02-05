@@ -369,3 +369,196 @@ async function deleteKey(id) {
         alert("Erro ao excluir chave");
     }
 }
+
+/* =========================
+   VENDAS MANUAIS
+========================= */
+
+document.getElementById('manualSaleForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch('/admin/sales/manual/add', { method: 'POST', body: formData });
+        const data = await res.json();
+        const msg = document.getElementById('manualSaleMessage');
+        if (data.success) {
+            msg.textContent = '✅ ' + data.message;
+            msg.className = 'mt-4 p-2 bg-green-900/30 border border-green-500 text-green-400 rounded';
+            e.target.reset();
+            loadManualSales();
+            loadSalesReport();
+        } else {
+            msg.textContent = '❌ ' + data.error;
+            msg.className = 'mt-4 p-2 bg-red-900/30 border border-red-500 text-red-400 rounded';
+        }
+        msg.classList.remove('hidden');
+    } catch (err) {
+        alert('Erro: ' + err);
+    }
+});
+
+async function loadManualSales() {
+    try {
+        const res = await fetch('/admin/sales/manual/list');
+        const sales = await res.json();
+        const tbody = document.getElementById('manualSalesTable');
+        
+        if (sales.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma venda registrada</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = sales.map(sale => {
+            const totalVenda = (sale.quantity * sale.unit_price).toFixed(2);
+            const totalCusto = (sale.quantity * sale.cost_per_unit_brl).toFixed(2);
+            const lucro = (totalVenda - totalCusto).toFixed(2);
+            const data = new Date(sale.created_at).toLocaleDateString('pt-BR');
+            
+            return `<tr class="border-b border-purple-500/30 hover:bg-purple-900/20">
+                <td class="p-2">${sale.product_name}</td>
+                <td class="p-2 text-center">${sale.quantity}</td>
+                <td class="p-2 text-right">R$ ${sale.unit_price.toFixed(2)}</td>
+                <td class="p-2 text-right">R$ ${sale.cost_per_unit_brl.toFixed(2)}</td>
+                <td class="p-2 text-right font-bold text-green-400">R$ ${totalVenda}</td>
+                <td class="p-2 text-right font-bold text-yellow-400">R$ ${lucro}</td>
+                <td class="p-2 text-center text-xs">${data}</td>
+                <td class="p-2 text-center"><button onclick="deleteManualSale(${sale.id})" class="text-red-400 hover:text-red-300">🗑️</button></td>
+            </tr>`;
+        }).join('');
+    } catch (err) {
+        console.error('Erro ao carregar vendas manuais:', err);
+    }
+}
+
+async function deleteManualSale(id) {
+    if (!confirm('Excluir esta venda?')) return;
+    try {
+        const res = await fetch(`/admin/sales/manual/delete/${id}`, { method: 'POST' });
+        if (res.ok) {
+            loadManualSales();
+            loadSalesReport();
+        }
+    } catch {
+        alert('Erro ao excluir');
+    }
+}
+
+/* =========================
+   RECARGAS DE PAINEL
+========================= */
+
+document.getElementById('panelRechargeForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch('/admin/panel/recharge', { method: 'POST', body: formData });
+        const data = await res.json();
+        const msg = document.getElementById('panelRechargeMessage');
+        if (data.success) {
+            msg.textContent = '✅ ' + data.message;
+            msg.className = 'mt-4 p-2 bg-green-900/30 border border-green-500 text-green-400 rounded';
+            e.target.reset();
+            loadPanelRecharges();
+            loadSalesReport();
+        } else {
+            msg.textContent = '❌ ' + data.error;
+            msg.className = 'mt-4 p-2 bg-red-900/30 border border-red-500 text-red-400 rounded';
+        }
+        msg.classList.remove('hidden');
+    } catch (err) {
+        alert('Erro: ' + err);
+    }
+});
+
+async function loadPanelRecharges() {
+    try {
+        const res = await fetch('/admin/panel/recharge/list');
+        const recharges = await res.json();
+        const tbody = document.getElementById('panelRechargesTable');
+        
+        if (recharges.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma recarga registrada</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = recharges.map(r => {
+            const totalBRL = (r.total_cost_usd * r.dolar_rate).toFixed(2);
+            const data = new Date(r.created_at).toLocaleDateString('pt-BR');
+            
+            return `<tr class="border-b border-orange-500/30 hover:bg-orange-900/20">
+                <td class="p-2 text-center">${r.quantity}</td>
+                <td class="p-2 text-right">$${r.cost_per_unit_usd.toFixed(2)}</td>
+                <td class="p-2 text-right font-bold text-cyan-400">$${r.total_cost_usd.toFixed(2)}</td>
+                <td class="p-2 text-right">R$ ${r.dolar_rate.toFixed(2)}</td>
+                <td class="p-2 text-right font-bold text-red-400">R$ ${totalBRL}</td>
+                <td class="p-2 text-sm">${r.notes || '-'}</td>
+                <td class="p-2 text-center text-xs">${data}</td>
+                <td class="p-2 text-center"><button onclick="deletePanelRecharge(${r.id})" class="text-red-400 hover:text-red-300">🗑️</button></td>
+            </tr>`;
+        }).join('');
+    } catch (err) {
+        console.error('Erro ao carregar recargas:', err);
+    }
+}
+
+async function deletePanelRecharge(id) {
+    if (!confirm('Excluir esta recarga?')) return;
+    try {
+        const res = await fetch(`/admin/panel/recharge/delete/${id}`, { method: 'POST' });
+        if (res.ok) {
+            loadPanelRecharges();
+            loadSalesReport();
+        }
+    } catch {
+        alert('Erro ao excluir');
+    }
+}
+
+/* =========================
+   RELATÓRIO DE VENDAS
+========================= */
+
+async function loadSalesReport() {
+    try {
+        const res = await fetch('/admin/sales/report');
+        const report = await res.json();
+        
+        const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        const fmtUSD = (n) => '$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        
+        // Online
+        document.getElementById('onlineRevenue').textContent = fmt(report.online.revenue);
+        document.getElementById('onlineCount').textContent = report.online.count + ' vendas';
+        
+        // Manual
+        document.getElementById('manualRevenue').textContent = fmt(report.manual.revenue);
+        document.getElementById('manualCount').textContent = report.manual.count + ' vendas';
+        
+        // Totais
+        const totalCount = report.online.count + report.manual.count;
+        document.getElementById('totalRevenue').textContent = fmt(report.summary.total_revenue);
+        document.getElementById('totalCount').textContent = totalCount + ' vendas';
+        
+        document.getElementById('totalCosts').textContent = fmt(report.summary.total_costs);
+        
+        const profitElement = document.getElementById('totalProfit');
+        profitElement.textContent = fmt(report.summary.total_profit);
+        profitElement.className = report.summary.total_profit >= 0 
+            ? 'text-2xl font-bold text-green-500' 
+            : 'text-2xl font-bold text-red-500';
+        
+        document.getElementById('marginProfit').textContent = report.summary.profit_margin + '%';
+        
+    } catch (err) {
+        console.error('Erro ao carregar relatório:', err);
+    }
+}
+
+// Carregar dados ao iniciar
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        loadManualSales();
+        loadPanelRecharges();
+        loadSalesReport();
+    }, 500);
+});

@@ -465,3 +465,200 @@ def delete_key(key_id):
     conn.close()
     
     return jsonify({'success': True})
+
+# --- VENDAS MANUAIS (OFFLINE) ---
+
+@admin_bp.route('/admin/sales/manual/add', methods=['POST'])
+def add_manual_sale():
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    try:
+        product_id = request.form.get('product_id')
+        quantity = int(request.form.get('quantity', 1))
+        unit_price = float(str(request.form.get('unit_price', 0)).replace('R$', '').replace(',', '.'))
+        cost_per_unit_brl = float(str(request.form.get('cost_per_unit_brl', 0)).replace('R$', '').replace(',', '.'))
+        notes = request.form.get('notes', '').strip()
+        
+        if not product_id or quantity <= 0 or unit_price <= 0:
+            return jsonify({'error': 'Dados inválidos'}), 400
+        
+        total_price = quantity * unit_price
+        
+        conn = get_db_connection()
+        conn.execute(
+            'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes) VALUES (?,?,?,?,?,?)',
+            (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes)
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Venda manual registrada!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/admin/sales/manual/list', methods=['GET'])
+def list_manual_sales():
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    # Pega vendas manuais com info do produto
+    sales = conn.execute('''
+        SELECT ms.*, p.name as product_name
+        FROM manual_sales ms
+        JOIN products p ON ms.product_id = p.id
+        ORDER BY ms.created_at DESC
+    ''').fetchall()
+    conn.close()
+    
+    return jsonify([dict(s) for s in sales])
+
+@admin_bp.route('/admin/sales/manual/delete/<int:sale_id>', methods=['POST'])
+def delete_manual_sale(sale_id):
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    conn.execute('DELETE FROM manual_sales WHERE id = ?', (sale_id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+# --- RECARGAS DE PAINEL ---
+
+@admin_bp.route('/admin/panel/recharge', methods=['POST'])
+def add_panel_recharge():
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    try:
+        quantity = int(request.form.get('quantity', 0))
+        cost_per_unit_usd = float(request.form.get('cost_per_unit_usd', 0))
+        dolar_rate = float(request.form.get('dolar_rate', get_dolar_hoje()))
+        notes = request.form.get('notes', '').strip()
+        
+        if quantity <= 0 or cost_per_unit_usd <= 0:
+            return jsonify({'error': 'Dados inválidos'}), 400
+        
+        total_cost_usd = quantity * cost_per_unit_usd
+        
+        conn = get_db_connection()
+        conn.execute(
+            'INSERT INTO panel_recharges (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes) VALUES (?,?,?,?,?)',
+            (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes)
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Recarga de painel registrada!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/admin/panel/recharge/list', methods=['GET'])
+def list_panel_recharges():
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    recharges = conn.execute('SELECT * FROM panel_recharges ORDER BY created_at DESC').fetchall()
+    conn.close()
+    
+    return jsonify([dict(r) for r in recharges])
+
+@admin_bp.route('/admin/panel/recharge/delete/<int:recharge_id>', methods=['POST'])
+def delete_panel_recharge(recharge_id):
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    conn.execute('DELETE FROM panel_recharges WHERE id = ?', (recharge_id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+# --- RELATÓRIO DE VENDAS & LUCROS ---
+
+@admin_bp.route('/admin/sales/report', methods=['GET'])
+def sales_report():
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    dolar_hoje = get_dolar_hoje()
+    IOF = 1.0638
+    
+    conn = get_db_connection()
+    
+    # Vendas Online (Mercado Pago)
+    approved_orders = conn.execute('''
+        SELECT SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total,
+               COUNT(*) as count
+        FROM orders WHERE status = 'approved'
+    ''').fetchone()
+    
+    online_revenue = float(approved_orders['total'] or 0) if approved_orders['total'] else 0
+    online_count = approved_orders['count'] or 0
+    
+    # Vendas Manuais
+    manual_sales = conn.execute('''
+        SELECT SUM(total_price) as total, COUNT(*) as count
+        FROM manual_sales
+    ''').fetchone()
+    
+    manual_revenue = float(manual_sales['total'] or 0) if manual_sales['total'] else 0
+    manual_count = manual_sales['count'] or 0
+    
+    # Custo de vendas online (produtos)
+    online_costs = conn.execute('''
+        SELECT SUM(p.cost_usd) as total_usd
+        FROM orders o
+        JOIN products p ON o.product_id = p.id
+        WHERE o.status = 'approved'
+    ''').fetchone()
+    
+    online_cost_usd = float(online_costs['total_usd'] or 0) if online_costs['total_usd'] else 0
+    online_cost_brl = online_cost_usd * dolar_hoje * IOF
+    
+    # Custo de vendas manuais
+    manual_costs = conn.execute('''
+        SELECT SUM(cost_per_unit_brl * quantity) as total
+        FROM manual_sales
+    ''').fetchone()
+    
+    manual_cost_brl = float(manual_costs['total'] or 0) if manual_costs['total'] else 0
+    
+    # Custo de recargas de painel
+    recharges = conn.execute('''
+        SELECT SUM(total_cost_usd) as total_usd
+        FROM panel_recharges
+    ''').fetchone()
+    
+    total_recharged_usd = float(recharges['total_usd'] or 0) if recharges['total_usd'] else 0
+    total_recharged_brl = total_recharged_usd * dolar_hoje * IOF
+    
+    conn.close()
+    
+    # Totais
+    total_revenue = online_revenue + manual_revenue
+    total_costs = online_cost_brl + manual_cost_brl + total_recharged_brl
+    total_profit = total_revenue - total_costs
+    
+    return jsonify({
+        'online': {
+            'revenue': round(online_revenue, 2),
+            'count': online_count,
+            'cost_brl': round(online_cost_brl, 2),
+            'cost_usd': round(online_cost_usd, 2)
+        },
+        'manual': {
+            'revenue': round(manual_revenue, 2),
+            'count': manual_count,
+            'cost_brl': round(manual_cost_brl, 2)
+        },
+        'panel': {
+            'total_cost_usd': round(total_recharged_usd, 2),
+            'total_cost_brl': round(total_recharged_brl, 2)
+        },
+        'summary': {
+            'dolar_rate': round(dolar_hoje, 2),
+            'total_revenue': round(total_revenue, 2),
+            'total_costs': round(total_costs, 2),
+            'total_profit': round(total_profit, 2),
+            'profit_margin': round((total_profit / total_revenue * 100) if total_revenue > 0 else 0, 2)
+        }
+    })

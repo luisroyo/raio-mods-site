@@ -44,6 +44,36 @@ cursor.execute('''
 ''')
 print("✅ Tabela 'orders' verificada.")
 
+# 2.5. Cria tabela de VENDAS MANUAIS (offline)
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS manual_sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER DEFAULT 1,
+        unit_price REAL NOT NULL,
+        cost_per_unit_brl REAL NOT NULL,
+        total_price REAL NOT NULL,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id) REFERENCES products (id)
+    )
+''')
+print("✅ Tabela 'manual_sales' criada/verificada.")
+
+# 2.6. Cria tabela de RECARGAS DE PAINEL
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS panel_recharges (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        quantity INTEGER NOT NULL,
+        cost_per_unit_usd REAL NOT NULL,
+        total_cost_usd REAL NOT NULL,
+        dolar_rate REAL NOT NULL,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+print("✅ Tabela 'panel_recharges' criada/verificada.")
+
 # 3. Garante colunas na tabela PRODUCTS
 try:
     cursor.execute('ALTER TABLE products ADD COLUMN cost_usd REAL DEFAULT 0.0')

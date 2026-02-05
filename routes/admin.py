@@ -36,7 +36,7 @@ def admin():
         legacy_rows = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
         legacy_catalog_ids = set(r[0] for r in legacy_rows)
         
-        catalogs, simple_products, subproducts_by_parent, parent_products = [], [], {}, []
+        catalogs, simple_products, subproducts_by_parent, subproducts_by_category, parent_products = [], [], {}, {}, []
         
         for p in all_products:
             # Adiciona a contagem de estoque ao objeto do produto
@@ -53,11 +53,18 @@ def admin():
                 if is_cat == 1 or p['id'] in legacy_catalog_ids:
                     catalogs.append(p_dict)
                     if p['id'] not in subproducts_by_parent: subproducts_by_parent[p['id']] = []
+                    if p['id'] not in subproducts_by_category: subproducts_by_category[p['id']] = {}
                 else:
                     simple_products.append(p_dict) 
             else:
                 if pid not in subproducts_by_parent: subproducts_by_parent[pid] = []
                 subproducts_by_parent[pid].append(p_dict)
+                
+                # Agrupa por categoria dentro da capa
+                if pid not in subproducts_by_category: subproducts_by_category[pid] = {}
+                category = p.get('category', 'Sem categoria') if 'category' in keys else 'Sem categoria'
+                if category not in subproducts_by_category[pid]: subproducts_by_category[pid][category] = []
+                subproducts_by_category[pid][category].append(p_dict)
         
         stats = {
             'total_products': len(all_products),
@@ -67,8 +74,8 @@ def admin():
         }
         conn.close()
         return render_template('admin.html', catalogs=catalogs, simple_products=simple_products, 
-                             subproducts_by_parent=subproducts_by_parent, parent_products=parent_products, 
-                             links=all_links, config=config, stats=stats)
+                             subproducts_by_parent=subproducts_by_parent, subproducts_by_category=subproducts_by_category,
+                             parent_products=parent_products, links=all_links, config=config, stats=stats)
     
     if request.method == 'POST':
         if request.form.get('password') == current_app.config['ADMIN_PASSWORD']:

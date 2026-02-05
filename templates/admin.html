@@ -92,33 +92,43 @@
                         </div>
                         <div class="md:w-2/3">
                             <h4 class="font-bold mb-4">Produtos em {{ catalog.name }}:</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {% for sub in subproducts %}
-                                <div class="border border-neon-cyan p-4 rounded bg-black">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <span class="font-bold text-neon-cyan block">{{ sub.name }}</span>
-                                            <span class="text-green-400 text-sm">{{ sub.price }}</span>
-                                            
-                                            <div class="mt-1 text-xs">
-                                                {% if sub.stock > 0 %}
-                                                    <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
-                                                {% else %}
-                                                    <span class="text-red-500">🔴 Sem estoque</span>
-                                                {% endif %}
+                            {% set categories = subproducts_by_category.get(catalog.id, {}) %}
+                            {% if categories %}
+                                {% for category, products in categories.items() | sort %}
+                                <div class="mb-6">
+                                    <h5 class="text-sm font-bold text-neon-cyan mb-3 px-2 py-1 bg-gray-800 rounded">📁 {{ category }}</h5>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {% for sub in products %}
+                                        <div class="border border-neon-cyan p-4 rounded bg-black">
+                                            <div class="flex justify-between items-start">
+                                                <div>
+                                                    <span class="font-bold text-neon-cyan block">{{ sub.name }}</span>
+                                                    <span class="text-green-400 text-sm">{{ sub.price }}</span>
+                                                    
+                                                    <div class="mt-1 text-xs">
+                                                        {% if sub.stock > 0 %}
+                                                            <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
+                                                        {% else %}
+                                                            <span class="text-red-500">🔴 Sem estoque</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1">
+                                                    <button type="button" onclick="openKeyModal({{ sub.id }}, {{ sub.name|tojson|forceescape }})" class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500" title="Gerenciar Chaves">🔑</button>
+                                                    
+                                                    <button type="button" onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, 0, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
+                                                    
+                                                    <button type="button" onclick='deleteProduct({{ sub.id }})' class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="flex gap-1">
-                                            <button type="button" onclick="openKeyModal({{ sub.id }}, {{ sub.name|tojson|forceescape }})" class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500" title="Gerenciar Chaves">🔑</button>
-                                            
-                                            <button type="button" onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, 0, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
-                                            
-                                            <button type="button" onclick='deleteProduct({{ sub.id }})' class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
-                                        </div>
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 {% endfor %}
-                            </div>
+                            {% else %}
+                                <p class="text-gray-500 text-sm">Nenhum produto adicionado ainda.</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

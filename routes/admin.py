@@ -15,67 +15,82 @@ def allowed_file(filename):
 @admin_bp.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'GET' and session.get('admin_logged_in'):
-        conn = get_db_connection()
         try:
-            # Busca produtos
-            all_products = conn.execute('SELECT * FROM products ORDER BY sort_order ASC, id ASC').fetchall()
-            all_links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
-            config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
-            
-            # --- CONTAGEM DE ESTOQUE ---
-            # Conta quantas chaves livres (is_used=0) cada produto tem
-            stock_query = conn.execute('SELECT product_id, COUNT(*) as total FROM product_keys WHERE is_used = 0 GROUP BY product_id').fetchall()
-            stock_map = {row['product_id']: row['total'] for row in stock_query}
-            
-        except sqlite3.OperationalError:
-            conn.close()
-            init_db()
-            return redirect(url_for('admin.admin'))
-
-        # Lógica de Catálogos vs Produtos Simples
-        legacy_rows = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
-        legacy_catalog_ids = set(r[0] for r in legacy_rows)
-        
-        catalogs, simple_products, subproducts_by_parent, subproducts_by_category, parent_products = [], [], {}, {}, []
-        
-        for p in all_products:
-            # Adiciona a contagem de estoque ao objeto do produto
-            p_dict = dict(p)
-            p_dict['stock'] = stock_map.get(p['id'], 0) # Se não tiver chave, é 0
-            
-            keys = p.keys()
-            pid = p['parent_id'] if 'parent_id' in keys else None
-            is_cat = p['is_catalog'] if 'is_catalog' in keys else 0
-
-            if pid is None and (is_cat == 1 or p['id'] in legacy_catalog_ids): parent_products.append(p_dict)
-
-            if pid is None:
-                if is_cat == 1 or p['id'] in legacy_catalog_ids:
-                    catalogs.append(p_dict)
-                    if p['id'] not in subproducts_by_parent: subproducts_by_parent[p['id']] = []
-                    if p['id'] not in subproducts_by_category: subproducts_by_category[p['id']] = {}
-                else:
-                    simple_products.append(p_dict) 
-            else:
-                if pid not in subproducts_by_parent: subproducts_by_parent[pid] = []
-                subproducts_by_parent[pid].append(p_dict)
+            conn = get_db_connection()
+            try:
+                # Busca produtos
+                all_products = conn.execute('SELECT * FROM products ORDER BY sort_order ASC, id ASC').fetchall()
+                all_links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
+                config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
                 
-                # Agrupa por categoria dentro da capa
-                if pid not in subproducts_by_category: subproducts_by_category[pid] = {}
-                category = p.get('category', 'Sem categoria') if 'category' in keys else 'Sem categoria'
-                if category not in subproducts_by_category[pid]: subproducts_by_category[pid][category] = []
-                subproducts_by_category[pid][category].append(p_dict)
-        
-        stats = {
-            'total_products': len(all_products),
-            'total_catalogs': len(catalogs),
-            'total_links': len(all_links),
-            'total_simple': len(simple_products),
-        }
-        conn.close()
-        return render_template('admin.html', catalogs=catalogs, simple_products=simple_products, 
-                             subproducts_by_parent=subproducts_by_parent, subproducts_by_category=subproducts_by_category,
-                             parent_products=parent_products, links=all_links, config=config, stats=stats)
+                # --- CONTAGEM DE ESTOQUE ---
+                # Conta quantas chaves livres (is_used=0) cada produto tem
+                stock_query = conn.execute('SELECT product_id, COUNT(*) as total FROM product_keys WHERE is_used = 0 GROUP BY product_id').fetchall()
+                stock_map = {row['product_id']: row['total'] for row in stock_query}
+                
+            except sqlite3.OperationalError:
+                conn.close()
+                init_db()
+                return redirect(url_for('admin.admin'))
+
+            # Lógica de Catálogos vs Produtos Simples
+            legacy_rows = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
+            legacy_catalog_ids = set(r[0] for r in legacy_rows)
+            
+            catalogs, simple_products, subproducts_by_parent, subproducts_by_category, parent_products = [], [], {}, {}, []
+            
+            for p in all_products:
+                # Adiciona a contagem de estoque ao objeto do produto
+                p_dict = dict(p)
+                p_dict['stock'] = stock_map.get(p['id'], 0) # Se não tiver chave, é 0
+                
+                keys = p.keys()
+                pid = p['parent_id'] if 'parent_id' in keys else None
+                is_cat = p['is_catalog'] if 'is_catalog' in keys else 0
+
+                if pid is None and (is_cat == 1 or p['id'] in legacy_catalog_ids): parent_products.append(p_dict)
+
+                if pid is None:
+                    if is_cat == 1 or p['id'] in legacy_catalog_ids:
+                        catalogs.append(p_dict)
+                        if p['id'] not in subproducts_by_parent: subproducts_by_parent[p['id']] = []
+                        if p['id'] not in subproducts_by_category: subproducts_by_category[p['id']] = {}
+                    else:
+                        simple_products.append(p_dict) 
+                else:
+                    if pid not in subproducts_by_parent: subproducts_by_parent[pid] = []
+                    subproducts_by_parent[pid].append(p_dict)
+                    
+                    # Agrupa por categoria dentro da capa (com segurança)
+                    if pid not in subproducts_by_category: 
+                        subproducts_by_category[pid] = {}
+                    try:
+                        category = p.get('category', 'Sem categoria') if 'category' in keys else 'Sem categoria'
+                        if not category or category.strip() == '':
+                            category = 'Sem categoria'
+                        if category not in subproducts_by_category[pid]: 
+                            subproducts_by_category[pid][category] = []
+                        subproducts_by_category[pid][category].append(p_dict)
+                    except Exception as e:
+                        print(f"Erro ao agrupar produto {p['id']} por categoria: {e}")
+                        # Fallback: adicionar em categoria genérica
+                        if 'Sem categoria' not in subproducts_by_category[pid]: 
+                            subproducts_by_category[pid]['Sem categoria'] = []
+                        subproducts_by_category[pid]['Sem categoria'].append(p_dict)
+            
+            stats = {
+                'total_products': len(all_products),
+                'total_catalogs': len(catalogs),
+                'total_links': len(all_links),
+                'total_simple': len(simple_products),
+            }
+            conn.close()
+            return render_template('admin.html', catalogs=catalogs, simple_products=simple_products, 
+                                 subproducts_by_parent=subproducts_by_parent, subproducts_by_category=subproducts_by_category,
+                                 parent_products=parent_products, links=all_links, config=config, stats=stats)
+        except Exception as e:
+            print(f"Erro ao carregar página admin: {e}")
+            return jsonify({'error': f'Erro interno: {str(e)}'}), 500
     
     if request.method == 'POST':
         if request.form.get('password') == current_app.config['ADMIN_PASSWORD']:

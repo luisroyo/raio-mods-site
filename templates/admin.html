@@ -332,41 +332,86 @@
 
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
         <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-blue-500 rounded-lg p-6 bg-black">
-            <h3 class="text-xl font-bold text-blue-500 mb-4">Editar</h3>
+            <h3 class="text-xl font-bold text-blue-500 mb-4">✏️ Editar Produto</h3>
             <form id="editProductForm" class="space-y-3" enctype="multipart/form-data">
                 <input type="hidden" id="edit_id">
                 <input type="hidden" id="edit_is_catalog" name="is_catalog">
-                <input type="text" id="edit_name" name="name" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Nome">
-                <textarea id="edit_description" name="description" rows="2" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Descrição"></textarea>
-                <input type="text" id="edit_price" name="price" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Preço">
-                <input type="text" id="edit_category" name="category" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Categoria">
-                <input type="text" id="edit_tagline" name="tagline" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Tagline (ex: 30 dias de acesso)">
-                <input type="text" id="edit_payment_url" name="payment_url" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white" placeholder="Link Mercado Pago">
-                <div class="border border-amber-500/50 rounded p-2 bg-amber-500/5">
-                    <label class="text-xs text-amber-400 block mb-1">🏷️ Promoção (opcional)</label>
-                    <input type="text" id="edit_promo_price" name="promo_price" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white mb-2" placeholder="Preço promocional (ex: R$ 9,90)">
-                    <input type="text" id="edit_promo_label" name="promo_label" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white" placeholder="Label (ex: 20% OFF ou PROMO)">
-                    <p class="text-xs text-gray-500 mt-1">Deixe em branco para remover a promoção.</p>
-                </div>
+                
                 <div>
-                    <label class="text-xs text-gray-400 block mb-1">Ordem:</label>
-                    <input type="number" id="edit_sort_order" name="sort_order" min="0" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
+                    <label class="text-xs text-gray-400 block mb-1">📝 Nome do Produto</label>
+                    <input type="text" id="edit_name" name="name" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: KOS Virtual Premium">
                 </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">📄 Descrição</label>
+                    <textarea id="edit_description" name="description" rows="2" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Descreva o produto (ex: 30 dias de acesso)"></textarea>
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">💵 Preço</label>
+                    <input type="text" id="edit_price" name="price" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: R$ 29,90">
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">📁 Categoria</label>
+                    <input type="text" id="edit_category" name="category" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: Premium, Standard, VIP">
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">🏷️ Tagline (Subtítulo)</label>
+                    <input type="text" id="edit_tagline" name="tagline" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: 30 dias de acesso incluso">
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">🔗 Link Mercado Pago</label>
+                    <input type="text" id="edit_payment_url" name="payment_url" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white" placeholder="Cole o link do Mercado Pago (opcional)">
+                </div>
+                
+                <div class="border border-amber-500/50 rounded p-3 bg-amber-500/5">
+                    <label class="text-xs text-amber-400 block mb-2 font-bold">🏷️ Promoção (Opcional)</label>
+                    <div class="mb-2">
+                        <label class="text-xs text-gray-400 block mb-1">Preço da Promoção</label>
+                        <input type="text" id="edit_promo_price" name="promo_price" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm" placeholder="Ex: R$ 9,90">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Label da Promoção</label>
+                        <input type="text" id="edit_promo_label" name="promo_label" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm" placeholder="Ex: 20% OFF ou PROMO">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Deixe em branco para remover a promoção.</p>
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">🔢 Ordem de Exibição</label>
+                    <input type="number" id="edit_sort_order" name="sort_order" min="0" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="0">
+                </div>
+                
                 <div id="edit_parent_div">
-                    <label class="text-xs text-gray-400">Mover para:</label>
+                    <label class="text-xs text-gray-400 block mb-1">📦 Mover para Capa (Opcional)</label>
                     <select id="edit_parent_id" name="parent_id" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
-                        <option value="">Nenhum (Solto)</option>
+                        <option value="">Nenhum (Produto Solto)</option>
                         {% for cat in parent_products %}
                         <option value="{{ cat.id }}">{{ cat.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="border border-blue-500 p-2 rounded">
-                    <img id="edit_preview" src="" class="w-16 h-16 object-contain mb-2 border border-white">
-                    <input type="file" id="edit_image" name="image" class="text-xs text-gray-400">
-                    <input type="text" id="edit_image_url" name="image_url" placeholder="Ou URL da imagem" class="w-full mt-2 p-1 bg-gray-900 border border-blue-500 rounded text-white text-xs">
+                
+                <div class="border border-blue-500 p-3 rounded">
+                    <label class="text-xs text-gray-400 block mb-2">🖼️ Imagem do Produto</label>
+                    <img id="edit_preview" src="" class="w-16 h-16 object-contain mb-2 border border-white rounded">
+                    <div class="mb-2">
+                        <label class="text-xs text-gray-400 block mb-1">Upload Novo</label>
+                        <input type="file" id="edit_image" name="image" class="text-xs text-gray-400 w-full">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Ou URL da Imagem</label>
+                        <input type="text" id="edit_image_url" name="image_url" placeholder="https://exemplo.com/imagem.png" class="w-full p-1 bg-gray-900 border border-blue-500 rounded text-white text-xs">
+                    </div>
                 </div>
-                <div class="flex gap-2 mt-4"><button type="button" onclick="closeModal('editModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded">Salvar</button></div>
+                
+                <div class="flex gap-2 mt-4">
+                    <button type="button" onclick="closeModal('editModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded hover:bg-red-900/20">❌ Cancelar</button>
+                    <button type="submit" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500">✅ Salvar</button>
+                </div>
             </form>
             <div id="edit_message" class="mt-2 hidden"></div>
         </div>

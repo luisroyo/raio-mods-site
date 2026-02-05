@@ -7,6 +7,16 @@ import os
 import sqlite3
 import time
 import requests
+import logging
+
+# Configure logging to file
+logging.basicConfig(
+    filename=os.path.join(os.path.dirname(__file__), '..', 'dolar.log'),
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -17,20 +27,50 @@ def get_dolar_hoje():
     """
     Consulta a cotação atual do dólar em tempo real via API AwesomeAPI.
     Retorna o valor 'bid' (compra) como float.
-    Em caso de erro, retorna valor padrão de segurança (5.50).
+    Em caso de erro, tenta APIs alternativas.
+    Valor padrão de segurança: 5.50
     """
-    try:
-        response = requests.get('https://economia.awesomeapi.com.br/last/USD-BRL', timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            if 'USDBRL' in data:
-                bid = float(data['USDBRL']['bid'])
-                return bid
-    except Exception as e:
-        print(f"⚠️ Erro ao consultar dólar: {e}")
+    apis = [
+        ('https://economia.awesomeapi.com.br/last/USD-BRL', 'USDBRL', 'bid'),
+        ('https://api.exchangerate-api.com/v4/latest/USD', 'rates', 'BRL'),
+    ]
     
-    # Valor padrão de segurança
+    for api_url, key1, key2 in apis:
+        try:
+            response = requests.get(api_url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if key1 in data:
+                    if isinstance(data[key1], dict) and key2 in data[key1]:
+                        bid = float(data[key1][key2])
+                        msg = f"[OK] Dolar atualizado via {api_url}: R$ {bid:.2f}"
+                        print(msg)
+                        logger.info(msg)
+                        return bid
+        except Exception as e:
+            msg = f"[ERRO] Falha ao consultar dolar em {api_url}: {e}"
+            print(msg)
+            logger.error(msg)
+            continue
+    
+    # Se todas as APIs falharem, usar valor padrão
+    msg = f"[AVISO] Todas as APIs falharam. Usando valor padrao: R$ 5.50"
+    print(msg)
+    logger.warning(msg)
     return 5.50
+
+@admin_bp.route('/admin/debug/dolar', methods=['GET'])
+def debug_dolar():
+    """Endpoint para debugar a cotação do dólar em tempo real"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    dolar = get_dolar_hoje()
+    return jsonify({
+        'dolar_rate': round(dolar, 4),
+        'timestamp': time.time(),
+        'note': 'Se o valor for 5.50, a API pode estar falhando. Verifique os logs do servidor.'
+    })
 
 @admin_bp.route('/admin', methods=['GET', 'POST'])
 def admin():

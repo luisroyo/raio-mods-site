@@ -7,7 +7,7 @@ def get_db_path():
 
 def init_db():
     db_path = get_db_path()
-    print(f"🔌 Verificando banco de dados em: {db_path}")
+    print(f"[BD] Verificando banco de dados em: {db_path}")
     
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -142,4 +142,4 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("✅ Banco de dados inicializado/atualizado com sucesso!")
+    print("[OK] Banco de dados inicializado/atualizado com sucesso!")

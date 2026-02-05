@@ -6,8 +6,8 @@
 
 {% block content %}
 <!-- Tabs para alternar entre Catálogos e Produtos Soltos -->
-<div class="mb-6 border-b border-gray-700">
-    <nav class="flex gap-4">
+<div class="mb-6 border-b border-gray-700 overflow-x-auto">
+    <nav class="flex gap-4 min-w-max pb-1">
         <button type="button" onclick="showProductTab('catalogs')" id="tab-catalogs"
             class="px-6 py-3 font-bold text-purple-400 border-b-2 border-purple-400">
             📂 Jogos (Catálogos)
@@ -88,10 +88,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                             {% for sub in products %}
                             <div class="border border-gray-700 p-3 rounded bg-gray-800/50">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <span class="font-bold text-cyan-400">{{ sub.name }}</span>
-                                        <span class="text-green-400 text-sm ml-2">{{ sub.price }}</span>
+                                <div class="flex flex-col sm:flex-row justify-between items-start gap-2">
+                                    <div class="w-full sm:w-auto">
+                                        <div class="flex justify-between sm:block">
+                                            <span class="font-bold text-cyan-400 block">{{ sub.name }}</span>
+                                            <span class="text-green-400 text-sm ml-2 sm:ml-0">{{ sub.price }}</span>
+                                        </div>
                                         <div class="mt-1 text-xs">
                                             {% if sub.stock > 0 %}
                                             <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
@@ -100,7 +102,7 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                    <div class="flex gap-1">
+                                    <div class="flex gap-1 w-full sm:w-auto justify-end mt-2 sm:mt-0">
                                         <button type="button"
                                             onclick="openKeyModal({{ sub.id }}, {{ sub.name|tojson|forceescape }})"
                                             class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500">🔑</button>
@@ -182,10 +184,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for prod in simple_products %}
         <div class="border border-cyan-500/50 rounded-lg p-4 bg-gray-800/50">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h4 class="font-bold text-white">{{ prod.name }}</h4>
-                    <p class="text-green-400 font-bold">{{ prod.price }}</p>
+            <div class="flex flex-col sm:flex-row justify-between items-start gap-2">
+                <div class="w-full sm:w-auto">
+                    <div class="flex justify-between sm:block">
+                        <h4 class="font-bold text-white">{{ prod.name }}</h4>
+                        <p class="text-green-400 font-bold sm:hidden">{{ prod.price }}</p>
+                    </div>
+                    <p class="text-green-400 font-bold hidden sm:block">{{ prod.price }}</p>
                     <div class="mt-2 text-sm">
                         {% if prod.stock > 0 %}
                         <span class="text-green-400">🟢 {{ prod.stock }} chaves</span>
@@ -195,7 +200,7 @@
                     </div>
                 </div>
                 {% if prod.image %}
-                <img src="{{ prod.image }}" class="w-12 h-12 object-contain rounded">
+                <img src="{{ prod.image }}" class="w-12 h-12 object-contain rounded self-end sm:self-start">
                 {% endif %}
             </div>
             <div class="flex gap-2 mt-4">

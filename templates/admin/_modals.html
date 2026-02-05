@@ -8,7 +8,7 @@
             <button type="button" onclick="closeModal('editManualSaleModal')"
                 class="text-gray-500 hover:text-white text-2xl">&times;</button>
         </div>
-        <div class="p-6 overflow-y-auto">
+        <div class="p-4 md:p-6 overflow-y-auto">
             <form id="editManualSaleForm" class="space-y-4">
                 <input type="hidden" id="edit_sale_id" name="sale_id">
 
@@ -142,7 +142,7 @@ function convertEditUsdToBrl() {
 <!-- Add Subproduct Modal -->
 <div id="addSubproductModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
     <div
-        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-green-500 rounded-lg p-6 bg-black relative">
+        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-green-500 rounded-lg p-4 md:p-6 bg-black relative">
         <h3 class="text-xl font-bold text-green-500 mb-4">Adicionar Produto em <span id="sub_cat_name"
                 class="text-white"></span></h3>
         <form id="addSubproductForm" class="space-y-3" data-url="{{ url_for('admin.add_product') }}"
@@ -195,7 +195,7 @@ function convertEditUsdToBrl() {
 <!-- Config Modal -->
 <div id="configModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
     <div
-        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black">
+        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-4 md:p-6 bg-black">
         <h3 class="text-xl font-bold text-yellow-500 mb-4">⚙️ Configurações</h3>
         <form id="configForm" class="space-y-4" data-url="{{ url_for('admin.update_config') }}">
             <div>
@@ -235,7 +235,7 @@ function convertEditUsdToBrl() {
 <!-- Edit Product Modal -->
 <div id="editModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
     <div
-        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-blue-500 rounded-lg p-6 bg-black">
+        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-blue-500 rounded-lg p-4 md:p-6 bg-black">
         <h3 class="text-xl font-bold text-blue-500 mb-4">✏️ Editar Produto</h3>
         <form id="editProductForm" class="space-y-3" enctype="multipart/form-data">
             <input type="hidden" id="edit_id">
@@ -360,7 +360,7 @@ function convertEditUsdToBrl() {
 
 <!-- Edit Link Modal -->
 <div id="editLinkModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
-    <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-white rounded-lg p-6 bg-black">
+    <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-white rounded-lg p-4 md:p-6 bg-black">
         <h3 class="text-xl font-bold text-white mb-4">Editar Link</h3>
         <form id="editLinkForm" class="space-y-3" enctype="multipart/form-data">
             <input type="hidden" id="link_edit_id">

@@ -6,7 +6,7 @@
 
 {% block content %}
 <!-- Formulário de Novo Link -->
-<div class="mb-8 border-2 border-blue-500 rounded-lg p-6 bg-blue-500/5">
+<div class="mb-8 border-2 border-blue-500 rounded-lg p-4 md:p-6 bg-blue-500/5">
     <h3 class="text-xl font-bold text-blue-400 mb-4">➕ Novo Link</h3>
     <form id="addLinkForm" class="space-y-4" data-url="{{ url_for('admin.add_link') }}" enctype="multipart/form-data">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -44,7 +44,7 @@
 
 <!-- Lista de Links -->
 {% if links %}
-<div class="border-2 border-blue-500 rounded-lg p-6 bg-blue-500/5">
+<div class="border-2 border-blue-500 rounded-lg p-4 md:p-6 bg-blue-500/5">
     <h3 class="text-xl font-bold text-blue-400 mb-4">📋 Links Cadastrados ({{ links|length }})</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for link in links %}

@@ -2,7 +2,7 @@
 <div id="editManualSaleModal"
     class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
     <div
-        class="w-full max-w-md bg-black border-2 border-purple-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+        class="w-full max-w-lg bg-black border-2 border-purple-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
         <div class="p-4 border-b border-gray-800 flex justify-between items-center">
             <h3 class="text-xl font-bold text-purple-500">✏️ Editar Venda Manual</h3>
             <button type="button" onclick="closeModal('editManualSaleModal')"
@@ -39,14 +39,23 @@
                     <div>
                         <label class="block text-sm text-gray-400 mb-1">Preço Venda (R$)</label>
                         <input type="text" id="edit_sale_unit_price" name="unit_price" required
-                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                            class="w-full px-4 py-2 bg-black border border-green-500 rounded text-white">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Custo Unitário (R$)</label>
-                    <input type="text" id="edit_sale_cost" name="cost_per_unit_brl" required
-                        class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Custo Unit. (USD)</label>
+                        <input type="text" id="edit_sale_cost_usd" name="cost_per_unit_usd"
+                            oninput="convertEditUsdToBrl()"
+                            class="w-full px-4 py-2 bg-black border border-cyan-500 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Custo Unit. (R$) - Auto</label>
+                        <input type="text" id="edit_sale_cost" name="cost_per_unit_brl" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        <p class="text-xs text-gray-500 mt-1">Cotação: R$ <span id="editDolarRate">{{ financeiro.dolar_hoje }}</span></p>
+                    </div>
                 </div>
 
                 <div>
@@ -63,6 +72,29 @@
         </div>
     </div>
 </div>
+
+<script>
+function convertEditUsdToBrl() {
+    const usdInput = document.getElementById('edit_sale_cost_usd');
+    const brlInput = document.getElementById('edit_sale_cost');
+    const rateEl = document.getElementById('editDolarRate');
+    
+    if (!usdInput || !brlInput || !rateEl) return;
+    
+    const rate = parseFloat(rateEl.textContent);
+    const usdValue = parseFloat(usdInput.value.replace(',', '.'));
+    
+    if (!isNaN(usdValue) && usdValue > 0 && !isNaN(rate)) {
+        const IOF = 1.0638;
+        const brlValue = (usdValue * rate * IOF).toFixed(2);
+        brlInput.value = brlValue;
+    } else if (usdInput.value === '') {
+        // Allow manual BRL input when USD is empty
+    }
+}
+</script>
+
+
 
 <!-- Key Modal -->
 <div id="keyModal"

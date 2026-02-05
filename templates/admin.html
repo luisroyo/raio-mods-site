@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - RAIO MODS</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
+
 <body>
     <header class="border-b-2 border-neon-cyan py-6 mb-8">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <h1 class="text-4xl font-bold neon-cyan">Painel Admin</h1>
             <div class="flex gap-4 items-center">
-                <button type="button" onclick="openConfigModal()" class="flex items-center gap-2 border border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-900 transition">
+                <button type="button" onclick="openConfigModal()"
+                    class="flex items-center gap-2 border border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-900 transition">
                     ⚙️ Config Pagamentos
                 </button>
                 <a href="{{ url_for('public.index') }}" class="neon-purple hover:text-white">Ver Loja</a>
@@ -35,29 +38,36 @@
                 <div class="border border-blue-500 rounded-lg p-4 bg-black/50">
                     <p class="text-xs text-gray-400 mb-2">📊 Cotação USD-BRL</p>
                     <p id="dolar_value" class="text-3xl font-bold text-blue-500">{{ financeiro.dolar_hoje }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Atualizado: <span id="dolar_updated">{{ financeiro.dolar_updated }}</span>
-                        <button id="refresh_dolar" type="button" class="ml-2 text-xs px-2 py-1 border border-blue-500 rounded">Atualizar</button>
+                    <p class="text-xs text-gray-500 mt-1">Atualizado: <span id="dolar_updated">{{
+                            financeiro.dolar_updated }}</span>
+                        <button id="refresh_dolar" type="button"
+                            class="ml-2 text-xs px-2 py-1 border border-blue-500 rounded">Atualizar</button>
                     </p>
                 </div>
-                
+
                 <!-- Faturamento Bruto -->
                 <div class="border border-green-500 rounded-lg p-4 bg-black/50">
                     <p class="text-xs text-gray-400 mb-2">💵 Faturamento Bruto</p>
-                    <p class="text-3xl font-bold text-green-500">R$ {{ "{:,.2f}".format(financeiro.faturamento_total) }}</p>
+                    <p class="text-3xl font-bold text-green-500">R$ {{ "{:,.2f}".format(financeiro.faturamento_total) }}
+                    </p>
                     <p class="text-xs text-gray-500 mt-1">{{ financeiro.total_vendas }} vendas aprovadas</p>
                 </div>
-                
+
                 <!-- Custos Totais -->
                 <div class="border border-red-500 rounded-lg p-4 bg-black/50">
                     <p class="text-xs text-gray-400 mb-2">📉 Custos Totais</p>
-                    <p class="text-3xl font-bold text-red-500">R$ {{ "{:,.2f}".format(financeiro.custo_vendas_total + financeiro.custo_fixo_painel_brl) }}</p>
+                    <p class="text-3xl font-bold text-red-500">R$ {{ "{:,.2f}".format(financeiro.custo_vendas_total +
+                        financeiro.custo_fixo_painel_brl) }}</p>
                     <p class="text-xs text-gray-500 mt-1">Produtos + Painel ($50 USD)</p>
                 </div>
-                
+
                 <!-- Lucro Líquido -->
-                <div class="border {% if financeiro.lucro_liquido >= 0 %}border-green-500{% else %}border-red-500{% endif %} rounded-lg p-4 bg-black/50">
+                <div
+                    class="border {% if financeiro.lucro_liquido >= 0 %}border-green-500{% else %}border-red-500{% endif %} rounded-lg p-4 bg-black/50">
                     <p class="text-xs text-gray-400 mb-2">🎯 Lucro Líquido</p>
-                    <p class="text-3xl font-bold {% if financeiro.lucro_liquido >= 0 %}text-green-500{% else %}text-red-500{% endif %}">R$ {{ "{:,.2f}".format(financeiro.lucro_liquido) }}</p>
+                    <p
+                        class="text-3xl font-bold {% if financeiro.lucro_liquido >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                        R$ {{ "{:,.2f}".format(financeiro.lucro_liquido) }}</p>
                     <p class="text-xs text-gray-500 mt-1">IOF: {{ (financeiro.iof * 100)|int }}% (6.38%)</p>
                 </div>
             </div>
@@ -65,13 +75,15 @@
                 <summary class="cursor-pointer font-bold text-gray-300">📋 Detalhes dos Cálculos</summary>
                 <div class="mt-3 space-y-2">
                     <p>💰 Faturamento Bruto: R$ {{ "{:,.2f}".format(financeiro.faturamento_total) }}</p>
-                    <p>📦 Custo de Produtos: R$ {{ "{:,.2f}".format(financeiro.custo_vendas_total) }} (Compra em USD + IOF)</p>
-                    <p>🏪 Custo Painel Fixo: R$ {{ "{:,.2f}".format(financeiro.custo_fixo_painel_brl) }} ($50 USD × {{ financeiro.dolar_hoje }} × {{ financeiro.iof }})</p>
+                    <p>📦 Custo de Produtos: R$ {{ "{:,.2f}".format(financeiro.custo_vendas_total) }} (Compra em USD +
+                        IOF)</p>
+                    <p>🏪 Custo Painel Fixo: R$ {{ "{:,.2f}".format(financeiro.custo_fixo_painel_brl) }} ($50 USD × {{
+                        financeiro.dolar_hoje }} × {{ financeiro.iof }})</p>
                     <p>✅ Lucro Líquido: R$ {{ "{:,.2f}".format(financeiro.lucro_liquido) }}</p>
                 </div>
             </details>
         </div>
-        
+
         <div class="mb-8 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="border border-neon-cyan rounded-lg p-4 text-center bg-black/30">
                 <div class="text-2xl md:text-3xl font-bold neon-cyan">{{ stats.total_products }}</div>
@@ -92,29 +104,42 @@
         </div>
 
         <div class="mb-8 flex flex-wrap gap-4 border-b-2 border-neon-cyan pb-2">
-            <button type="button" onclick="showSection('catalog')" id="tab-catalog" class="px-6 py-2 font-bold neon-cyan border-b-2 border-neon-cyan">📂 Jogos (Capas)</button>
-            <button type="button" onclick="showSection('product')" id="tab-product" class="px-6 py-2 font-bold text-gray-400">🛍️ Produtos Soltos</button>
-            <button type="button" onclick="showSection('sales')" id="tab-sales" class="px-6 py-2 font-bold text-gray-400">💰 Vendas & Lucros</button>
-            <button type="button" onclick="showSection('links')" id="tab-links" class="px-6 py-2 font-bold text-gray-400">🔗 Links Úteis</button>
+            <button type="button" onclick="showSection('catalog')" id="tab-catalog"
+                class="px-6 py-2 font-bold neon-cyan border-b-2 border-neon-cyan">📂 Jogos (Capas)</button>
+            <button type="button" onclick="showSection('product')" id="tab-product"
+                class="px-6 py-2 font-bold text-gray-400">🛍️ Produtos Soltos</button>
+            <button type="button" onclick="showSection('sales')" id="tab-sales"
+                class="px-6 py-2 font-bold text-gray-400">💰 Vendas & Lucros</button>
+            <button type="button" onclick="showSection('links')" id="tab-links"
+                class="px-6 py-2 font-bold text-gray-400">🔗 Links Úteis</button>
         </div>
 
         <div id="section-catalog" class="section-content">
             <div class="mb-12 border-2 border-neon-purple rounded-lg p-8">
                 <h2 class="text-2xl font-bold neon-purple mb-6">📂 Novo Jogo (Capa)</h2>
-                <form id="addCatalogForm" class="space-y-4" data-url="{{ url_for('admin.add_product') }}" enctype="multipart/form-data">
+                <form id="addCatalogForm" class="space-y-4" data-url="{{ url_for('admin.add_product') }}"
+                    enctype="multipart/form-data">
                     <input type="hidden" name="is_catalog" value="1">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="name" required placeholder="Nome do Jogo" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
-                        <input type="text" name="category" required placeholder="Categoria" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                        <input type="text" name="name" required placeholder="Nome do Jogo"
+                            class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                        <input type="text" name="category" required placeholder="Categoria"
+                            class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
                     </div>
-                    <textarea name="description" required rows="2" placeholder="Descrição da Capa" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white"></textarea>
+                    <textarea name="description" required rows="2" placeholder="Descrição da Capa"
+                        class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white"></textarea>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="number" name="sort_order" value="0" placeholder="Ordem" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
-                        <input type="text" name="price" required placeholder="Chamada (Ex: A partir de R$ 10)" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                        <input type="number" name="sort_order" value="0" placeholder="Ordem"
+                            class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                        <input type="text" name="price" required placeholder="Chamada (Ex: A partir de R$ 10)"
+                            class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
                     </div>
-                    <input type="file" name="image" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
-                    <input type="text" name="image_url" placeholder="Ou URL da imagem" class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
-                    <button type="submit" class="w-full py-3 bg-neon-purple text-white font-bold rounded">➕ Criar Jogo</button>
+                    <input type="file" name="image"
+                        class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                    <input type="text" name="image_url" placeholder="Ou URL da imagem"
+                        class="w-full px-4 py-2 bg-black border border-neon-purple rounded text-white">
+                    <button type="submit" class="w-full py-3 bg-neon-purple text-white font-bold rounded">➕ Criar
+                        Jogo</button>
                 </form>
                 <div id="catalog_message" class="mt-4 hidden"></div>
             </div>
@@ -126,54 +151,68 @@
                 <div class="border border-neon-purple rounded-lg p-6 bg-gray-900 bg-opacity-30">
                     <div class="flex flex-col md:flex-row gap-6">
                         <div class="md:w-1/3 text-center">
-                            <img src="{{ catalog.image }}" class="w-32 h-32 mx-auto rounded-full object-contain border-4 border-neon-purple mb-4">
+                            <img src="{{ catalog.image }}"
+                                class="w-32 h-32 mx-auto rounded-full object-contain border-4 border-neon-purple mb-4">
                             <h3 class="text-2xl font-bold neon-purple">{{ catalog.name }}</h3>
                             <div class="flex gap-2 justify-center mt-4">
-                                <button type="button" onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }})' class="px-4 py-2 bg-neon-purple text-white rounded hover:bg-opacity-80">Editar</button>
-                                
-                                <button type="button" onclick='deleteProduct({{ catalog.id }})' class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Excluir</button>
+                                <button type="button"
+                                    onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }})'
+                                    class="px-4 py-2 bg-neon-purple text-white rounded hover:bg-opacity-80">Editar</button>
+
+                                <button type="button" onclick='deleteProduct({{ catalog.id }})'
+                                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Excluir</button>
                             </div>
-                            
-                            <button type="button" onclick='openAddSubproductModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }})' class="w-full mt-4 py-2 bg-green-600 text-black font-bold rounded hover:bg-green-500">➕ Add Produto Aqui</button>
+
+                            <button type="button"
+                                onclick='openAddSubproductModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }})'
+                                class="w-full mt-4 py-2 bg-green-600 text-black font-bold rounded hover:bg-green-500">➕
+                                Add Produto Aqui</button>
                         </div>
                         <div class="md:w-2/3">
                             <h4 class="font-bold mb-4">Produtos em {{ catalog.name }}:</h4>
                             {% set categories = subproducts_by_category.get(catalog.id, {}) %}
                             {% if categories %}
-                                {% for category, products in categories.items() | sort %}
-                                <div class="mb-6">
-                                    <h5 class="text-sm font-bold text-neon-cyan mb-3 px-2 py-1 bg-gray-800 rounded">📁 {{ category }}</h5>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {% for sub in products %}
-                                        <div class="border border-neon-cyan p-4 rounded bg-black">
-                                            <div class="flex justify-between items-start">
-                                                <div>
-                                                    <span class="font-bold text-neon-cyan block">{{ sub.name }}</span>
-                                                    <span class="text-green-400 text-sm">{{ sub.price }}</span>
-                                                    
-                                                    <div class="mt-1 text-xs">
-                                                        {% if sub.stock > 0 %}
-                                                            <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
-                                                        {% else %}
-                                                            <span class="text-red-500">🔴 Sem estoque</span>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                                <div class="flex gap-1">
-                                                    <button type="button" onclick="openKeyModal({{ sub.id }}, {{ sub.name|tojson|forceescape }})" class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500" title="Gerenciar Chaves">🔑</button>
-                                                    
-                                                    <button type="button" onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, 0, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }}, {{ (sub.cost_usd|default(0))|tojson|forceescape }}, {{ (sub.apply_iof|default(1))|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
-                                                    
-                                                    <button type="button" onclick='deleteProduct({{ sub.id }})' class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
+                            {% for category, products in categories.items() | sort %}
+                            <div class="mb-6">
+                                <h5 class="text-sm font-bold text-neon-cyan mb-3 px-2 py-1 bg-gray-800 rounded">📁 {{
+                                    category }}</h5>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {% for sub in products %}
+                                    <div class="border border-neon-cyan p-4 rounded bg-black">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <span class="font-bold text-neon-cyan block">{{ sub.name }}</span>
+                                                <span class="text-green-400 text-sm">{{ sub.price }}</span>
+
+                                                <div class="mt-1 text-xs">
+                                                    {% if sub.stock > 0 %}
+                                                    <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
+                                                    {% else %}
+                                                    <span class="text-red-500">🔴 Sem estoque</span>
+                                                    {% endif %}
                                                 </div>
                                             </div>
+                                            <div class="flex gap-1">
+                                                <button type="button"
+                                                    onclick="openKeyModal({{ sub.id }}, {{ sub.name|tojson|forceescape }})"
+                                                    class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500"
+                                                    title="Gerenciar Chaves">🔑</button>
+
+                                                <button type="button"
+                                                    onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, 0, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }}, {{ (sub.cost_usd|default(0))|tojson|forceescape }}, {{ (sub.apply_iof|default(1))|tojson|forceescape }})'
+                                                    class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
+
+                                                <button type="button" onclick='deleteProduct({{ sub.id }})'
+                                                    class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
+                                            </div>
                                         </div>
-                                        {% endfor %}
                                     </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
+                            </div>
+                            {% endfor %}
                             {% else %}
-                                <p class="text-gray-500 text-sm">Nenhum produto adicionado ainda.</p>
+                            <p class="text-gray-500 text-sm">Nenhum produto adicionado ainda.</p>
                             {% endif %}
                         </div>
                     </div>
@@ -186,34 +225,49 @@
         <div id="section-product" class="section-content hidden">
             <div class="mb-8 border-2 border-neon-cyan rounded-lg p-8">
                 <h2 class="text-2xl font-bold neon-cyan mb-4">🛍️ Novo Produto Solto</h2>
-                <form id="addProductForm" class="space-y-4" data-url="{{ url_for('admin.add_product') }}" enctype="multipart/form-data">
+                <form id="addProductForm" class="space-y-4" data-url="{{ url_for('admin.add_product') }}"
+                    enctype="multipart/form-data">
                     <input type="hidden" name="is_catalog" value="0">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="name" required placeholder="Nome" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
-                        <input type="text" name="category" required placeholder="Categoria" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
+                        <input type="text" name="name" required placeholder="Nome"
+                            class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
+                        <input type="text" name="category" required placeholder="Categoria"
+                            class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                     </div>
-                    <textarea name="description" required placeholder="Descrição" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white"></textarea>
+                    <textarea name="description" required placeholder="Descrição"
+                        class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white"></textarea>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="number" name="sort_order" value="0" placeholder="Ordem" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
-                        <input type="text" name="price" required placeholder="Preço" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
+                        <input type="number" name="sort_order" value="0" placeholder="Ordem"
+                            class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
+                        <input type="text" name="price" required placeholder="Preço"
+                            class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex items-center gap-3">
-                            <input type="number" name="cost_usd" step="0.01" placeholder="Custo (USD)" class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white" title="Quanto você paga pelo produto em dólares">
+                            <input type="number" name="cost_usd" step="0.01" placeholder="Custo (USD)"
+                                class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white"
+                                title="Quanto você paga pelo produto em dólares">
                             <div class="flex items-center text-sm text-gray-300">
                                 <input type="hidden" name="apply_iof" value="0">
-                                <input type="checkbox" id="add_apply_iof_product" name="apply_iof" value="1" checked class="mr-2">
+                                <input type="checkbox" id="add_apply_iof_product" name="apply_iof" value="1" checked
+                                    class="mr-2">
                                 <label for="add_apply_iof_product">Aplicar IOF?</label>
                             </div>
                         </div>
-                        <input type="text" name="payment_url" placeholder="Link Mercado Pago (Opcional se usar automático)" class="w-full px-4 py-2 bg-black border border-green-500 rounded text-white">
+                        <input type="text" name="payment_url"
+                            placeholder="Link Mercado Pago (Opcional se usar automático)"
+                            class="w-full px-4 py-2 bg-black border border-green-500 rounded text-white">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="promo_price" placeholder="Preço promocional (opcional)" class="w-full px-4 py-2 bg-black border border-amber-500/50 rounded text-white">
-                        <input type="text" name="promo_label" placeholder="Label promo (ex: 20% OFF)" class="w-full px-4 py-2 bg-black border border-amber-500/50 rounded text-white">
+                        <input type="text" name="promo_price" placeholder="Preço promocional (opcional)"
+                            class="w-full px-4 py-2 bg-black border border-amber-500/50 rounded text-white">
+                        <input type="text" name="promo_label" placeholder="Label promo (ex: 20% OFF)"
+                            class="w-full px-4 py-2 bg-black border border-amber-500/50 rounded text-white">
                     </div>
-                    <input type="file" name="image" class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
-                    <button type="submit" class="w-full py-2 bg-neon-cyan text-black font-bold rounded hover:bg-opacity-80">Adicionar</button>
+                    <input type="file" name="image"
+                        class="w-full px-4 py-2 bg-black border border-neon-cyan rounded text-white">
+                    <button type="submit"
+                        class="w-full py-2 bg-neon-cyan text-black font-bold rounded hover:bg-opacity-80">Adicionar</button>
                 </form>
                 <div id="message" class="mt-4 hidden"></div>
             </div>
@@ -227,9 +281,9 @@
                             <p class="text-neon-green font-bold">{{ prod.price }}</p>
                             <div class="mt-2 text-sm">
                                 {% if prod.stock > 0 %}
-                                    <span class="text-green-400">🟢 {{ prod.stock }} chaves</span>
+                                <span class="text-green-400">🟢 {{ prod.stock }} chaves</span>
                                 {% else %}
-                                    <span class="text-red-400">🔴 Sem estoque</span>
+                                <span class="text-red-400">🔴 Sem estoque</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -238,11 +292,16 @@
                         {% endif %}
                     </div>
                     <div class="flex gap-2 mt-4">
-                        <button type="button" onclick="openKeyModal({{ prod.id }}, {{ prod.name|tojson|forceescape }})" class="flex-1 bg-yellow-600 text-white text-xs py-2 rounded hover:bg-yellow-500">🔑 Chaves</button>
-                        
-                        <button type="button" onclick='openEditModal({{ prod.id }}, {{ prod.name|tojson|forceescape }}, {{ prod.description|tojson|forceescape }}, {{ prod.price|tojson|forceescape }}, {{ prod.category|tojson|forceescape }}, {{ prod.image|tojson|forceescape }}, {{ (prod.tagline|default(""))|tojson|forceescape }}, {{ prod.sort_order|default(0) }}, null, 0, {{ (prod.payment_url|default(""))|tojson|forceescape }}, {{ (prod.promo_price|default(""))|tojson|forceescape }}, {{ (prod.promo_label|default(""))|tojson|forceescape }}, {{ (prod.cost_usd|default(0))|tojson|forceescape }}, {{ (prod.apply_iof|default(1))|tojson|forceescape }})' class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-500">Editar</button>
-                        
-                        <button type="button" onclick='deleteProduct({{ prod.id }})' class="flex-1 bg-red-600 text-white text-xs py-2 rounded hover:bg-red-500">Excluir</button>
+                        <button type="button" onclick="openKeyModal({{ prod.id }}, {{ prod.name|tojson|forceescape }})"
+                            class="flex-1 bg-yellow-600 text-white text-xs py-2 rounded hover:bg-yellow-500">🔑
+                            Chaves</button>
+
+                        <button type="button"
+                            onclick='openEditModal({{ prod.id }}, {{ prod.name|tojson|forceescape }}, {{ prod.description|tojson|forceescape }}, {{ prod.price|tojson|forceescape }}, {{ prod.category|tojson|forceescape }}, {{ prod.image|tojson|forceescape }}, {{ (prod.tagline|default(""))|tojson|forceescape }}, {{ prod.sort_order|default(0) }}, null, 0, {{ (prod.payment_url|default(""))|tojson|forceescape }}, {{ (prod.promo_price|default(""))|tojson|forceescape }}, {{ (prod.promo_label|default(""))|tojson|forceescape }}, {{ (prod.cost_usd|default(0))|tojson|forceescape }}, {{ (prod.apply_iof|default(1))|tojson|forceescape }})'
+                            class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-500">Editar</button>
+
+                        <button type="button" onclick='deleteProduct({{ prod.id }})'
+                            class="flex-1 bg-red-600 text-white text-xs py-2 rounded hover:bg-red-500">Excluir</button>
                     </div>
                 </div>
                 {% endfor %}
@@ -275,13 +334,17 @@
                         <p class="text-2xl font-bold text-red-500" id="totalCosts">R$ 0,00</p>
                         <p class="text-xs text-gray-500">Produtos + Recargas</p>
                     </div>
-                    <div class="border {% if financeiro.lucro_liquido >= 0 %}border-green-500{% else %}border-red-500{% endif %} rounded-lg p-4 bg-black/50">
+                    <div
+                        class="border {% if financeiro.lucro_liquido >= 0 %}border-green-500{% else %}border-red-500{% endif %} rounded-lg p-4 bg-black/50">
                         <p class="text-xs text-gray-400 mb-2">🎯 Lucro Total</p>
-                        <p class="text-2xl font-bold {% if financeiro.lucro_liquido >= 0 %}text-green-500{% else %}text-red-500{% endif %}" id="totalProfit">R$ 0,00</p>
+                        <p class="text-2xl font-bold {% if financeiro.lucro_liquido >= 0 %}text-green-500{% else %}text-red-500{% endif %}"
+                            id="totalProfit">R$ 0,00</p>
                         <p class="text-xs text-gray-500" id="marginProfit">0%</p>
                     </div>
                 </div>
-                <button type="button" onclick="loadSalesReport()" class="mt-4 px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-500">🔄 Atualizar Relatório</button>
+                <button type="button" onclick="loadSalesReport()"
+                    class="mt-4 px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-500">🔄 Atualizar
+                    Relatório</button>
             </div>
 
             <!-- Registro de Vendas Manuais -->
@@ -289,7 +352,8 @@
                 <h2 class="text-2xl font-bold text-purple-500 mb-4">🛒 Registrar Venda Manual</h2>
                 <form id="manualSaleForm" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <select name="product_id" required class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        <select name="product_id" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
                             <option value="">Selecione um Produto</option>
                             {% for p in simple_products %}
                             <option value="{{ p.id }}">{{ p.name }} - {{ p.price }}</option>
@@ -302,14 +366,20 @@
                             </optgroup>
                             {% endfor %}
                         </select>
-                        <input type="number" name="quantity" value="1" min="1" placeholder="Quantidade" required class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        <input type="number" name="quantity" value="1" min="1" placeholder="Quantidade" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="unit_price" placeholder="Preço de Venda (R$)" required class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
-                        <input type="text" name="cost_per_unit_brl" placeholder="Custo Unitário (R$)" required class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        <input type="text" name="unit_price" placeholder="Preço de Venda (R$)" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        <input type="text" name="cost_per_unit_brl" placeholder="Custo Unitário (R$)" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
                     </div>
-                    <textarea name="notes" placeholder="Notas (opcional)" rows="2" class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white"></textarea>
-                    <button type="submit" class="w-full py-2 bg-purple-600 text-white font-bold rounded hover:bg-purple-500">💾 Registrar Venda Manual</button>
+                    <textarea name="notes" placeholder="Notas (opcional)" rows="2"
+                        class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white"></textarea>
+                    <button type="submit"
+                        class="w-full py-2 bg-purple-600 text-white font-bold rounded hover:bg-purple-500">💾 Registrar
+                        Venda Manual</button>
                 </form>
                 <div id="manualSaleMessage" class="mt-4 hidden"></div>
             </div>
@@ -319,12 +389,19 @@
                 <h2 class="text-2xl font-bold text-orange-500 mb-4">🔄 Recarga de Painel</h2>
                 <form id="panelRechargeForm" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="number" name="quantity" min="1" placeholder="Quantidade de Painéis" required class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
-                        <input type="number" name="cost_per_unit_usd" step="0.01" placeholder="Custo Unitário (USD)" required class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
-                        <input type="number" name="dolar_rate" step="0.01" placeholder="Cotação USD-BRL" value="{{ financeiro.dolar_hoje }}" class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
+                        <input type="number" name="quantity" min="1" placeholder="Quantidade de Painéis" required
+                            class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
+                        <input type="number" name="cost_per_unit_usd" step="0.01" placeholder="Custo Unitário (USD)"
+                            required class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
+                        <input type="number" name="dolar_rate" step="0.01" placeholder="Cotação USD-BRL"
+                            value="{{ financeiro.dolar_hoje }}"
+                            class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
                     </div>
-                    <textarea name="notes" placeholder="Notas (ex: Fornecedor, data de recebimento)" rows="2" class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white"></textarea>
-                    <button type="submit" class="w-full py-2 bg-orange-600 text-white font-bold rounded hover:bg-orange-500">📦 Registrar Recarga</button>
+                    <textarea name="notes" placeholder="Notas (ex: Fornecedor, data de recebimento)" rows="2"
+                        class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white"></textarea>
+                    <button type="submit"
+                        class="w-full py-2 bg-orange-600 text-white font-bold rounded hover:bg-orange-500">📦 Registrar
+                        Recarga</button>
                 </form>
                 <div id="panelRechargeMessage" class="mt-4 hidden"></div>
             </div>
@@ -347,7 +424,9 @@
                             </tr>
                         </thead>
                         <tbody id="manualSalesTable">
-                            <tr><td colspan="8" class="p-4 text-center text-gray-500">Carregando...</td></tr>
+                            <tr>
+                                <td colspan="8" class="p-4 text-center text-gray-500">Carregando...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -371,7 +450,9 @@
                             </tr>
                         </thead>
                         <tbody id="panelRechargesTable">
-                            <tr><td colspan="8" class="p-4 text-center text-gray-500">Carregando...</td></tr>
+                            <tr>
+                                <td colspan="8" class="p-4 text-center text-gray-500">Carregando...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -381,23 +462,34 @@
         <div id="section-links" class="section-content hidden">
             <div class="mb-8 border-2 border-white rounded-lg p-8">
                 <h2 class="text-2xl font-bold text-white mb-4">🔗 Novo Link</h2>
-                <form id="addLinkForm" class="space-y-4" data-url="{{ url_for('admin.add_link') }}" enctype="multipart/form-data">
-                    <input type="text" name="title" required placeholder="Título" class="w-full px-4 py-2 bg-black border border-white rounded text-white">
-                    <input type="text" name="description" placeholder="Descrição" class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+                <form id="addLinkForm" class="space-y-4" data-url="{{ url_for('admin.add_link') }}"
+                    enctype="multipart/form-data">
+                    <input type="text" name="title" required placeholder="Título"
+                        class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+                    <input type="text" name="description" placeholder="Descrição"
+                        class="w-full px-4 py-2 bg-black border border-white rounded text-white">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Imagem (opcional)</label>
-                        <input type="file" name="image" accept="image/*" class="w-full px-4 py-2 bg-black border border-white rounded text-white text-sm">
-                        <input type="text" name="image_url" placeholder="Ou URL da imagem" class="w-full mt-2 px-4 py-2 bg-black border border-white rounded text-white text-sm">
+                        <input type="file" name="image" accept="image/*"
+                            class="w-full px-4 py-2 bg-black border border-white rounded text-white text-sm">
+                        <input type="text" name="image_url" placeholder="Ou URL da imagem"
+                            class="w-full mt-2 px-4 py-2 bg-black border border-white rounded text-white text-sm">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="download_link" placeholder="Link Download" class="w-full px-4 py-2 bg-black border border-white rounded text-white">
-                        <input type="text" name="video_link" placeholder="Link Vídeo" class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+                        <input type="text" name="download_link" placeholder="Link Download"
+                            class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+                        <input type="text" name="video_link" placeholder="Link Vídeo"
+                            class="w-full px-4 py-2 bg-black border border-white rounded text-white">
                     </div>
-                    <input type="text" name="game" placeholder="Jogo Relacionado" class="w-full px-4 py-2 bg-black border border-white rounded text-white">
-                    <button type="submit" class="w-full py-2 bg-white text-black font-bold rounded hover:bg-gray-200">Adicionar Link</button>
+                    <input type="text" name="game" placeholder="Jogo Relacionado"
+                        class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+                    <button type="submit"
+                        class="w-full py-2 bg-white text-black font-bold rounded hover:bg-gray-200">Adicionar
+                        Link</button>
                 </form>
                 <div id="link_message" class="mt-4 hidden"></div>
             </div>
+
             {% if links %}
             <div class="mt-8">
                 <h3 class="text-lg font-bold text-white mb-4">Links cadastrados</h3>
@@ -405,14 +497,18 @@
                     {% for link in links %}
                     <div class="border border-white rounded-lg p-4 flex items-start gap-4">
                         {% if link.image %}
-                        <img src="{{ link.image }}" alt="" class="w-16 h-16 object-cover rounded border border-gray-600 flex-shrink-0">
+                        <img src="{{ link.image }}" alt=""
+                            class="w-16 h-16 object-cover rounded border border-gray-600 flex-shrink-0">
                         {% endif %}
                         <div class="flex-1 min-w-0">
                             <p class="font-bold text-white truncate">{{ link.title }}</p>
                             {% if link.game %}<p class="text-xs text-gray-400">{{ link.game }}</p>{% endif %}
                             <div class="flex gap-2 mt-2">
-                                <button type="button" onclick='openEditLink({{ link.id }}, {{ link.title|tojson|forceescape }}, {{ (link.description or "")|tojson|forceescape }}, {{ (link.image or "")|tojson|forceescape }}, {{ (link.download_link or "")|tojson|forceescape }}, {{ (link.video_link or "")|tojson|forceescape }}, {{ (link.game or "")|tojson|forceescape }})' class="text-xs px-2 py-1 bg-white text-black rounded hover:bg-gray-200">Editar</button>                                
-                                <button type="button" onclick="deleteLink({{ link.id }})" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Remover</button>
+                                <button type="button"
+                                    onclick='openEditLink({{ link.id }}, {{ link.title|tojson|forceescape }}, {{ (link.description or "")|tojson|forceescape }}, {{ (link.image or "")|tojson|forceescape }}, {{ (link.download_link or "")|tojson|forceescape }}, {{ (link.video_link or "")|tojson|forceescape }}, {{ (link.game or "")|tojson|forceescape }})'
+                                    class="text-xs px-2 py-1 bg-white text-black rounded hover:bg-gray-200">Editar</button>
+                                <button type="button" onclick="deleteLink({{ link.id }})"
+                                    class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Remover</button>
                             </div>
                         </div>
                     </div>
@@ -423,18 +519,90 @@
         </div>
     </main>
 
-    <div id="keyModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-lg bg-black border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+    <!-- Edit Manual Sale Modal (Global) -->
+    <div id="editManualSaleModal"
+        class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
+        <div
+            class="w-full max-w-md bg-black border-2 border-purple-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-purple-500">✏️ Editar Venda Manual</h3>
+                <button type="button" onclick="closeModal('editManualSaleModal')"
+                    class="text-gray-500 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="editManualSaleForm" class="space-y-4">
+                    <input type="hidden" id="edit_sale_id" name="sale_id">
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Produto</label>
+                        <select id="edit_sale_product_id" name="product_id" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                            <option value="">Selecione um Produto</option>
+                            {% for p in simple_products %}
+                            <option value="{{ p.id }}">{{ p.name }} - {{ p.price }}</option>
+                            {% endfor %}
+                            {% for c in catalogs %}
+                            <optgroup label="📁 {{ c.name }}">
+                                {% for sub in subproducts_by_parent.get(c.id, []) %}
+                                <option value="{{ sub.id }}">&nbsp;&nbsp;{{ sub.name }} - {{ sub.price }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Quantidade</label>
+                            <input type="number" id="edit_sale_quantity" name="quantity" min="1" required
+                                class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Preço Venda (R$)</label>
+                            <input type="text" id="edit_sale_unit_price" name="unit_price" required
+                                class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Custo Unitário (R$)</label>
+                        <input type="text" id="edit_sale_cost" name="cost_per_unit_brl" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Notas (Opcional)</label>
+                        <textarea id="edit_sale_notes" name="notes" rows="2"
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white"></textarea>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full py-2 bg-purple-600 text-white font-bold rounded hover:bg-purple-500">💾
+                        Salvar Alterações</button>
+                </form>
+                <div id="editManualSaleMessage" class="mt-4 hidden text-center font-bold"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="keyModal"
+        class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
+        <div
+            class="w-full max-w-lg bg-black border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-gray-800 flex justify-between items-center">
                 <div>
                     <h3 class="text-xl font-bold text-yellow-500">Gerenciar Chaves</h3>
                     <p id="keyProductName" class="text-gray-400 text-sm">Produto...</p>
                 </div>
-                <button type="button" onclick="closeModal('keyModal')" class="text-gray-500 hover:text-white text-2xl">&times;</button>
+                <button type="button" onclick="closeModal('keyModal')"
+                    class="text-gray-500 hover:text-white text-2xl">&times;</button>
             </div>
             <div class="flex border-b border-gray-800">
-                <button type="button" onclick="switchKeyTab('add')" id="tab-key-add" class="flex-1 py-3 font-bold text-yellow-500 border-b-2 border-yellow-500 bg-gray-900">➕ Adicionar</button>
-                <button type="button" onclick="switchKeyTab('list')" id="tab-key-list" class="flex-1 py-3 font-bold text-gray-500 hover:text-white">📋 Lista / Excluir</button>
+                <button type="button" onclick="switchKeyTab('add')" id="tab-key-add"
+                    class="flex-1 py-3 font-bold text-yellow-500 border-b-2 border-yellow-500 bg-gray-900">➕
+                    Adicionar</button>
+                <button type="button" onclick="switchKeyTab('list')" id="tab-key-list"
+                    class="flex-1 py-3 font-bold text-gray-500 hover:text-white">📋 Lista / Excluir</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4">
                 <div id="view-key-add">
@@ -442,10 +610,12 @@
                         <input type="hidden" id="keyProductId" name="product_id">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Cole as chaves (uma por linha):</label>
-                            <textarea name="keys_list" rows="8" placeholder="XXXX-YYYY-ZZZZ&#10;AAAA-BBBB-CCCC" 
-                                    class="w-full p-3 bg-gray-900 border border-yellow-500 rounded text-white font-mono text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"></textarea>
+                            <textarea name="keys_list" rows="8" placeholder="XXXX-YYYY-ZZZZ&#10;AAAA-BBBB-CCCC"
+                                class="w-full p-3 bg-gray-900 border border-yellow-500 rounded text-white font-mono text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"></textarea>
                         </div>
-                        <button type="submit" class="w-full py-3 bg-yellow-600 text-black font-bold rounded hover:bg-yellow-500 transition">Salvar Chaves</button>
+                        <button type="submit"
+                            class="w-full py-3 bg-yellow-600 text-black font-bold rounded hover:bg-yellow-500 transition">Salvar
+                            Chaves</button>
                     </form>
                     <div id="key_message" class="mt-2 hidden text-center font-bold"></div>
                 </div>
@@ -458,34 +628,50 @@
     </div>
 
     <div id="addSubproductModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
-        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-green-500 rounded-lg p-6 bg-black relative">
-            <h3 class="text-xl font-bold text-green-500 mb-4">Adicionar Produto em <span id="sub_cat_name" class="text-white"></span></h3>
-            <form id="addSubproductForm" class="space-y-3" data-url="{{ url_for('admin.add_product') }}" enctype="multipart/form-data">
+        <div
+            class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-green-500 rounded-lg p-6 bg-black relative">
+            <h3 class="text-xl font-bold text-green-500 mb-4">Adicionar Produto em <span id="sub_cat_name"
+                    class="text-white"></span></h3>
+            <form id="addSubproductForm" class="space-y-3" data-url="{{ url_for('admin.add_product') }}"
+                enctype="multipart/form-data">
                 <input type="hidden" id="sub_pid" name="parent_id">
                 <input type="hidden" name="is_catalog" value="0">
-                <input type="text" name="name" required placeholder="Nome do Produto (ex: VIP 30 Dias)" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
-                <textarea name="description" required rows="2" placeholder="Descrição" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white"></textarea>
+                <input type="text" name="name" required placeholder="Nome do Produto (ex: VIP 30 Dias)"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                <textarea name="description" required rows="2" placeholder="Descrição"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white"></textarea>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="price" required placeholder="Preço (R$)" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
-                    <input type="number" name="sort_order" value="0" placeholder="Ordem" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                    <input type="text" name="price" required placeholder="Preço (R$)"
+                        class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                    <input type="number" name="sort_order" value="0" placeholder="Ordem"
+                        class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="category" required placeholder="Categoria (ex: Key)" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                    <input type="text" name="category" required placeholder="Categoria (ex: Key)"
+                        class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
                     <div class="flex items-center gap-3">
-                        <input type="number" name="cost_usd" step="0.01" placeholder="Custo USD" class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white" title="Quanto você paga pelo produto em dólares">
+                        <input type="number" name="cost_usd" step="0.01" placeholder="Custo USD"
+                            class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white"
+                            title="Quanto você paga pelo produto em dólares">
                         <div class="flex items-center text-sm text-gray-300">
                             <input type="hidden" name="apply_iof" value="0">
-                            <input type="checkbox" id="add_apply_iof_sub" name="apply_iof" value="1" checked class="mr-2">
+                            <input type="checkbox" id="add_apply_iof_sub" name="apply_iof" value="1" checked
+                                class="mr-2">
                             <label for="add_apply_iof_sub">Aplicar IOF?</label>
                         </div>
                     </div>
                 </div>
-                <input type="text" name="payment_url" placeholder="Link Mercado Pago" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
-                <input type="text" name="promo_price" placeholder="Preço promocional (opcional)" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white">
-                <input type="text" name="promo_label" placeholder="Label promo (ex: PROMO)" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white">
-                <input type="file" name="image" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                <input type="text" name="payment_url" placeholder="Link Mercado Pago"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                <input type="text" name="promo_price" placeholder="Preço promocional (opcional)"
+                    class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white">
+                <input type="text" name="promo_label" placeholder="Label promo (ex: PROMO)"
+                    class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white">
+                <input type="file" name="image"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
                 <div class="flex gap-2 mt-4">
-                    <button type="button" onclick="closeModal('addSubproductModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button>
+                    <button type="button" onclick="closeModal('addSubproductModal')"
+                        class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button>
                     <button type="submit" class="flex-1 py-2 bg-green-600 text-black font-bold rounded">Salvar</button>
                 </div>
             </form>
@@ -494,31 +680,38 @@
     </div>
 
     <div id="configModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
-        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black">
+        <div
+            class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-yellow-500 mb-4">⚙️ Configurações</h3>
             <form id="configForm" class="space-y-4" data-url="{{ url_for('admin.update_config') }}">
                 <div>
                     <label class="block text-sm text-gray-400">Chave Pix (Manual):</label>
-                    <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                    <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}"
+                        class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>
                 <div class="border-t border-b border-gray-800 py-4 my-2">
                     <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado Pago):</label>
-                    <input type="password" name="mercado_pago_token" value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}" 
-                           class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
-                           placeholder="Cole seu Access Token (APP_USR-...)">
+                    <input type="password" name="mercado_pago_token"
+                        value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}"
+                        class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
+                        placeholder="Cole seu Access Token (APP_USR-...)">
                     <p class="text-xs text-gray-500 mt-1">Deixe em branco para não alterar o token já salvo.</p>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400">PIX Copia e Cola (opcional):</label>
-                    <textarea name="pix_copia_cola" rows="3" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
+                    <textarea name="pix_copia_cola" rows="3"
+                        class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400">WhatsApp Suporte:</label>
-                    <input type="text" name="contact_whatsapp" value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}" class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                    <input type="text" name="contact_whatsapp"
+                        value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}"
+                        class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                 </div>
                 <div id="config_message" class="mt-2 hidden"></div>
                 <div class="flex gap-2 mt-6">
-                    <button type="button" onclick="closeModal('configModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
+                    <button type="button" onclick="closeModal('configModal')"
+                        class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
                     <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar</button>
                 </div>
             </form>
@@ -526,31 +719,40 @@
     </div>
 
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
-        <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-blue-500 rounded-lg p-6 bg-black">
+        <div
+            class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-blue-500 rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-blue-500 mb-4">✏️ Editar Produto</h3>
             <form id="editProductForm" class="space-y-3" enctype="multipart/form-data">
                 <input type="hidden" id="edit_id">
                 <input type="hidden" id="edit_is_catalog" name="is_catalog">
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">📝 Nome do Produto</label>
-                    <input type="text" id="edit_name" name="name" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: KOS Virtual Premium">
+                    <input type="text" id="edit_name" name="name"
+                        class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                        placeholder="Ex: KOS Virtual Premium">
                 </div>
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">📄 Descrição</label>
-                    <textarea id="edit_description" name="description" rows="2" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Descreva o produto (ex: 30 dias de acesso)"></textarea>
+                    <textarea id="edit_description" name="description" rows="2"
+                        class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                        placeholder="Descreva o produto (ex: 30 dias de acesso)"></textarea>
                 </div>
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">💵 Preço</label>
-                    <input type="text" id="edit_price" name="price" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: R$ 29,90">
+                    <input type="text" id="edit_price" name="price"
+                        class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                        placeholder="Ex: R$ 29,90">
                 </div>
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">💸 Custo em USD (para cálculos)</label>
                     <div class="flex items-center gap-3">
-                        <input type="number" id="edit_cost_usd" name="cost_usd" step="0.01" class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white" placeholder="Ex: 9.99" title="Quanto você paga pelo produto em dólares">
+                        <input type="number" id="edit_cost_usd" name="cost_usd" step="0.01"
+                            class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white"
+                            placeholder="Ex: 9.99" title="Quanto você paga pelo produto em dólares">
                         <div class="flex items-center text-sm text-gray-300">
                             <input type="hidden" name="apply_iof" value="0">
                             <input type="checkbox" id="edit_apply_iof" name="apply_iof" value="1" checked class="mr-2">
@@ -558,50 +760,62 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">📁 Categoria</label>
-                    <input type="text" id="edit_category" name="category" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: Premium, Standard, VIP">
+                    <input type="text" id="edit_category" name="category"
+                        class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                        placeholder="Ex: Premium, Standard, VIP">
                 </div>
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">🏷️ Tagline (Subtítulo)</label>
-                    <input type="text" id="edit_tagline" name="tagline" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="Ex: 30 dias de acesso incluso">
+                    <input type="text" id="edit_tagline" name="tagline"
+                        class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                        placeholder="Ex: 30 dias de acesso incluso">
                 </div>
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">🔗 Link Mercado Pago</label>
-                    <input type="text" id="edit_payment_url" name="payment_url" class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white" placeholder="Cole o link do Mercado Pago (opcional)">
+                    <input type="text" id="edit_payment_url" name="payment_url"
+                        class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white"
+                        placeholder="Cole o link do Mercado Pago (opcional)">
                 </div>
-                
+
                 <div class="border border-amber-500/50 rounded p-3 bg-amber-500/5">
                     <label class="text-xs text-amber-400 block mb-2 font-bold">🏷️ Promoção (Opcional)</label>
                     <div class="mb-2">
                         <label class="text-xs text-gray-400 block mb-1">Preço da Promoção</label>
-                        <input type="text" id="edit_promo_price" name="promo_price" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm" placeholder="Ex: R$ 9,90">
+                        <input type="text" id="edit_promo_price" name="promo_price"
+                            class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm"
+                            placeholder="Ex: R$ 9,90">
                     </div>
                     <div>
                         <label class="text-xs text-gray-400 block mb-1">Label da Promoção</label>
-                        <input type="text" id="edit_promo_label" name="promo_label" class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm" placeholder="Ex: 20% OFF ou PROMO">
+                        <input type="text" id="edit_promo_label" name="promo_label"
+                            class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm"
+                            placeholder="Ex: 20% OFF ou PROMO">
                     </div>
                     <p class="text-xs text-gray-500 mt-2">Deixe em branco para remover a promoção.</p>
                 </div>
-                
+
                 <div>
                     <label class="text-xs text-gray-400 block mb-1">🔢 Ordem de Exibição</label>
-                    <input type="number" id="edit_sort_order" name="sort_order" min="0" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="0">
+                    <input type="number" id="edit_sort_order" name="sort_order" min="0"
+                        class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="0">
                 </div>
-                
+
                 <div id="edit_parent_div">
                     <label class="text-xs text-gray-400 block mb-1">📦 Mover para Capa (Opcional)</label>
-                    <select id="edit_parent_id" name="parent_id" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
+                    <select id="edit_parent_id" name="parent_id"
+                        class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
                         <option value="">Nenhum (Produto Solto)</option>
                         {% for cat in parent_products %}
                         <option value="{{ cat.id }}">{{ cat.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="border border-blue-500 p-3 rounded">
                     <label class="text-xs text-gray-400 block mb-2">🖼️ Imagem do Produto</label>
                     <img id="edit_preview" src="" class="w-16 h-16 object-contain mb-2 border border-white rounded">
@@ -611,69 +825,85 @@
                     </div>
                     <div>
                         <label class="text-xs text-gray-400 block mb-1">Ou URL da Imagem</label>
-                        <input type="text" id="edit_image_url" name="image_url" placeholder="https://exemplo.com/imagem.png" class="w-full p-1 bg-gray-900 border border-blue-500 rounded text-white text-xs">
+                        <input type="text" id="edit_image_url" name="image_url"
+                            placeholder="https://exemplo.com/imagem.png"
+                            class="w-full p-1 bg-gray-900 border border-blue-500 rounded text-white text-xs">
                     </div>
                 </div>
-                
+
                 <div class="flex gap-2 mt-4">
-                    <button type="button" onclick="closeModal('editModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded hover:bg-red-900/20">❌ Cancelar</button>
-                    <button type="submit" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500">✅ Salvar</button>
+                    <button type="button" onclick="closeModal('editModal')"
+                        class="flex-1 py-2 border border-red-500 text-red-500 rounded hover:bg-red-900/20">❌
+                        Cancelar</button>
+                    <button type="submit"
+                        class="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500">✅ Salvar</button>
                 </div>
             </form>
             <div id="edit_message" class="mt-2 hidden"></div>
         </div>
     </div>
-    
+
     <div id="editLinkModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
         <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-white rounded-lg p-6 bg-black">
             <h3 class="text-xl font-bold text-white mb-4">Editar Link</h3>
             <form id="editLinkForm" class="space-y-3" enctype="multipart/form-data">
                 <input type="hidden" id="link_edit_id">
-                <input type="text" id="link_title" name="title" class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Título">
-                <input type="text" id="link_desc" name="description" class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Descrição">
+                <input type="text" id="link_title" name="title"
+                    class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Título">
+                <input type="text" id="link_desc" name="description"
+                    class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Descrição">
                 <div class="border border-white p-2 rounded">
-                    <img id="link_edit_preview" src="" alt="" class="w-16 h-16 object-contain mb-2 border border-gray-600 rounded">
-                    <input type="file" id="link_edit_image" name="image" accept="image/*" class="text-xs text-gray-400 w-full">
-                    <input type="text" id="link_edit_image_url" name="image_url" placeholder="Ou URL da imagem" class="w-full mt-2 p-2 bg-gray-900 border border-white rounded text-white text-xs">
+                    <img id="link_edit_preview" src="" alt=""
+                        class="w-16 h-16 object-contain mb-2 border border-gray-600 rounded">
+                    <input type="file" id="link_edit_image" name="image" accept="image/*"
+                        class="text-xs text-gray-400 w-full">
+                    <input type="text" id="link_edit_image_url" name="image_url" placeholder="Ou URL da imagem"
+                        class="w-full mt-2 p-2 bg-gray-900 border border-white rounded text-white text-xs">
                 </div>
-                <input type="text" id="link_down" name="download_link" class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Link Download">
-                <input type="text" id="link_vid" name="video_link" class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Link Vídeo">
-                <input type="text" id="link_game" name="game" class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Jogo">
-                <div class="flex gap-2 mt-4"><button type="button" onclick="closeModal('editLinkModal')" class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button><button type="submit" class="flex-1 py-2 bg-white text-black font-bold rounded">Salvar</button></div>
+                <input type="text" id="link_down" name="download_link"
+                    class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Link Download">
+                <input type="text" id="link_vid" name="video_link"
+                    class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Link Vídeo">
+                <input type="text" id="link_game" name="game"
+                    class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Jogo">
+                <div class="flex gap-2 mt-4"><button type="button" onclick="closeModal('editLinkModal')"
+                        class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button><button
+                        type="submit" class="flex-1 py-2 bg-white text-black font-bold rounded">Salvar</button></div>
             </form>
             <div id="link_edit_message" class="mt-2 hidden"></div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function(){
+        document.addEventListener('DOMContentLoaded', function () {
             const btn = document.getElementById('refresh_dolar')
-            if(!btn) return
-            btn.addEventListener('click', async function(){
+            if (!btn) return
+            btn.addEventListener('click', async function () {
                 btn.disabled = true
                 btn.textContent = 'Atualizando...'
-                try{
+                try {
                     const resp = await fetch('{{ url_for("admin.debug_dolar") }}')
-                    if(resp.ok){
+                    if (resp.ok) {
                         const data = await resp.json()
                         document.getElementById('dolar_value').textContent = parseFloat(data.dolar_rate).toFixed(2)
                         const d = new Date(data.timestamp * 1000)
                         document.getElementById('dolar_updated').textContent = d.toLocaleString()
-                    } else if(resp.status === 401){
+                    } else if (resp.status === 401) {
                         alert('Você precisa estar logado como admin para atualizar a cotação.')
                     } else {
                         alert('Erro ao buscar cotação')
                     }
-                }catch(e){
+                } catch (e) {
                     console.error(e)
                     alert('Erro ao atualizar cotação')
-                }finally{
+                } finally {
                     btn.disabled = false
                     btn.textContent = 'Atualizar'
                 }
             })
         })
     </script>
-    <script src="{{ url_for('static', filename='js/admin.js') }}?v=5" defer></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}?v=13" defer></script>
 </body>
+
 </html>

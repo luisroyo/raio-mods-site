@@ -674,6 +674,42 @@ def list_manual_sales():
     
     return jsonify([dict(s) for s in sales])
 
+@admin_bp.route('/admin/sales/manual/edit/<int:sale_id>', methods=['POST'])
+def edit_manual_sale(sale_id):
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    
+    try:
+        conn = get_db_connection()
+        existing = conn.execute('SELECT * FROM manual_sales WHERE id = ?', (sale_id,)).fetchone()
+        if not existing:
+            conn.close()
+            return jsonify({'error': 'Venda não encontrada'}), 404
+            
+        product_id = request.form.get('product_id')
+        quantity = int(request.form.get('quantity', 1))
+        unit_price = float(str(request.form.get('unit_price', 0)).replace('R$', '').replace(',', '.'))
+        cost_per_unit_brl = float(str(request.form.get('cost_per_unit_brl', 0)).replace('R$', '').replace(',', '.'))
+        notes = request.form.get('notes', '').strip()
+        
+        if not product_id or quantity <= 0 or unit_price <= 0:
+            conn.close()
+            return jsonify({'error': 'Dados inválidos'}), 400
+        
+        total_price = quantity * unit_price
+        
+        conn.execute('''
+            UPDATE manual_sales 
+            SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, notes=?
+            WHERE id=?
+        ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, sale_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Venda atualizada com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/admin/product/info/<int:pid>', methods=['GET'])
 def product_info(pid):

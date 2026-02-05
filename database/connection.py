@@ -47,6 +47,34 @@ def init_db():
         )
     ''')
 
+    # 3. Tabela de Vendas Manuais (Novo)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS manual_sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER,
+            quantity INTEGER DEFAULT 1,
+            unit_price REAL,
+            cost_per_unit_brl REAL,
+            total_price REAL,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (product_id) REFERENCES products (id)
+        )
+    ''')
+
+    # 4. Tabela de Recargas de Painel (Novo)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS panel_recharges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            quantity INTEGER,
+            cost_per_unit_usd REAL,
+            total_cost_usd REAL,
+            dolar_rate REAL,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     # --- NOVAS TABELAS PARA AUTOMAÇÃO (MERCADO PAGO) ---
     
     # 1. Tabela de Chaves (O Estoque de produtos digitais)
@@ -95,7 +123,9 @@ def init_db():
         ('is_catalog', 'INTEGER DEFAULT 0'),
         ('payment_url', 'TEXT DEFAULT ""'),
         ('promo_price', 'TEXT DEFAULT ""'),
-        ('promo_label', 'TEXT DEFAULT ""')
+        ('promo_label', 'TEXT DEFAULT ""'),
+        ('cost_usd', 'REAL DEFAULT 0'),
+        ('apply_iof', 'INTEGER DEFAULT 1')
     ]
 
     for col_name, col_type in new_columns_products:

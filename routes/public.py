@@ -117,8 +117,18 @@ def catalogo(parent_id):
     stock_map = _get_stock_map(conn, child_ids)
     whatsapp_contact = _get_whatsapp_from_config(conn)
     total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
+    
+    # Agrupar produtos por categoria
+    products_by_category = {}
+    for product in children:
+        category = product.get('category', 'Sem categoria') or 'Sem categoria'
+        if category not in products_by_category:
+            products_by_category[category] = []
+        products_by_category[category].append(product)
+    
     conn.close()
     return render_template('catalogo.html', parent=parent, products=children,
+                          products_by_category=products_by_category,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
                           page=page, total_pages=total_pages, total=total)
 

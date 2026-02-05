@@ -17,6 +17,76 @@
         </div>
 
         {% if products %}
+        {% if products_by_category %}
+            {% for category, category_products in products_by_category.items() | sort %}
+            <div class="mb-12 md:mb-16" data-aos="fade-up">
+                <div class="mb-6 md:mb-8">
+                    <h2 class="text-2xl md:text-3xl font-bold neon-cyan border-b-2 border-neon-cyan pb-3">📁 {{ category }}</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {% for product in category_products %}
+                    <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                        <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50 z-10">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                            <span class="text-[10px] font-bold text-green-400 tracking-wider">ATUALIZADO</span>
+                        </div>
+                        {% if product.promo_price or product.promo_label %}
+                        <div class="absolute top-3 left-3 z-10">
+                            <span class="px-2 py-1 rounded text-xs font-bold bg-amber-500 text-black border border-amber-400">{{ product.promo_label or 'PROMO' }}</span>
+                        </div>
+                        {% endif %}
+                        {% if product.image %}
+                        <div class="catalog-img-container">
+                            <img src="{{ product.image }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                        </div>
+                        {% endif %}
+                        
+                        <h3 class="text-xl md:text-2xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
+                        
+                        <p class="text-gray-300 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm md:text-base flex-grow">
+                            {{ product.description }}
+                        </p>
+                        
+                        <div class="mb-4 md:mb-6 mt-auto">
+                            {% if product.promo_price %}
+                            <p class="text-lg md:text-xl text-gray-500 line-through mb-0.5">{{ product.price }}</p>
+                            <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.promo_price }}</p>
+                            {% else %}
+                            <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
+                            {% endif %}
+                            {% if product.tagline %}
+                            <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        {% set display_price = product.promo_price or product.price %}
+                        {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
+                        <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')" 
+                                class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 cursor-pointer">
+                            <span>🛒 Comprar Agora</span>
+                        </button>
+                        {% else %}
+                        <div class="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-center">
+                            <p class="text-amber-400 font-semibold mb-2">Sem estoque no momento.</p>
+                            <p class="text-gray-400 text-sm mb-3">Entre em contato com o administrador pelo WhatsApp para mais informações.</p>
+                            {% if whatsapp_contact %}
+                            <a href="https://wa.me/{{ whatsapp_contact }}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors">
+                                📲 Contatar no WhatsApp
+                            </a>
+                            {% else %}
+                            <p class="text-gray-500 text-xs">WhatsApp não configurado. Contate o suporte.</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-20">
             {% for product in products %}
             <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
@@ -78,6 +148,7 @@
             </div>
             {% endfor %}
         </div>
+        {% endif %}
         {% else %}
         <div class="empty-catalog" data-aos="fade-up">
             <p class="text-xl neon-cyan mb-4">Nenhuma opção neste catálogo ainda.</p>

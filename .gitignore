@@ -31,3 +31,6 @@ static/uploads/*
 
 # --- Logs e Erros ---
 *.log
+
+# --- Cache ---
+dolar_cache.json

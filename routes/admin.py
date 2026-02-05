@@ -144,60 +144,63 @@ def delete_product(pid):
 @admin_bp.route('/admin/edit/<int:pid>', methods=['POST'])
 def edit_product(pid):
     if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
-    conn = get_db_connection()
-    row = conn.execute('SELECT * FROM products WHERE id = ?', (pid,)).fetchone()
-    if not row: conn.close(); return jsonify({'error': '404'}), 404
     
-    existing = dict(row)
-    name = request.form.get('name') or existing.get('name', '')
-    desc = request.form.get('description') or existing.get('description', '')
-    price = request.form.get('price') or existing.get('price', '')
-    cat = request.form.get('category') or existing.get('category', '')
-    tagline = request.form.get('tagline', existing.get('tagline', '')).strip()
-    payment_url = request.form.get('payment_url', existing.get('payment_url', '')).strip()
-    promo_price = (request.form.get('promo_price') or existing.get('promo_price') or '').strip()
-    promo_label = (request.form.get('promo_label') or existing.get('promo_label') or '').strip()
-    
-    try: is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
-    except: is_catalog = 0
-    try: sort = int(request.form.get('sort_order') or existing.get('sort_order', 0))
-    except: sort = 0
-    
-    pid_val = request.form.get('parent_id')
-    
-    # --- CORREÇÃO DE LÓGICA DO PAI/CATÁLOGO ---
-    # Se for marcado como catálogo, NÃO pode ter pai.
-    if is_catalog == 1:
-        pid_val = None
-    # Se o pai for ele mesmo ou string vazia, anula
-    elif pid_val == str(pid) or not pid_val or str(pid_val).strip() == '':
-        pid_val = None
-    
-    img = request.form.get('image_url') or ''
-    if not img: img = existing.get('image', '')
-    if 'image' in request.files:
-        file = request.files['image']
-        if file and allowed_file(file.filename):
-            base_name = get_base_filename(secure_filename(file.filename))
-            uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
-            img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
-            if ok: img = img_path
-            else:
-                fname = f"{int(time.time())}_{secure_filename(file.filename)}"
-                file.seek(0); file.save(os.path.join(uploads_dir, fname))
-                img = f"/static/uploads/{fname}"
-
     try:
+        conn = get_db_connection()
+        row = conn.execute('SELECT * FROM products WHERE id = ?', (pid,)).fetchone()
+        if not row: conn.close(); return jsonify({'error': '404'}), 404
+        
+        existing = dict(row)
+        name = request.form.get('name') or existing.get('name', '')
+        desc = request.form.get('description') or existing.get('description', '')
+        price = request.form.get('price') or existing.get('price', '')
+        cat = request.form.get('category') or existing.get('category', '')
+        tagline = request.form.get('tagline', existing.get('tagline', '')).strip()
+        payment_url = request.form.get('payment_url', existing.get('payment_url', '')).strip()
+        promo_price = (request.form.get('promo_price') or existing.get('promo_price') or '').strip()
+        promo_label = (request.form.get('promo_label') or existing.get('promo_label') or '').strip()
+        
+        try: is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
+        except: is_catalog = 0
+        try: sort = int(request.form.get('sort_order') or existing.get('sort_order', 0))
+        except: sort = 0
+        
+        pid_val = request.form.get('parent_id')
+        
+        # --- CORREÇÃO DE LÓGICA DO PAI/CATÁLOGO ---
+        # Se for marcado como catálogo, NÃO pode ter pai.
+        if is_catalog == 1:
+            pid_val = None
+        # Se o pai for ele mesmo ou string vazia, anula
+        elif pid_val == str(pid) or not pid_val or str(pid_val).strip() == '':
+            pid_val = None
+        
+        img = request.form.get('image_url') or ''
+        if not img: img = existing.get('image', '')
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                base_name = get_base_filename(secure_filename(file.filename))
+                uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+                img_path, ok = process_upload_image(file.stream, uploads_dir, base_name)
+                if ok: img = img_path
+                else:
+                    fname = f"{int(time.time())}_{secure_filename(file.filename)}"
+                    file.seek(0); file.save(os.path.join(uploads_dir, fname))
+                    img = f"/static/uploads/{fname}"
+
         conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=? WHERE id=?',
                      (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, pid))
         conn.commit()
-    except sqlite3.OperationalError as e:
         conn.close()
-        # Removido o init_db() aqui pois é perigoso durante update
-        return jsonify({'error': 'Erro ao atualizar: ' + str(e)}), 500
+        return jsonify({'success': True, 'message': 'Atualizado!'})
         
-    conn.close()
-    return jsonify({'success': True, 'message': 'Atualizado!'})
+    except sqlite3.OperationalError as e:
+        conn.close() if 'conn' in locals() else None
+        return jsonify({'error': f'Erro ao atualizar: {str(e)}'}), 500
+    except Exception as e:
+        conn.close() if 'conn' in locals() else None
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 # --- ROTA DE CONFIGURAÇÃO ---
 

@@ -43,6 +43,20 @@ try:
 except sqlite3.OperationalError:
     print("ℹ️ Coluna pix_copia_cola já existe.")
 
+# 4. Adiciona promo_price na tabela products se não existir
+try:
+    cursor.execute('ALTER TABLE products ADD COLUMN promo_price TEXT DEFAULT ""')
+    print("✅ Coluna promo_price criada.")
+except sqlite3.OperationalError:
+    print("ℹ️ Coluna promo_price já existe.")
+
+# 5. Adiciona promo_label na tabela products se não existir
+try:
+    cursor.execute('ALTER TABLE products ADD COLUMN promo_label TEXT DEFAULT ""')
+    print("✅ Coluna promo_label criada.")
+except sqlite3.OperationalError:
+    print("ℹ️ Coluna promo_label já existe.")
+
 conn.commit()
 conn.close()
 

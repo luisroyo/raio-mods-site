@@ -1,0 +1,15 @@
+<!-- Header e Navegação -->
+<header class="border-b-2 border-neon-cyan py-6 mb-8">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+        <h1 class="text-4xl font-bold neon-cyan">Painel Admin</h1>
+        <div class="flex gap-4 items-center">
+            <button type="button" onclick="openConfigModal()"
+                class="flex items-center gap-2 border border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-900 transition">
+                ⚙️ Config Pagamentos
+            </button>
+            <a href="{{ url_for('public.index') }}" class="neon-purple hover:text-white">Ver Loja</a>
+            <a href="{{ url_for('public.links') }}" class="neon-cyan hover:text-white">Ver Links</a>
+            <a href="{{ url_for('admin.admin_logout') }}" class="text-red-400">Sair</a>
+        </div>
+    </div>
+</header>

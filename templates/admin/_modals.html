@@ -1,0 +1,390 @@
+<!-- Edit Manual Sale Modal -->
+<div id="editManualSaleModal"
+    class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
+    <div
+        class="w-full max-w-md bg-black border-2 border-purple-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-purple-500">✏️ Editar Venda Manual</h3>
+            <button type="button" onclick="closeModal('editManualSaleModal')"
+                class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <form id="editManualSaleForm" class="space-y-4">
+                <input type="hidden" id="edit_sale_id" name="sale_id">
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Produto</label>
+                    <select id="edit_sale_product_id" name="product_id" required
+                        class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                        <option value="">Selecione um Produto</option>
+                        {% for p in simple_products %}
+                        <option value="{{ p.id }}">{{ p.name }} - {{ p.price }}</option>
+                        {% endfor %}
+                        {% for c in catalogs %}
+                        <optgroup label="📁 {{ c.name }}">
+                            {% for sub in subproducts_by_parent.get(c.id, []) %}
+                            <option value="{{ sub.id }}">&nbsp;&nbsp;{{ sub.name }} - {{ sub.price }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Quantidade</label>
+                        <input type="number" id="edit_sale_quantity" name="quantity" min="1" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Preço Venda (R$)</label>
+                        <input type="text" id="edit_sale_unit_price" name="unit_price" required
+                            class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Custo Unitário (R$)</label>
+                    <input type="text" id="edit_sale_cost" name="cost_per_unit_brl" required
+                        class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Notas (Opcional)</label>
+                    <textarea id="edit_sale_notes" name="notes" rows="2"
+                        class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white"></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-2 bg-purple-600 text-white font-bold rounded hover:bg-purple-500">💾
+                    Salvar Alterações</button>
+            </form>
+            <div id="editManualSaleMessage" class="mt-4 hidden text-center font-bold"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Modal -->
+<div id="keyModal"
+    class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
+    <div
+        class="w-full max-w-lg bg-black border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+            <div>
+                <h3 class="text-xl font-bold text-yellow-500">Gerenciar Chaves</h3>
+                <p id="keyProductName" class="text-gray-400 text-sm">Produto...</p>
+            </div>
+            <button type="button" onclick="closeModal('keyModal')"
+                class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div class="flex border-b border-gray-800">
+            <button type="button" onclick="switchKeyTab('add')" id="tab-key-add"
+                class="flex-1 py-3 font-bold text-yellow-500 border-b-2 border-yellow-500 bg-gray-900">➕
+                Adicionar</button>
+            <button type="button" onclick="switchKeyTab('list')" id="tab-key-list"
+                class="flex-1 py-3 font-bold text-gray-500 hover:text-white">📋 Lista / Excluir</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4">
+            <div id="view-key-add">
+                <form id="addKeyForm" class="space-y-4">
+                    <input type="hidden" id="keyProductId" name="product_id">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Cole as chaves (uma por linha):</label>
+                        <textarea name="keys_list" rows="8" placeholder="XXXX-YYYY-ZZZZ&#10;AAAA-BBBB-CCCC"
+                            class="w-full p-3 bg-gray-900 border border-yellow-500 rounded text-white font-mono text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 bg-yellow-600 text-black font-bold rounded hover:bg-yellow-500 transition">Salvar
+                        Chaves</button>
+                </form>
+                <div id="key_message" class="mt-2 hidden text-center font-bold"></div>
+            </div>
+            <div id="view-key-list" class="hidden">
+                <div id="keys-loading" class="text-center text-gray-500 py-4">Carregando...</div>
+                <ul id="keys-list-ul" class="space-y-2"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Subproduct Modal -->
+<div id="addSubproductModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+    <div
+        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-green-500 rounded-lg p-6 bg-black relative">
+        <h3 class="text-xl font-bold text-green-500 mb-4">Adicionar Produto em <span id="sub_cat_name"
+                class="text-white"></span></h3>
+        <form id="addSubproductForm" class="space-y-3" data-url="{{ url_for('admin.add_product') }}"
+            enctype="multipart/form-data">
+            <input type="hidden" id="sub_pid" name="parent_id">
+            <input type="hidden" name="is_catalog" value="0">
+            <input type="text" name="name" required placeholder="Nome do Produto (ex: VIP 30 Dias)"
+                class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+            <textarea name="description" required rows="2" placeholder="Descrição"
+                class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white"></textarea>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" name="price" required placeholder="Preço (R$)"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                <input type="number" name="sort_order" value="0" placeholder="Ordem"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" name="category" required placeholder="Categoria (ex: Key)"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+                <div class="flex items-center gap-3">
+                    <input type="number" name="cost_usd" step="0.01" placeholder="Custo USD"
+                        class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white"
+                        title="Quanto você paga pelo produto em dólares">
+                    <div class="flex items-center text-sm text-gray-300">
+                        <input type="hidden" name="apply_iof" value="0">
+                        <input type="checkbox" id="add_apply_iof_sub" name="apply_iof" value="1" checked
+                            class="mr-2">
+                        <label for="add_apply_iof_sub">Aplicar IOF?</label>
+                    </div>
+                </div>
+            </div>
+            <input type="text" name="payment_url" placeholder="Link Mercado Pago"
+                class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+            <input type="text" name="promo_price" placeholder="Preço promocional (opcional)"
+                class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white">
+            <input type="text" name="promo_label" placeholder="Label promo (ex: PROMO)"
+                class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white">
+            <input type="file" name="image"
+                class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
+            <div class="flex gap-2 mt-4">
+                <button type="button" onclick="closeModal('addSubproductModal')"
+                    class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button>
+                <button type="submit" class="flex-1 py-2 bg-green-600 text-black font-bold rounded">Salvar</button>
+            </div>
+        </form>
+        <div id="subproduct_message" class="mt-2 hidden"></div>
+    </div>
+</div>
+
+<!-- Config Modal -->
+<div id="configModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+    <div
+        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-6 bg-black">
+        <h3 class="text-xl font-bold text-yellow-500 mb-4">⚙️ Configurações</h3>
+        <form id="configForm" class="space-y-4" data-url="{{ url_for('admin.update_config') }}">
+            <div>
+                <label class="block text-sm text-gray-400">Chave Pix (Manual):</label>
+                <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}"
+                    class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+            </div>
+            <div class="border-t border-b border-gray-800 py-4 my-2">
+                <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado Pago):</label>
+                <input type="password" name="mercado_pago_token"
+                    value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}"
+                    class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
+                    placeholder="Cole seu Access Token (APP_USR-...)">
+                <p class="text-xs text-gray-500 mt-1">Deixe em branco para não alterar o token já salvo.</p>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400">PIX Copia e Cola (opcional):</label>
+                <textarea name="pix_copia_cola" rows="3"
+                    class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400">WhatsApp Suporte:</label>
+                <input type="text" name="contact_whatsapp"
+                    value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}"
+                    class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+            </div>
+            <div id="config_message" class="mt-2 hidden"></div>
+            <div class="flex gap-2 mt-6">
+                <button type="button" onclick="closeModal('configModal')"
+                    class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
+                <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+    <div
+        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-blue-500 rounded-lg p-6 bg-black">
+        <h3 class="text-xl font-bold text-blue-500 mb-4">✏️ Editar Produto</h3>
+        <form id="editProductForm" class="space-y-3" enctype="multipart/form-data">
+            <input type="hidden" id="edit_id">
+            <input type="hidden" id="edit_is_catalog" name="is_catalog">
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">📝 Nome do Produto</label>
+                <input type="text" id="edit_name" name="name"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                    placeholder="Ex: KOS Virtual Premium">
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">📄 Descrição</label>
+                <textarea id="edit_description" name="description" rows="2"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                    placeholder="Descreva o produto (ex: 30 dias de acesso)"></textarea>
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">💵 Preço</label>
+                <input type="text" id="edit_price" name="price"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                    placeholder="Ex: R$ 29,90">
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">💸 Custo em USD (para cálculos)</label>
+                <div class="flex items-center gap-3">
+                    <input type="number" id="edit_cost_usd" name="cost_usd" step="0.01"
+                        class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white"
+                        placeholder="Ex: 9.99" title="Quanto você paga pelo produto em dólares">
+                    <div class="flex items-center text-sm text-gray-300">
+                        <input type="hidden" name="apply_iof" value="0">
+                        <input type="checkbox" id="edit_apply_iof" name="apply_iof" value="1" checked class="mr-2">
+                        <label for="edit_apply_iof">Aplicar IOF?</label>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">📁 Categoria</label>
+                <input type="text" id="edit_category" name="category"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                    placeholder="Ex: Premium, Standard, VIP">
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">🏷️ Tagline (Subtítulo)</label>
+                <input type="text" id="edit_tagline" name="tagline"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
+                    placeholder="Ex: 30 dias de acesso incluso">
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">🔗 Link Mercado Pago</label>
+                <input type="text" id="edit_payment_url" name="payment_url"
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white"
+                    placeholder="Cole o link do Mercado Pago (opcional)">
+            </div>
+
+            <div class="border border-amber-500/50 rounded p-3 bg-amber-500/5">
+                <label class="text-xs text-amber-400 block mb-2 font-bold">🏷️ Promoção (Opcional)</label>
+                <div class="mb-2">
+                    <label class="text-xs text-gray-400 block mb-1">Preço da Promoção</label>
+                    <input type="text" id="edit_promo_price" name="promo_price"
+                        class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm"
+                        placeholder="Ex: R$ 9,90">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Label da Promoção</label>
+                    <input type="text" id="edit_promo_label" name="promo_label"
+                        class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white text-sm"
+                        placeholder="Ex: 20% OFF ou PROMO">
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Deixe em branco para remover a promoção.</p>
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">🔢 Ordem de Exibição</label>
+                <input type="number" id="edit_sort_order" name="sort_order" min="0"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white" placeholder="0">
+            </div>
+
+            <div id="edit_parent_div">
+                <label class="text-xs text-gray-400 block mb-1">📦 Mover para Capa (Opcional)</label>
+                <select id="edit_parent_id" name="parent_id"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
+                    <option value="">Nenhum (Produto Solto)</option>
+                    {% for cat in parent_products %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="border border-blue-500 p-3 rounded">
+                <label class="text-xs text-gray-400 block mb-2">🖼️ Imagem do Produto</label>
+                <img id="edit_preview" src="" class="w-16 h-16 object-contain mb-2 border border-white rounded">
+                <div class="mb-2">
+                    <label class="text-xs text-gray-400 block mb-1">Upload Novo</label>
+                    <input type="file" id="edit_image" name="image" class="text-xs text-gray-400 w-full">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Ou URL da Imagem</label>
+                    <input type="text" id="edit_image_url" name="image_url"
+                        placeholder="https://exemplo.com/imagem.png"
+                        class="w-full p-1 bg-gray-900 border border-blue-500 rounded text-white text-xs">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-4">
+                <button type="button" onclick="closeModal('editModal')"
+                    class="flex-1 py-2 border border-red-500 text-red-500 rounded hover:bg-red-900/20">❌
+                    Cancelar</button>
+                <button type="submit"
+                    class="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500">✅ Salvar</button>
+            </div>
+        </form>
+        <div id="edit_message" class="mt-2 hidden"></div>
+    </div>
+</div>
+
+<!-- Edit Link Modal -->
+<div id="editLinkModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
+    <div class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-white rounded-lg p-6 bg-black">
+        <h3 class="text-xl font-bold text-white mb-4">Editar Link</h3>
+        <form id="editLinkForm" class="space-y-3" enctype="multipart/form-data">
+            <input type="hidden" id="link_edit_id">
+            <input type="text" id="link_title" name="title"
+                class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Título">
+            <input type="text" id="link_desc" name="description"
+                class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Descrição">
+            <div class="border border-white p-2 rounded">
+                <img id="link_edit_preview" src="" alt=""
+                    class="w-16 h-16 object-contain mb-2 border border-gray-600 rounded">
+                <input type="file" id="link_edit_image" name="image" accept="image/*"
+                    class="text-xs text-gray-400 w-full">
+                <input type="text" id="link_edit_image_url" name="image_url" placeholder="Ou URL da imagem"
+                    class="w-full mt-2 p-2 bg-gray-900 border border-white rounded text-white text-xs">
+            </div>
+            <input type="text" id="link_down" name="download_link"
+                class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Link Download">
+            <input type="text" id="link_vid" name="video_link"
+                class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Link Vídeo">
+            <input type="text" id="link_game" name="game"
+                class="w-full p-2 bg-gray-900 border border-white rounded text-white" placeholder="Jogo">
+            <div class="flex gap-2 mt-4"><button type="button" onclick="closeModal('editLinkModal')"
+                    class="flex-1 py-2 border border-red-500 text-red-500 rounded">Cancelar</button><button
+                    type="submit" class="flex-1 py-2 bg-white text-black font-bold rounded">Salvar</button></div>
+        </form>
+        <div id="link_edit_message" class="mt-2 hidden"></div>
+    </div>
+</div>
+
+<!-- Inline Scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('refresh_dolar')
+        if (!btn) return
+        btn.addEventListener('click', async function () {
+            btn.disabled = true
+            btn.textContent = 'Atualizando...'
+            try {
+                const resp = await fetch('{{ url_for("admin.debug_dolar") }}')
+                if (resp.ok) {
+                    const data = await resp.json()
+                    document.getElementById('dolar_value').textContent = parseFloat(data.dolar_rate).toFixed(2)
+                    const d = new Date(data.timestamp * 1000)
+                    document.getElementById('dolar_updated').textContent = d.toLocaleString()
+                } else if (resp.status === 401) {
+                    alert('Você precisa estar logado como admin para atualizar a cotação.')
+                } else {
+                    alert('Erro ao buscar cotação')
+                }
+            } catch (e) {
+                console.error(e)
+                alert('Erro ao atualizar cotação')
+            } finally {
+                btn.disabled = false
+                btn.textContent = 'Atualizar'
+            }
+        })
+    })
+</script>

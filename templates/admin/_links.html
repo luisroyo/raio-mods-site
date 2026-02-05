@@ -1,0 +1,59 @@
+<!-- Section: Links -->
+<div id="section-links" class="section-content hidden">
+    <div class="mb-8 border-2 border-white rounded-lg p-8">
+        <h2 class="text-2xl font-bold text-white mb-4">🔗 Novo Link</h2>
+        <form id="addLinkForm" class="space-y-4" data-url="{{ url_for('admin.add_link') }}"
+            enctype="multipart/form-data">
+            <input type="text" name="title" required placeholder="Título"
+                class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+            <input type="text" name="description" placeholder="Descrição"
+                class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Imagem (opcional)</label>
+                <input type="file" name="image" accept="image/*"
+                    class="w-full px-4 py-2 bg-black border border-white rounded text-white text-sm">
+                <input type="text" name="image_url" placeholder="Ou URL da imagem"
+                    class="w-full mt-2 px-4 py-2 bg-black border border-white rounded text-white text-sm">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" name="download_link" placeholder="Link Download"
+                    class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+                <input type="text" name="video_link" placeholder="Link Vídeo"
+                    class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+            </div>
+            <input type="text" name="game" placeholder="Jogo Relacionado"
+                class="w-full px-4 py-2 bg-black border border-white rounded text-white">
+            <button type="submit"
+                class="w-full py-2 bg-white text-black font-bold rounded hover:bg-gray-200">Adicionar
+                Link</button>
+        </form>
+        <div id="link_message" class="mt-4 hidden"></div>
+    </div>
+
+    {% if links %}
+    <div class="mt-8">
+        <h3 class="text-lg font-bold text-white mb-4">Links cadastrados</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for link in links %}
+            <div class="border border-white rounded-lg p-4 flex items-start gap-4">
+                {% if link.image %}
+                <img src="{{ link.image }}" alt=""
+                    class="w-16 h-16 object-cover rounded border border-gray-600 flex-shrink-0">
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-white truncate">{{ link.title }}</p>
+                    {% if link.game %}<p class="text-xs text-gray-400">{{ link.game }}</p>{% endif %}
+                    <div class="flex gap-2 mt-2">
+                        <button type="button"
+                            onclick='openEditLink({{ link.id }}, {{ link.title|tojson|forceescape }}, {{ (link.description or "")|tojson|forceescape }}, {{ (link.image or "")|tojson|forceescape }}, {{ (link.download_link or "")|tojson|forceescape }}, {{ (link.video_link or "")|tojson|forceescape }}, {{ (link.game or "")|tojson|forceescape }})'
+                            class="text-xs px-2 py-1 bg-white text-black rounded hover:bg-gray-200">Editar</button>
+                        <button type="button" onclick="deleteLink({{ link.id }})"
+                            class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Remover</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>

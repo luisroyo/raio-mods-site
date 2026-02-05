@@ -34,3 +34,4 @@ static/uploads/*
 
 # --- Cache ---
 dolar_cache.json
+dolar.log

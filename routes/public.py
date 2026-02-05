@@ -121,7 +121,8 @@ def catalogo(parent_id):
     # Agrupar produtos por categoria
     products_by_category = {}
     for product in children:
-        category = product.get('category', 'Sem categoria') or 'Sem categoria'
+        product_dict = dict(product)
+        category = product_dict.get('category', 'Sem categoria') or 'Sem categoria'
         if category not in products_by_category:
             products_by_category[category] = []
         products_by_category[category].append(product)

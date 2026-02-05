@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
         AOS.init({ duration: 800, easing: 'ease-in-out', once: true });
     }
 
-    // Setup functions from modules
-    setupFormListeners();
-    setupMobileMenu();
-    setupKeyForm();
-    setupManualSaleForm();
-    setupPanelRechargeForm();
+    // Setup functions from modules (verificar se existem antes de chamar)
+    if (typeof setupFormListeners === 'function') setupFormListeners();
+    if (typeof setupMobileMenu === 'function') setupMobileMenu();
+    if (typeof setupKeyForm === 'function') setupKeyForm();
+    if (typeof setupManualSaleForm === 'function') setupManualSaleForm();
+    if (typeof setupPanelRechargeForm === 'function') setupPanelRechargeForm();
 
 });
 
@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('load', () => {
     setTimeout(() => {
-        loadManualSales();
-        loadPanelRecharges();
-        loadSalesReport();
+        if (typeof loadManualSales === 'function') loadManualSales();
+        if (typeof loadPanelRecharges === 'function') loadPanelRecharges();
+        if (typeof loadSalesReport === 'function') loadSalesReport();
     }, 500);
 });

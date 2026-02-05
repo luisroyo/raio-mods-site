@@ -14,6 +14,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+/* Auto-fill custo unitário em BRL ao selecionar produto */
+document.addEventListener('DOMContentLoaded', () => {
+    const prodSelect = document.querySelector('#manualSaleForm select[name="product_id"]');
+    if (prodSelect) {
+        prodSelect.addEventListener('change', async (e) => {
+            const pid = e.target.value;
+            const costInput = document.querySelector('#manualSaleForm input[name="cost_per_unit_brl"]');
+            if (!pid) {
+                if (costInput) costInput.value = '';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/admin/product/info/${pid}`);
+                if (!res.ok) return;
+                const info = await res.json();
+                if (info && typeof info.calculated_cost_brl !== 'undefined') {
+                    // set value with dot as decimal separator
+                    if (costInput) costInput.value = info.calculated_cost_brl.toFixed(2);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar info do produto:', err);
+            }
+        });
+    }
+});
+
 /* =========================
    HELPERS
 ========================= */
@@ -94,6 +121,7 @@ function showSection(id) {
     tab?.classList.remove('text-gray-400');
 }
 
+
 function closeModal(id) {
     const m = document.getElementById(id);
     m?.classList.remove('modal-active');
@@ -132,6 +160,11 @@ function openEditModal(
     setVal('edit_promo_price', promoPrice);
     setVal('edit_promo_label', promoLabel);
     setVal('edit_cost_usd', costUsd || 0);
+    // set apply_iof checkbox if provided (backwards compatible)
+    if (typeof arguments !== 'undefined' && arguments.length > 14) {
+        const applyIoF = arguments[14];
+        try { setVal('edit_apply_iof', applyIoF); } catch (e) { /* ignore */ }
+    }
     setVal('edit_image_url', '');
 
     const preview = document.getElementById('edit_preview');

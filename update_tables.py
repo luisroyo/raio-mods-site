@@ -84,6 +84,16 @@ except Exception as e:
     else:
         print(f"⚠️ Aviso ao adicionar 'cost_usd': {e}")
 
+# 3.5 Garante flag apply_iof na tabela PRODUCTS (1 = aplicar IOF, 0 = não aplicar)
+try:
+    cursor.execute('ALTER TABLE products ADD COLUMN apply_iof INTEGER DEFAULT 1')
+    print("✅ Coluna 'apply_iof' adicionada à tabela 'products'.")
+except Exception as e:
+    if 'duplicate column' in str(e).lower():
+        print("✅ Coluna 'apply_iof' já existe na tabela 'products'.")
+    else:
+        print(f"⚠️ Aviso ao adicionar 'apply_iof': {e}")
+
 # 4. Garante colunas na tabela CONFIG
 try:
     cursor.execute('ALTER TABLE config ADD COLUMN mercado_pago_token TEXT DEFAULT ""')

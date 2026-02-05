@@ -58,9 +58,9 @@ def admin():
             IOF = 1.0638  # 6.38%
             CUSTO_FIXO_PAINEL_USD = 50.0
             
-            # Busca todas as vendas aprovadas com join para pegar cost_usd
+            # Busca todas as vendas aprovadas com join para pegar cost_usd e flag apply_iof
             approved_orders = conn.execute('''
-                SELECT o.*, p.cost_usd, p.price
+                SELECT o.*, p.cost_usd, p.price, p.apply_iof
                 FROM orders o
                 JOIN products p ON o.product_id = p.id
                 WHERE o.status = 'approved'
@@ -77,11 +77,21 @@ def admin():
                 except:
                     pass
                 
-                # Custo das vendas em BRL (USD * cotação * IOF)
+                # Custo das vendas em BRL (USD * cotação) e aplica IOF somente quando configurado
                 try:
                     cost_usd = float(order['cost_usd'] or 0)
                     if cost_usd > 0:
-                        custo_vendas_total += (cost_usd * dolar_hoje * IOF)
+                        apply_iof = 1
+                        try:
+                            # Alguns registros antigos podem não ter a coluna; usar 1 por padrão
+                            apply_iof = int(order['apply_iof']) if 'apply_iof' in order.keys() else 1
+                        except:
+                            apply_iof = 1
+
+                        if apply_iof == 1:
+                            custo_vendas_total += (cost_usd * dolar_hoje * IOF)
+                        else:
+                            custo_vendas_total += (cost_usd * dolar_hoje)
                 except:
                     pass
             
@@ -192,6 +202,18 @@ def add_product():
         cost_usd = float(request.form.get('cost_usd', 0) or 0)
     except:
         cost_usd = 0.0
+    # Novo: Recebe flag apply_iof (checkbox). Pode vir como lista; tomar último valor se houver.
+    try:
+        vals = request.form.getlist('apply_iof')
+        if vals:
+            apply_iof = int(vals[-1])
+        else:
+            apply_iof = int(request.form.get('apply_iof', 1) or 1)
+    except:
+        try:
+            apply_iof = int(request.form.get('apply_iof', 1) or 1)
+        except:
+            apply_iof = 1
     
     try: is_catalog = int(request.form.get('is_catalog', 0))
     except: is_catalog = 0
@@ -219,8 +241,8 @@ def add_product():
     
     conn = get_db_connection()
     try:
-        conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                     (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd))
+        conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                 (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof))
         conn.commit()
     except sqlite3.OperationalError as e:
         conn.close()
@@ -261,6 +283,18 @@ def edit_product(pid):
             cost_usd = float(request.form.get('cost_usd') or existing.get('cost_usd', 0) or 0)
         except:
             cost_usd = float(existing.get('cost_usd', 0) or 0)
+        # Novo: Recebe flag apply_iof (checkbox). Pode vir como lista; tomar último valor se houver.
+        try:
+            vals = request.form.getlist('apply_iof')
+            if vals:
+                apply_iof = int(vals[-1])
+            else:
+                apply_iof = int(request.form.get('apply_iof', existing.get('apply_iof', 1)) or existing.get('apply_iof', 1))
+        except:
+            try:
+                apply_iof = int(request.form.get('apply_iof', existing.get('apply_iof', 1)) or existing.get('apply_iof', 1))
+            except:
+                apply_iof = int(existing.get('apply_iof', 1) or 1)
         
         try: is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
         except: is_catalog = 0
@@ -291,8 +325,8 @@ def edit_product(pid):
                     file.seek(0); file.save(os.path.join(uploads_dir, fname))
                     img = f"/static/uploads/{fname}"
 
-        conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=? WHERE id=?',
-                     (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, pid))
+        conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, apply_iof=? WHERE id=?',
+                 (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, pid))
         conn.commit()
         conn.close()
         return jsonify({'success': True, 'message': 'Atualizado!'})
@@ -476,13 +510,38 @@ def add_manual_sale():
         product_id = request.form.get('product_id')
         quantity = int(request.form.get('quantity', 1))
         unit_price = float(str(request.form.get('unit_price', 0)).replace('R$', '').replace(',', '.'))
-        cost_per_unit_brl = float(str(request.form.get('cost_per_unit_brl', 0)).replace('R$', '').replace(',', '.'))
+        # cost_per_unit_brl can be provided by admin, but if not, calculate from product.cost_usd
+        raw_cost = request.form.get('cost_per_unit_brl', '')
+        if raw_cost is None or str(raw_cost).strip() == '':
+            cost_per_unit_brl = 0.0
+        else:
+            cost_per_unit_brl = float(str(raw_cost).replace('R$', '').replace(',', '.'))
         notes = request.form.get('notes', '').strip()
         
         if not product_id or quantity <= 0 or unit_price <= 0:
             return jsonify({'error': 'Dados inválidos'}), 400
         
         total_price = quantity * unit_price
+
+        # If cost wasn't provided, compute from product.cost_usd and current dolar rate
+        if not cost_per_unit_brl or cost_per_unit_brl <= 0:
+            try:
+                conn = get_db_connection()
+                prod = conn.execute('SELECT cost_usd, apply_iof FROM products WHERE id = ?', (product_id,)).fetchone()
+                conn.close()
+                dolar_rate = get_dolar_hoje()
+                IOF = 1.0638
+                if prod:
+                    cost_usd = float(prod['cost_usd'] or 0)
+                    apply_iof = int(prod['apply_iof']) if 'apply_iof' in prod.keys() and prod['apply_iof'] is not None else 1
+                    if cost_usd > 0:
+                        if apply_iof == 1:
+                            cost_per_unit_brl = round(cost_usd * dolar_rate * IOF, 2)
+                        else:
+                            cost_per_unit_brl = round(cost_usd * dolar_rate, 2)
+            except Exception as e:
+                # fallback: keep cost_per_unit_brl as 0
+                print(f"Erro ao calcular custo automático: {e}")
         
         conn = get_db_connection()
         conn.execute(
@@ -511,6 +570,41 @@ def list_manual_sales():
     conn.close()
     
     return jsonify([dict(s) for s in sales])
+
+
+@admin_bp.route('/admin/product/info/<int:pid>', methods=['GET'])
+def product_info(pid):
+    if not session.get('admin_logged_in'): return jsonify({'error': '401'}), 401
+    try:
+        conn = get_db_connection()
+        row = conn.execute('SELECT id, cost_usd, apply_iof FROM products WHERE id = ?', (pid,)).fetchone()
+        conn.close()
+        if not row:
+            return jsonify({'error': '404'}), 404
+
+        dolar_rate = get_dolar_hoje()
+        IOF = 1.0638
+
+        cost_usd = float(row['cost_usd'] or 0)
+        apply_iof = int(row['apply_iof']) if 'apply_iof' in row.keys() and row['apply_iof'] is not None else 1
+
+        calculated_cost_brl = 0.0
+        if cost_usd > 0:
+            if apply_iof == 1:
+                calculated_cost_brl = round(cost_usd * dolar_rate * IOF, 2)
+            else:
+                calculated_cost_brl = round(cost_usd * dolar_rate, 2)
+
+        return jsonify({
+            'id': row['id'],
+            'cost_usd': round(cost_usd, 2),
+            'apply_iof': apply_iof,
+            'dolar_rate': round(dolar_rate, 4),
+            'calculated_cost_brl': calculated_cost_brl
+        })
+    except Exception as e:
+        print(f"Erro product_info: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @admin_bp.route('/admin/sales/manual/delete/<int:sale_id>', methods=['POST'])
 def delete_manual_sale(sale_id):
@@ -603,16 +697,20 @@ def sales_report():
     manual_revenue = float(manual_sales['total'] or 0) if manual_sales['total'] else 0
     manual_count = manual_sales['count'] or 0
     
-    # Custo de vendas online (produtos)
+    # Custo de vendas online (produtos) - separar itens com/s/IOF
     online_costs = conn.execute('''
-        SELECT SUM(p.cost_usd) as total_usd
+        SELECT 
+            SUM(CASE WHEN p.apply_iof = 1 THEN p.cost_usd ELSE 0 END) as total_usd_iof,
+            SUM(CASE WHEN p.apply_iof = 0 THEN p.cost_usd ELSE 0 END) as total_usd_noiof
         FROM orders o
         JOIN products p ON o.product_id = p.id
         WHERE o.status = 'approved'
     ''').fetchone()
-    
-    online_cost_usd = float(online_costs['total_usd'] or 0) if online_costs['total_usd'] else 0
-    online_cost_brl = online_cost_usd * dolar_hoje * IOF
+
+    total_usd_iof = float(online_costs['total_usd_iof'] or 0) if online_costs['total_usd_iof'] else 0
+    total_usd_noiof = float(online_costs['total_usd_noiof'] or 0) if online_costs['total_usd_noiof'] else 0
+
+    online_cost_brl = (total_usd_iof * dolar_hoje * IOF) + (total_usd_noiof * dolar_hoje)
     
     # Custo de vendas manuais
     manual_costs = conn.execute('''
@@ -640,11 +738,12 @@ def sales_report():
     
     return jsonify({
         'online': {
-            'revenue': round(online_revenue, 2),
-            'count': online_count,
-            'cost_brl': round(online_cost_brl, 2),
-            'cost_usd': round(online_cost_usd, 2)
-        },
+                'revenue': round(online_revenue, 2),
+                'count': online_count,
+                'cost_brl': round(online_cost_brl, 2),
+                'cost_usd_with_iof': round(total_usd_iof, 2),
+                'cost_usd_no_iof': round(total_usd_noiof, 2)
+            },
         'manual': {
             'revenue': round(manual_revenue, 2),
             'count': manual_count,

@@ -22,13 +22,15 @@ def admin():
             all_links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
             config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
             
-            # --- NOVO: CONTAGEM DE ESTOQUE ---
+            # --- CONTAGEM DE ESTOQUE ---
             # Conta quantas chaves livres (is_used=0) cada produto tem
             stock_query = conn.execute('SELECT product_id, COUNT(*) as total FROM product_keys WHERE is_used = 0 GROUP BY product_id').fetchall()
             stock_map = {row['product_id']: row['total'] for row in stock_query}
             
         except sqlite3.OperationalError:
-            conn.close(); init_db(); return redirect(url_for('admin.admin'))
+            conn.close()
+            init_db()
+            return redirect(url_for('admin.admin'))
 
         # Lógica de Catálogos vs Produtos Simples
         legacy_rows = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
@@ -51,7 +53,8 @@ def admin():
                 if is_cat == 1 or p['id'] in legacy_catalog_ids:
                     catalogs.append(p_dict)
                     if p['id'] not in subproducts_by_parent: subproducts_by_parent[p['id']] = []
-                else: simple_products.append(p_dict) 
+                else:
+                    simple_products.append(p_dict) 
             else:
                 if pid not in subproducts_by_parent: subproducts_by_parent[pid] = []
                 subproducts_by_parent[pid].append(p_dict)
@@ -93,12 +96,15 @@ def add_product():
     payment_url = (request.form.get('payment_url') or '').strip()
     promo_price = (request.form.get('promo_price') or '').strip()
     promo_label = (request.form.get('promo_label') or '').strip()
+    
     try: is_catalog = int(request.form.get('is_catalog', 0))
     except: is_catalog = 0
     try: sort_order = int(request.form.get('sort_order') or 0)
     except: sort_order = 0
-    parent_id = request.form.get('parent_id') or None
-    if parent_id and str(parent_id).strip() == '': parent_id = None
+    
+    parent_id = request.form.get('parent_id')
+    if not parent_id or str(parent_id).strip() == '':
+        parent_id = None
     
     image = request.form.get('image_url', '')
     if 'image' in request.files:
@@ -122,11 +128,8 @@ def add_product():
         conn.commit()
     except sqlite3.OperationalError as e:
         conn.close()
-        init_db()
-        conn = get_db_connection()
-        conn.execute('INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-                     (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label))
-        conn.commit()
+        return jsonify({'error': 'Erro no banco de dados: ' + str(e)}), 500
+        
     conn.close()
     return jsonify({'success': True, 'message': 'Adicionado!'})
 
@@ -154,11 +157,21 @@ def edit_product(pid):
     payment_url = request.form.get('payment_url', existing.get('payment_url', '')).strip()
     promo_price = (request.form.get('promo_price') or existing.get('promo_price') or '').strip()
     promo_label = (request.form.get('promo_label') or existing.get('promo_label') or '').strip()
-    is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
+    
+    try: is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
+    except: is_catalog = 0
     try: sort = int(request.form.get('sort_order') or existing.get('sort_order', 0))
     except: sort = 0
+    
     pid_val = request.form.get('parent_id')
-    if pid_val == str(pid) or not pid_val: pid_val = None
+    
+    # --- CORREÇÃO DE LÓGICA DO PAI/CATÁLOGO ---
+    # Se for marcado como catálogo, NÃO pode ter pai.
+    if is_catalog == 1:
+        pid_val = None
+    # Se o pai for ele mesmo ou string vazia, anula
+    elif pid_val == str(pid) or not pid_val or str(pid_val).strip() == '':
+        pid_val = None
     
     img = request.form.get('image_url') or ''
     if not img: img = existing.get('image', '')
@@ -178,17 +191,11 @@ def edit_product(pid):
         conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=? WHERE id=?',
                      (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, pid))
         conn.commit()
-    except sqlite3.OperationalError:
+    except sqlite3.OperationalError as e:
         conn.close()
-        init_db()
-        conn = get_db_connection()
-        row = conn.execute('SELECT * FROM products WHERE id = ?', (pid,)).fetchone()
-        if not row:
-            conn.close()
-            return jsonify({'error': '404'}), 404
-        conn.execute('UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=? WHERE id=?',
-                     (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, pid))
-        conn.commit()
+        # Removido o init_db() aqui pois é perigoso durante update
+        return jsonify({'error': 'Erro ao atualizar: ' + str(e)}), 500
+        
     conn.close()
     return jsonify({'success': True, 'message': 'Atualizado!'})
 
@@ -222,7 +229,7 @@ def update_config():
     conn.close()
     return jsonify({'success': True})
 
-# --- ROTAS DE CHAVES (ESTOQUE) --- NOVO! ---
+# --- ROTAS DE CHAVES (ESTOQUE) ---
 
 @admin_bp.route('/admin/keys/add', methods=['POST'])
 def add_keys():
@@ -330,7 +337,7 @@ def edit_link(lid):
     conn.commit(); conn.close()
     return jsonify({'success': True})
 
-# --- ROTAS DE GERENCIAMENTO DE CHAVES (NOVO) ---
+# --- ROTAS DE GERENCIAMENTO DE CHAVES ---
 
 @admin_bp.route('/admin/keys/list/<int:product_id>', methods=['GET'])
 def list_keys(product_id):

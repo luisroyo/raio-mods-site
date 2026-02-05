@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     /* =========================
-       INIT
+        INIT
     ========================= */
 
     if (typeof AOS !== 'undefined') {
@@ -68,13 +68,27 @@ function setupMobileMenu() {
 ========================= */
 
 function showSection(id) {
+    // Esconde todas as seções
     document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
+    
+    // Reseta abas
     document.querySelectorAll('[id^="tab-"]').forEach(t => {
         t.classList.remove('neon-cyan', 'border-b-2');
         t.classList.add('text-gray-400');
     });
 
-    document.getElementById(`section-${id}`)?.classList.remove('hidden');
+    // Mostra a seção desejada
+    const section = document.getElementById(`section-${id}`);
+    if (section) {
+        section.classList.remove('hidden');
+        
+        // CORREÇÃO: Força o AOS a recalcular posições, senão o conteúdo fica invisível
+        if (typeof AOS !== 'undefined') {
+            setTimeout(() => AOS.refresh(), 100);
+        }
+    }
+
+    // Ativa aba
     const tab = document.getElementById(`tab-${id}`);
     tab?.classList.add('neon-cyan', 'border-b-2');
     tab?.classList.remove('text-gray-400');
@@ -82,11 +96,11 @@ function showSection(id) {
 
 function closeModal(id) {
     const m = document.getElementById(id);
-    m?.classList.add('hidden', 'modal-hidden');
+    m?.classList.remove('modal-active');
 }
 
 function openConfigModal() {
-    document.getElementById('configModal')?.classList.remove('hidden', 'modal-hidden');
+    document.getElementById('configModal')?.classList.add('modal-active');
 }
 
 function openAddSubproductModal(pid, name) {
@@ -94,7 +108,7 @@ function openAddSubproductModal(pid, name) {
     const lbl = document.getElementById('sub_cat_name');
     if (lbl) lbl.innerText = name;
 
-    document.getElementById('addSubproductModal')?.classList.remove('hidden', 'modal-hidden');
+    document.getElementById('addSubproductModal')?.classList.add('modal-active');
 }
 
 /* =========================
@@ -126,17 +140,19 @@ function openEditModal(
     const parentSel = document.getElementById('edit_parent_id');
 
     if (parentDiv && parentSel) {
+        // Se for catálogo, esconde a opção de escolher pai
         if (isCat == 1) {
             parentDiv.style.display = 'none';
             parentSel.value = '';
         } else {
             parentDiv.style.display = 'block';
             parentSel.value = pid || '';
+            // Desabilita a opção de selecionar a si mesmo como pai (evita loop)
             [...parentSel.options].forEach(o => o.disabled = o.value == id);
         }
     }
 
-    document.getElementById('editModal')?.classList.remove('hidden', 'modal-hidden');
+    document.getElementById('editModal')?.classList.add('modal-active');
 }
 
 /* =========================
@@ -155,7 +171,7 @@ function openEditLink(id, title, desc, img, down, vid, game) {
     const preview = document.getElementById('link_edit_preview');
     if (preview) preview.src = img || '';
 
-    document.getElementById('editLinkModal')?.classList.remove('hidden', 'modal-hidden');
+    document.getElementById('editLinkModal')?.classList.add('modal-active');
 }
 
 /* =========================
@@ -177,7 +193,16 @@ async function sendData(e, msgId) {
 
     try {
         const res = await fetch(url, { method: 'POST', body: new FormData(form) });
-        const data = await res.json();
+        const text = await res.text();
+        
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('JSON Parse Error:', e, 'Text:', text);
+            msg && (msg.innerHTML = '❌ Erro na resposta do servidor');
+            return;
+        }
 
         if (data.success) {
             msg && (msg.innerHTML = '✅ Sucesso!');
@@ -185,8 +210,9 @@ async function sendData(e, msgId) {
         } else {
             msg && (msg.innerHTML = '❌ ' + (data.error || 'Erro'));
         }
-    } catch {
-        msg && (msg.innerHTML = '❌ Erro de conexão');
+    } catch (err) {
+        console.error('Fetch Error:', err);
+        msg && (msg.innerHTML = '❌ Erro: ' + err.message);
     }
 }
 
@@ -236,7 +262,7 @@ async function deleteLink(id) {
 }
 
 /* =========================
-   KEYS
+   KEYS (GERENCIAMENTO)
 ========================= */
 
 let currentKeyProductId = null;
@@ -245,7 +271,12 @@ function openKeyModal(id, name) {
     currentKeyProductId = id;
     setVal('keyProductId', id);
     document.getElementById('keyProductName').innerText = name;
-    document.getElementById('keyModal')?.classList.remove('hidden', 'modal-hidden');
+    document.getElementById('keyModal')?.classList.add('modal-active');
+    
+    // Limpa mensagem anterior
+    const msg = document.getElementById('key_message');
+    if(msg) msg.classList.add('hidden');
+
     switchKeyTab('add');
 }
 
@@ -253,15 +284,23 @@ function setupKeyForm() {
     const form = document.getElementById('addKeyForm');
     if (!form) return;
 
-    form.addEventListener('submit', async e => {
+    // CORREÇÃO: Remove listener anterior clonando o elemento
+    // Isso evita envios múltiplos se a função for recarregada
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    newForm.addEventListener('submit', async e => {
         e.preventDefault();
         const msg = document.getElementById('key_message');
         try {
-            const r = await fetch('/admin/keys/add', { method: 'POST', body: new FormData(form) });
+            const r = await fetch('/admin/keys/add', { method: 'POST', body: new FormData(newForm) });
             const d = await r.json();
-            msg.innerText = d.success ? '✅ Salvo!' : '❌ Erro';
+            msg.innerText = d.success ? '✅ Salvo!' : '❌ ' + (d.error || 'Erro');
             msg.classList.remove('hidden');
-            d.success && setTimeout(() => location.reload(), 800);
+            if (d.success) {
+                newForm.reset(); // Limpa o textarea
+                setTimeout(() => location.reload(), 800);
+            }
         } catch {
             msg.innerText = '❌ Erro de conexão';
             msg.classList.remove('hidden');
@@ -272,36 +311,60 @@ function setupKeyForm() {
 function switchKeyTab(tab) {
     document.getElementById('view-key-add')?.classList.toggle('hidden', tab !== 'add');
     document.getElementById('view-key-list')?.classList.toggle('hidden', tab === 'add');
-    tab === 'list' && loadKeysList();
+    
+    // Recarrega a lista se entrar na aba list
+    if (tab === 'list') {
+        loadKeysList();
+    }
 }
 
 async function loadKeysList() {
     const ul = document.getElementById('keys-list-ul');
     const loading = document.getElementById('keys-loading');
+    
+    if (!ul || !currentKeyProductId) return;
+
     ul.innerHTML = '';
     loading.classList.remove('hidden');
 
-    const res = await fetch(`/admin/keys/list/${currentKeyProductId}`);
-    const keys = await res.json();
-    loading.classList.add('hidden');
+    try {
+        const res = await fetch(`/admin/keys/list/${currentKeyProductId}`);
+        const keys = await res.json();
+        loading.classList.add('hidden');
 
-    if (!keys.length) {
-        ul.innerHTML = '<li class="text-gray-500 text-center">Nenhuma chave.</li>';
-        return;
+        if (!keys || !keys.length) {
+            ul.innerHTML = '<li class="text-gray-500 text-center py-4">Nenhuma chave cadastrada.</li>';
+            return;
+        }
+
+        keys.forEach(k => {
+            const li = document.createElement('li');
+            li.className = "flex justify-between items-center p-2 border-b border-gray-800";
+            
+            // Visual diferente para chave usada vs livre
+            const statusClass = k.is_used 
+                ? "text-gray-600 line-through" 
+                : "text-green-400 font-mono";
+            const statusIcon = k.is_used ? "✅" : "🔑";
+
+            li.innerHTML = `
+                <span class="${statusClass} text-sm">${statusIcon} ${k.key_value}</span>
+                <button onclick="deleteKey(${k.id})" class="text-red-500 hover:text-red-300 ml-2" title="Excluir">🗑️</button>
+            `;
+            ul.appendChild(li);
+        });
+    } catch (error) {
+        loading.classList.add('hidden');
+        ul.innerHTML = '<li class="text-red-500 text-center">Erro ao carregar chaves.</li>';
     }
-
-    keys.forEach(k => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <span class="font-mono">${k.key_value}</span>
-            <button onclick="deleteKey(${k.id})">🗑️</button>
-        `;
-        ul.appendChild(li);
-    });
 }
 
 async function deleteKey(id) {
     if (!confirm('Excluir chave?')) return;
-    await fetch(`/admin/keys/delete/${id}`, { method: 'POST' });
-    loadKeysList();
+    try {
+        await fetch(`/admin/keys/delete/${id}`, { method: 'POST' });
+        loadKeysList(); // Recarrega a lista após excluir
+    } catch {
+        alert("Erro ao excluir chave");
+    }
 }

@@ -16,6 +16,18 @@ function setVal(id, value) {
     }
 }
 
+function openModal(id) {
+    const m = document.getElementById(id);
+    if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        // Pequeno delay para animação se houver
+        setTimeout(() => m.classList.add('modal-active'), 10);
+    } else {
+        console.error('Modal não encontrado:', id);
+    }
+}
+
 function closeModal(id) {
     const m = document.getElementById(id);
     m?.classList.remove('modal-active');

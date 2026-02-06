@@ -45,58 +45,48 @@ def _get_admin_data():
     # Cálculos financeiros
     dolar_hoje = get_dolar_hoje()
     
+    # 1. Vendas Online (Orders)
     try:
         approved_orders = conn.execute('''
-            SELECT o.*, p.cost_usd, p.price, p.apply_iof
+            SELECT amount, p.cost_usd, p.price, p.apply_iof
             FROM orders o
             JOIN products p ON o.product_id = p.id
             WHERE o.status = 'approved'
         ''').fetchall()
     except sqlite3.OperationalError:
-        approved_orders = conn.execute('''
-            SELECT o.*, p.cost_usd, p.price, 1 as apply_iof
-            FROM orders o
-            JOIN products p ON o.product_id = p.id
-            WHERE o.status = 'approved'
-        ''').fetchall()
-    
-    faturamento_total = 0.0
-    custo_vendas_total = 0.0
-    
+        approved_orders = []
+
+    online_revenue = 0.0
     for order in approved_orders:
         try:
-            amount = float(str(order['amount']).replace('R$', '').replace(',', '.').strip())
-            faturamento_total += amount
+            val = float(str(order['amount']).replace('R$', '').replace(',', '.').strip())
+            online_revenue += val
         except:
             pass
-        
-        try:
-            cost_usd = float(order['cost_usd'] or 0)
-            if cost_usd > 0:
-                apply_iof = 1
-                try:
-                    apply_iof = int(order['apply_iof']) if 'apply_iof' in order.keys() else 1
-                except:
-                    apply_iof = 1
 
-                if apply_iof == 1:
-                    custo_vendas_total += (cost_usd * dolar_hoje * IOF)
-                else:
-                    custo_vendas_total += (cost_usd * dolar_hoje)
-        except:
-            pass
+    # 2. Vendas Manuais
+    manual_sales = conn.execute('SELECT SUM(total_price) as total FROM manual_sales').fetchone()
+    manual_revenue = float(manual_sales['total'] or 0) if manual_sales else 0.0
+
+    # 3. Custos (Regime de Caixa - Apenas Recargas)
+    # O usuário optou por considerar apenas o custo das recargas como custo total
+    recharges = conn.execute('SELECT SUM(total_cost_usd * dolar_rate) as total_brl FROM panel_recharges').fetchone()
+    total_recharged_brl = float(recharges['total_brl'] or 0) if recharges else 0.0
     
-    custo_fixo_painel_brl = CUSTO_FIXO_PAINEL_USD * dolar_hoje * IOF
-    lucro_liquido = faturamento_total - custo_vendas_total - custo_fixo_painel_brl
+    # Totais
+    faturamento_total = online_revenue + manual_revenue
+    custo_total = total_recharged_brl
+    lucro_liquido = faturamento_total - custo_total
     
     financeiro = {
         'dolar_hoje': round(dolar_hoje, 2),
         'faturamento_total': round(faturamento_total, 2),
-        'custo_vendas_total': round(custo_vendas_total, 2),
-        'custo_fixo_painel_brl': round(custo_fixo_painel_brl, 2),
+        'custo_total': round(custo_total, 2),
         'lucro_liquido': round(lucro_liquido, 2),
-        'total_vendas': len(approved_orders),
+        'total_vendas': len(approved_orders) + conn.execute('SELECT COUNT(*) FROM manual_sales').fetchone()[0],
         'iof': IOF,
+        'online_revenue': online_revenue,
+        'manual_revenue': manual_revenue
     }
 
     try:

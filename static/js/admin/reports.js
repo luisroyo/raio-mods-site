@@ -19,6 +19,13 @@ async function loadSalesReport() {
     }
 }
 
+// Auto-initialize on load if elements exist
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('totalRevenue') || document.getElementById('salesSummary')) {
+        loadSalesReport();
+    }
+});
+
 async function updateSalesData() {
     try {
         const res = await fetch('/admin/sales/report');
@@ -29,65 +36,49 @@ async function updateSalesData() {
         const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         // const fmtUSD = (n) => '$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
-        // Online
-        const elOnlineRev = document.getElementById('onlineRevenue');
-        if (elOnlineRev) elOnlineRev.textContent = fmt(report.online.revenue);
-        // document.getElementById('onlineCount').textContent = report.online.count + ' vendas';
-
-        // Manual
-        const elManualRev = document.getElementById('manualRevenue');
-        if (elManualRev) elManualRev.textContent = fmt(report.manual.revenue);
-        // document.getElementById('manualCount').textContent = report.manual.count + ' vendas';
+        // Online & Manual (Upper Cards in Sales / Bottom Cards in Dashboard)
+        if (document.getElementById('onlineRevenue')) 
+            document.getElementById('onlineRevenue').textContent = fmt(report.online.revenue);
+        
+        if (document.getElementById('manualRevenue')) 
+            document.getElementById('manualRevenue').textContent = fmt(report.manual.revenue);
 
         // Totais
         const totalCount = report.online.count + report.manual.count;
         const sumCosts = report.summary.total_costs;
         const sumProfit = report.summary.total_profit;
 
-        const elTotalRev = document.getElementById('totalRevenue');
-        if (elTotalRev) elTotalRev.textContent = fmt(report.summary.total_revenue);
+        if (document.getElementById('totalRevenue')) 
+            document.getElementById('totalRevenue').textContent = fmt(report.summary.total_revenue);
         
-        const elTotalCount = document.getElementById('totalCount');
-        if (elTotalCount) elTotalCount.textContent = totalCount;
+        if (document.getElementById('totalCount')) 
+            document.getElementById('totalCount').textContent = totalCount;
 
-        const elTotalCosts = document.getElementById('totalCosts');
-        if (elTotalCosts) elTotalCosts.textContent = fmt(sumCosts);
+        // Custos (Regime de Caixa)
+        if (document.getElementById('totalCosts')) 
+            document.getElementById('totalCosts').textContent = fmt(sumCosts);
 
-        // Atualiza Lucros (Cartão Principal + Lista inferior + Detalhes)
-        const profitClass = sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500';
-        const profitUncheckedClass = sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500'; // Class string without 'text-2xl font-bold' etc if needed, or just replace classList
-
-        // 1. Cartão Inferior
-        const profitElement = document.getElementById('totalProfit');
-        if (profitElement) {
-            profitElement.textContent = fmt(sumProfit);
-            profitElement.className = 'text-2xl font-bold ' + profitClass;
-        }
-
-        // 2. Cartão Superior (Main Profit)
-        const mainProfit = document.getElementById('mainProfit');
-        if (mainProfit) {
-            mainProfit.textContent = fmt(sumProfit);
-            // Preserva classes base que não são de cor, assumindo que a cor é a última ou controlada. 
-            // Simplificando: resetar classes de cor.
-            mainProfit.classList.remove('text-emerald-400', 'text-red-500');
-            mainProfit.classList.add(sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500');
-        }
-
-        // 3. Detalhes
-        // Custo Produtos = (Online total cost - panel fees if any?) -> Actually report.online.cost_brl + report.manual.cost_brl
-        // Mas report.summary.total_costs = online_cost + manual_cost + report.panel.total_cost_brl
-        const costProducts = (report.online.cost_brl || 0) + (report.manual.cost_brl || 0);
-        const costPanel = report.panel.total_cost_brl || 0;
-
-        if (document.getElementById('detailCostProducts')) 
-            document.getElementById('detailCostProducts').textContent = fmt(costProducts);
+        // Atualiza Lucros
         
-        if (document.getElementById('detailCostPanel')) 
-            document.getElementById('detailCostPanel').textContent = fmt(costPanel);
+        // 1. Cartão Inferior (Vendas Page) e Cartão de Lucro (Dashboard)
+        const profitElements = ['totalProfit', 'mainProfit'];
+        
+        profitElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = fmt(sumProfit);
+                el.classList.remove('text-emerald-400', 'text-red-500'); // Reset colors
+                el.classList.add(sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500');
+            }
+        });
 
-        if (document.getElementById('detailDolar')) 
-            document.getElementById('detailDolar').textContent = report.summary.dolar_rate;
+        // 3. Detalhes (Dashboard)
+        // Atualizados para refletir Regime de Caixa
+        if (document.getElementById('detailOnlineRev')) 
+            document.getElementById('detailOnlineRev').textContent = fmt(report.online.revenue);
+
+        if (document.getElementById('detailManualRev')) 
+            document.getElementById('detailManualRev').textContent = fmt(report.manual.revenue);
 
         if (document.getElementById('detailRevenue')) 
             document.getElementById('detailRevenue').textContent = fmt(report.summary.total_revenue);

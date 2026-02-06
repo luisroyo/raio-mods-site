@@ -27,8 +27,8 @@
         <!-- Custos -->
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p class="text-gray-400 text-sm mb-2">Custos Totais</p>
-            <p class="text-3xl font-bold text-red-400" id="totalCosts">R$ {{ (financeiro.custo_vendas_total + financeiro.custo_fixo_painel_brl)|round(2) }}</p>
-            <p class="text-xs text-gray-500 mt-1">Produtos + Painel (IOF {{ ((financeiro.iof - 1) * 100)|round(2) }}%)</p>
+            <p class="text-3xl font-bold text-red-400" id="totalCosts">R$ {{ financeiro.custo_total }}</p>
+            <p class="text-xs text-gray-500 mt-1">Recargas de Painel (Regime de Caixa)</p>
         </div>
         <!-- Lucro -->
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
@@ -36,7 +36,7 @@
             <p class="text-3xl font-bold {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}" id="mainProfit">
                 R$ {{ financeiro.lucro_liquido }}
             </p>
-            <p class="text-xs text-gray-500 mt-1">Após custos e IOF</p>
+            <p class="text-xs text-gray-500 mt-1">Faturamento - Recargas</p>
         </div>
     </div>
     
@@ -44,11 +44,11 @@
     <details class="mt-4 p-3 bg-gray-900/50 rounded text-xs text-gray-400 border border-gray-700">
         <summary class="cursor-pointer hover:text-white">📋 Ver detalhes do cálculo</summary>
         <div class="mt-2 space-y-1 font-mono">
-            <p>Custo das vendas (produtos): <span id="detailCostProducts">R$ {{ financeiro.custo_vendas_total }}</span></p>
-            <p>Custo fixo painel (50 USD × <span id="detailDolar">{{ financeiro.dolar_hoje }}</span> × IOF): <span id="detailCostPanel">R$ {{ financeiro.custo_fixo_painel_brl }}</span></p>
+            <p>Vendas Online: <span id="detailOnlineRev">R$ {{ financeiro.online_revenue|round(2) }}</span></p>
+            <p>Vendas Manuais: <span id="detailManualRev">R$ {{ financeiro.manual_revenue|round(2) }}</span></p>
             <p>---</p>
-            <p>Faturamento: <span id="detailRevenue">R$ {{ financeiro.faturamento_total }}</span></p>
-            <p>(-) Custos: <span id="detailTotalCosts">R$ {{ (financeiro.custo_vendas_total + financeiro.custo_fixo_painel_brl)|round(2) }}</span></p>
+            <p>Faturamento Total: <span id="detailRevenue">R$ {{ financeiro.faturamento_total }}</span></p>
+            <p>(-) Custos (Recargas): <span id="detailTotalCosts">R$ {{ financeiro.custo_total }}</span></p>
             <p class="text-lg {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}" id="detailProfitLine">
                 = Lucro: <span id="detailProfit">R$ {{ financeiro.lucro_liquido }}</span>
             </p>

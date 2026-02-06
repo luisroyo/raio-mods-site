@@ -62,16 +62,36 @@ def list_manual_sales():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
     
-    conn = get_db_connection()
-    sales = conn.execute('''
-        SELECT ms.*, p.name as product_name
-        FROM manual_sales ms
-        JOIN products p ON ms.product_id = p.id
-        ORDER BY ms.created_at DESC
-    ''').fetchall()
-    conn.close()
-    
-    return jsonify([dict(s) for s in sales])
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        offset = (page - 1) * limit
+        
+        conn = get_db_connection()
+        
+        # Total count
+        total_items = conn.execute('SELECT COUNT(*) FROM manual_sales').fetchone()[0]
+        
+        # Paginated data
+        sales = conn.execute(f'''
+            SELECT ms.*, p.name as product_name
+            FROM manual_sales ms
+            JOIN products p ON ms.product_id = p.id
+            ORDER BY ms.created_at DESC
+            LIMIT ? OFFSET ?
+        ''', (limit, offset)).fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            'data': [dict(s) for s in sales],
+            'total': total_items,
+            'page': page,
+            'limit': limit,
+            'pages': (total_items + limit - 1) // limit
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 def edit_manual_sale(sale_id):

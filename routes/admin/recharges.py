@@ -37,12 +37,35 @@ def add_panel_recharge():
 def list_panel_recharges():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
-    
-    conn = get_db_connection()
-    recharges = conn.execute('SELECT * FROM panel_recharges ORDER BY created_at DESC').fetchall()
-    conn.close()
-    
-    return jsonify([dict(r) for r in recharges])
+
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        offset = (page - 1) * limit
+
+        conn = get_db_connection()
+        
+        # Total count
+        total_items = conn.execute('SELECT COUNT(*) FROM panel_recharges').fetchone()[0]
+
+        # Paginated data
+        recharges = conn.execute(f'''
+            SELECT * FROM panel_recharges 
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        ''', (limit, offset)).fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            'data': [dict(r) for r in recharges],
+            'total': total_items,
+            'page': page,
+            'limit': limit,
+            'pages': (total_items + limit - 1) // limit
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 def edit_panel_recharge(recharge_id):

@@ -2,7 +2,10 @@
    SALES - Vendas Manuais
 ========================= */
 
-let allManualSales = []; // Global store for sales
+let allManualSales = []; // Store only current page sales
+let salesPage = 1;
+let salesLimit = 10;
+let salesTotalPages = 1;
 
 function setupManualSaleForm() {
     document.getElementById('manualSaleForm')?.addEventListener('submit', async (e) => {
@@ -84,11 +87,40 @@ function setupManualSaleForm() {
     });
 }
 
+function changeSalesLimit() {
+    salesLimit = parseInt(document.getElementById('salesLimit').value);
+    salesPage = 1;
+    loadManualSales();
+}
+
+function prevSalesPage() {
+    if (salesPage > 1) {
+        salesPage--;
+        loadManualSales();
+    }
+}
+
+function nextSalesPage() {
+    if (salesPage < salesTotalPages) {
+        salesPage++;
+        loadManualSales();
+    }
+}
+
 async function loadManualSales() {
     try {
-        const res = await fetch('/admin/sales/manual/list');
-        const sales = await res.json();
+        const res = await fetch(`/admin/sales/manual/list?page=${salesPage}&limit=${salesLimit}`);
+        const data = await res.json();
+        const sales = data.data;
         allManualSales = sales; // Store globally
+        
+        salesTotalPages = data.pages;
+        document.getElementById('salesPageDisplay').textContent = salesPage;
+        document.getElementById('salesTotalPages').textContent = salesTotalPages;
+        
+        document.getElementById('btnPrevSales').disabled = salesPage <= 1;
+        document.getElementById('btnNextSales').disabled = salesPage >= salesTotalPages;
+
         const tbody = document.getElementById('manualSalesTable');
         
         if (sales.length === 0) {
@@ -100,7 +132,7 @@ async function loadManualSales() {
             const totalVenda = (sale.quantity * sale.unit_price).toFixed(2);
             const totalCusto = (sale.quantity * sale.cost_per_unit_brl).toFixed(2);
             const lucro = (totalVenda - totalCusto).toFixed(2);
-            const data = new Date(sale.created_at).toLocaleDateString('pt-BR');
+            const dataStr = new Date(sale.created_at).toLocaleDateString('pt-BR');
             
             return `<tr class="border-b border-purple-500/30 hover:bg-purple-900/20">
                 <td class="p-2">${sale.product_name}</td>
@@ -109,7 +141,7 @@ async function loadManualSales() {
                 <td class="p-2 text-right">R$ ${sale.cost_per_unit_brl.toFixed(2)}</td>
                 <td class="p-2 text-right font-bold text-green-400">R$ ${totalVenda}</td>
                 <td class="p-2 text-right font-bold text-yellow-400">R$ ${lucro}</td>
-                <td class="p-2 text-center text-xs">${data}</td>
+                <td class="p-2 text-center text-xs">${dataStr}</td>
                 <td class="p-2 text-center">
                     <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.notes || "")})' class="text-blue-400 hover:text-blue-300 mr-2">✏️</button>
                     <button onclick="deleteManualSale(${sale.id})" class="text-red-400 hover:text-red-300">🗑️</button>

@@ -175,12 +175,13 @@ def sales_report():
     
     # Custo de recargas de painel
     recharges = conn.execute('''
-        SELECT SUM(total_cost_usd) as total_usd
+        SELECT SUM(total_cost_usd) as total_usd,
+               SUM(total_cost_usd * dolar_rate) as total_brl
         FROM panel_recharges
     ''').fetchone()
     
     total_recharged_usd = float(recharges['total_usd'] or 0) if recharges['total_usd'] else 0
-    total_recharged_brl = total_recharged_usd * dolar_hoje * IOF
+    total_recharged_brl = float(recharges['total_brl'] or 0) if recharges['total_brl'] else 0
     
     conn.close()
     

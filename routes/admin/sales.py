@@ -227,6 +227,56 @@ def sales_report():
     
     conn.close()
     
+    # --- Agregação por Produto ---
+    product_stats = {}
+
+    conn = get_db_connection()
+    
+    # 1. Agrega Vendas Online
+    online_by_product = conn.execute('''
+        SELECT p.name, COUNT(*) as qtd, 
+               SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total
+        FROM orders o
+        JOIN products p ON o.product_id = p.id
+        WHERE o.status = 'approved'
+        GROUP BY p.name
+    ''').fetchall()
+    
+    for row in online_by_product:
+        name = row['name']
+        if name not in product_stats:
+            product_stats[name] = {'qtd': 0, 'total': 0.0}
+        product_stats[name]['qtd'] += row['qtd']
+        product_stats[name]['total'] += row['total'] or 0
+
+    # 2. Agrega Vendas Manuais
+    manual_by_product = conn.execute('''
+        SELECT p.name, SUM(ms.quantity) as qtd, SUM(ms.total_price) as total
+        FROM manual_sales ms
+        JOIN products p ON ms.product_id = p.id
+        GROUP BY p.name
+    ''').fetchall()
+    
+    for row in manual_by_product:
+        name = row['name']
+        if name not in product_stats:
+            product_stats[name] = {'qtd': 0, 'total': 0.0}
+        product_stats[name]['qtd'] += row['qtd']
+        product_stats[name]['total'] += row['total'] or 0
+
+    conn.close()
+
+    # Converter para lista e ordenar por Faturamento (total)
+    sorted_products = []
+    for name, data in product_stats.items():
+        sorted_products.append({
+            'name': name,
+            'quantity': data['qtd'],
+            'total': round(data['total'], 2)
+        })
+    
+    sorted_products.sort(key=lambda x: x['total'], reverse=True)
+
     # Totais
     total_revenue = online_revenue + manual_revenue
     
@@ -255,6 +305,7 @@ def sales_report():
             'total_cost_usd': round(total_recharged_usd, 2),
             'total_cost_brl': round(total_recharged_brl, 2)
         },
+        'by_product': sorted_products,
         'summary': {
             'dolar_rate': round(dolar_hoje, 2),
             'total_revenue': round(total_revenue, 2),

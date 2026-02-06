@@ -104,6 +104,23 @@ async function updateSalesData() {
             detailProfitLine.classList.add(sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500');
         }
 
+        // Update Product Performance Table
+        const productTable = document.getElementById('productPerformanceTable');
+        if (productTable && report.by_product) {
+            if (report.by_product.length === 0) {
+                productTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma venda registrada</td></tr>';
+            } else {
+                productTable.innerHTML = report.by_product.map((p, index) => `
+                    <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                        <td class="p-3 text-center text-gray-400 font-bold">#${index + 1}</td>
+                        <td class="p-3 text-white">${p.name}</td>
+                        <td class="p-3 text-center text-cyan-400 font-bold">${p.quantity}</td>
+                        <td class="p-3 text-right text-green-400">R$ ${p.total.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
     } catch (err) {
         console.error('Erro ao atualizar relatório:', err);
     }

@@ -7,6 +7,11 @@ let salesPage = 1;
 let salesLimit = 10;
 let salesTotalPages = 1;
 
+// Filter State
+let salesCategory = '';
+let salesDateStart = '';
+let salesDateEnd = '';
+
 function setupManualSaleForm() {
     document.getElementById('manualSaleForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -107,9 +112,35 @@ function nextSalesPage() {
     }
 }
 
+function applySalesFilters() {
+    salesCategory = document.getElementById('filterCategory').value;
+    salesDateStart = document.getElementById('filterDateStart').value;
+    salesDateEnd = document.getElementById('filterDateEnd').value;
+    salesPage = 1; // Reset to page 1
+    loadManualSales();
+}
+
+function clearSalesFilters() {
+    salesCategory = '';
+    salesDateStart = '';
+    salesDateEnd = '';
+    
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterDateStart').value = '';
+    document.getElementById('filterDateEnd').value = '';
+    
+    salesPage = 1;
+    loadManualSales();
+}
+
 async function loadManualSales() {
     try {
-        const res = await fetch(`/admin/sales/manual/list?page=${salesPage}&limit=${salesLimit}`);
+        let url = `/admin/sales/manual/list?page=${salesPage}&limit=${salesLimit}`;
+        if (salesCategory) url += `&category=${encodeURIComponent(salesCategory)}`;
+        if (salesDateStart) url += `&date_start=${salesDateStart}`;
+        if (salesDateEnd) url += `&date_end=${salesDateEnd}`;
+
+        const res = await fetch(url);
         const data = await res.json();
         const sales = data.data;
         allManualSales = sales; // Store globally

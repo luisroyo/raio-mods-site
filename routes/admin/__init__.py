@@ -155,6 +155,10 @@ def _get_admin_data():
         'total_links': len(all_links),
         'total_simple': len(simple_products),
     }
+
+    # Extract unique categories
+    categories = sorted(list(set(p['category'] for p in all_products if p['category'] and p['category'].strip() != '')))
+
     conn.close()
     
     return {
@@ -163,6 +167,7 @@ def _get_admin_data():
         'subproducts_by_parent': subproducts_by_parent,
         'subproducts_by_category': subproducts_by_category,
         'parent_products': parent_products,
+        'categories': categories,
         'links': all_links,
         'config': config,
         'stats': stats,

@@ -67,19 +67,41 @@ def list_manual_sales():
         limit = int(request.args.get('limit', 10))
         offset = (page - 1) * limit
         
-        conn = get_db_connection()
+        # Filters
+        category = request.args.get('category', '')
+        date_start = request.args.get('date_start', '')
+        date_end = request.args.get('date_end', '')
         
-        # Total count
-        total_items = conn.execute('SELECT COUNT(*) FROM manual_sales').fetchone()[0]
-        
-        # Paginated data
-        sales = conn.execute(f'''
-            SELECT ms.*, p.name as product_name
+        query = '''
+            SELECT ms.*, p.name as product_name, p.category
             FROM manual_sales ms
             JOIN products p ON ms.product_id = p.id
-            ORDER BY ms.created_at DESC
-            LIMIT ? OFFSET ?
-        ''', (limit, offset)).fetchall()
+            WHERE 1=1
+        '''
+        params = []
+        
+        if category:
+            query += ' AND p.category = ?'
+            params.append(category)
+            
+        if date_start:
+            query += ' AND date(ms.created_at) >= ?'
+            params.append(date_start)
+            
+        if date_end:
+            query += ' AND date(ms.created_at) <= ?'
+            params.append(date_end)
+            
+        # Count total filtered items
+        count_query = f'SELECT COUNT(*) FROM ({query})'
+        conn = get_db_connection()
+        total_items = conn.execute(count_query, params).fetchone()[0]
+        
+        # Fetch paginated data
+        query += ' ORDER BY ms.created_at DESC LIMIT ? OFFSET ?'
+        params.extend([limit, offset])
+        
+        sales = conn.execute(query, params).fetchall()
         
         conn.close()
         
@@ -88,7 +110,7 @@ def list_manual_sales():
             'total': total_items,
             'page': page,
             'limit': limit,
-            'pages': (total_items + limit - 1) // limit
+            'pages': (total_items + limit - 1) // limit if limit > 0 else 0
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

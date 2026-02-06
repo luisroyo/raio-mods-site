@@ -53,10 +53,17 @@ function setupPanelRechargeForm() {
     });
 }
 
+// Global variable to store recharges
+window.panelRecharges = [];
+
 async function loadPanelRecharges() {
     try {
         const res = await fetch('/admin/panel/recharge/list');
         const recharges = await res.json();
+        
+        // Update global variable
+        window.panelRecharges = recharges;
+
         const tbody = document.getElementById('panelRechargesTable');
 
         if (recharges.length === 0) {
@@ -64,10 +71,11 @@ async function loadPanelRecharges() {
             return;
         }
 
-        tbody.innerHTML = recharges.map(r => {
+        tbody.innerHTML = recharges.map((r, index) => {
             const totalBRL = (r.total_cost_usd * r.dolar_rate).toFixed(2);
             const data = new Date(r.created_at).toLocaleDateString('pt-BR');
 
+            // Using index to pass to openEditPanelRecharge
             return `<tr class="border-b border-orange-500/30 hover:bg-orange-900/20">
                 <td class="p-2 text-center">${r.quantity}</td>
                 <td class="p-2 text-right">$${r.cost_per_unit_usd.toFixed(2)}</td>
@@ -77,8 +85,8 @@ async function loadPanelRecharges() {
                 <td class="p-2 text-sm">${r.notes || '-'}</td>
                 <td class="p-2 text-center text-xs">${data}</td>
                 <td class="p-2 text-center flex justify-center gap-2">
-                    <button onclick='openEditPanelRecharge(${JSON.stringify(r)})' class="text-blue-400 hover:text-blue-300" title="Editar">✏️</button>
-                    <button onclick="deletePanelRecharge(${r.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
+                    <button type="button" onclick="openEditPanelRecharge(${index})" class="text-blue-400 hover:text-blue-300" title="Editar">✏️</button>
+                    <button type="button" onclick="deletePanelRecharge(${r.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
                 </td>
             </tr>`;
         }).join('');
@@ -100,7 +108,13 @@ async function deletePanelRecharge(id) {
     }
 }
 
-function openEditPanelRecharge(r) {
+function openEditPanelRecharge(index) {
+    const r = window.panelRecharges[index];
+    if (!r) {
+        console.error('Recarga não encontrada no índice:', index);
+        return;
+    }
+
     document.getElementById('edit_recharge_id').value = r.id;
     document.getElementById('edit_recharge_quantity').value = r.quantity;
     document.getElementById('edit_recharge_cost_usd').value = r.cost_per_unit_usd;

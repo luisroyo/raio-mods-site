@@ -25,6 +25,32 @@ function setupPanelRechargeForm() {
             alert('Erro: ' + err);
         }
     });
+
+    document.getElementById('editPanelRechargeForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit_recharge_id').value;
+        const formData = new FormData(e.target);
+        const msg = document.getElementById('editRechargeMessage');
+
+        try {
+            const res = await fetch(`/admin/panel/recharge/edit/${id}`, { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (data.success) {
+                msg.textContent = '✅ ' + data.message;
+                msg.className = 'mt-4 text-center font-bold text-green-400';
+                loadPanelRecharges();
+                loadSalesReport();
+                setTimeout(() => closeModal('editPanelRechargeModal'), 1500);
+            } else {
+                msg.textContent = '❌ ' + data.error;
+                msg.className = 'mt-4 text-center font-bold text-red-400';
+            }
+            msg.classList.remove('hidden');
+        } catch (err) {
+            alert('Erro: ' + err);
+        }
+    });
 }
 
 async function loadPanelRecharges() {
@@ -50,7 +76,10 @@ async function loadPanelRecharges() {
                 <td class="p-2 text-right font-bold text-red-400">R$ ${totalBRL}</td>
                 <td class="p-2 text-sm">${r.notes || '-'}</td>
                 <td class="p-2 text-center text-xs">${data}</td>
-                <td class="p-2 text-center"><button onclick="deletePanelRecharge(${r.id})" class="text-red-400 hover:text-red-300">🗑️</button></td>
+                <td class="p-2 text-center flex justify-center gap-2">
+                    <button onclick='openEditPanelRecharge(${JSON.stringify(r)})' class="text-blue-400 hover:text-blue-300" title="Editar">✏️</button>
+                    <button onclick="deletePanelRecharge(${r.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
+                </td>
             </tr>`;
         }).join('');
     } catch (err) {
@@ -69,4 +98,15 @@ async function deletePanelRecharge(id) {
     } catch {
         alert('Erro ao excluir');
     }
+}
+
+function openEditPanelRecharge(r) {
+    document.getElementById('edit_recharge_id').value = r.id;
+    document.getElementById('edit_recharge_quantity').value = r.quantity;
+    document.getElementById('edit_recharge_cost_usd').value = r.cost_per_unit_usd;
+    document.getElementById('edit_recharge_dolar').value = r.dolar_rate;
+    document.getElementById('edit_recharge_notes').value = r.notes || '';
+    
+    document.getElementById('editRechargeMessage').classList.add('hidden');
+    openModal('editPanelRechargeModal');
 }

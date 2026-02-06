@@ -41,24 +41,68 @@ async function updateSalesData() {
 
         // Totais
         const totalCount = report.online.count + report.manual.count;
+        const sumCosts = report.summary.total_costs;
+        const sumProfit = report.summary.total_profit;
+
         const elTotalRev = document.getElementById('totalRevenue');
         if (elTotalRev) elTotalRev.textContent = fmt(report.summary.total_revenue);
         
         const elTotalCount = document.getElementById('totalCount');
-        if (elTotalCount) elTotalCount.textContent = totalCount; // + ' vendas' (O texto 'vendas' já está no HTML)
+        if (elTotalCount) elTotalCount.textContent = totalCount;
 
         const elTotalCosts = document.getElementById('totalCosts');
-        if (elTotalCosts) elTotalCosts.textContent = fmt(report.summary.total_costs);
+        if (elTotalCosts) elTotalCosts.textContent = fmt(sumCosts);
 
+        // Atualiza Lucros (Cartão Principal + Lista inferior + Detalhes)
+        const profitClass = sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500';
+        const profitUncheckedClass = sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500'; // Class string without 'text-2xl font-bold' etc if needed, or just replace classList
+
+        // 1. Cartão Inferior
         const profitElement = document.getElementById('totalProfit');
         if (profitElement) {
-            profitElement.textContent = fmt(report.summary.total_profit);
-            profitElement.className = report.summary.total_profit >= 0
-                ? 'text-2xl font-bold text-emerald-400'
-                : 'text-2xl font-bold text-red-500';
+            profitElement.textContent = fmt(sumProfit);
+            profitElement.className = 'text-2xl font-bold ' + profitClass;
         }
 
-        // if (document.getElementById('marginProfit')) document.getElementById('marginProfit').textContent = report.summary.profit_margin + '%';
+        // 2. Cartão Superior (Main Profit)
+        const mainProfit = document.getElementById('mainProfit');
+        if (mainProfit) {
+            mainProfit.textContent = fmt(sumProfit);
+            // Preserva classes base que não são de cor, assumindo que a cor é a última ou controlada. 
+            // Simplificando: resetar classes de cor.
+            mainProfit.classList.remove('text-emerald-400', 'text-red-500');
+            mainProfit.classList.add(sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500');
+        }
+
+        // 3. Detalhes
+        // Custo Produtos = (Online total cost - panel fees if any?) -> Actually report.online.cost_brl + report.manual.cost_brl
+        // Mas report.summary.total_costs = online_cost + manual_cost + report.panel.total_cost_brl
+        const costProducts = (report.online.cost_brl || 0) + (report.manual.cost_brl || 0);
+        const costPanel = report.panel.total_cost_brl || 0;
+
+        if (document.getElementById('detailCostProducts')) 
+            document.getElementById('detailCostProducts').textContent = fmt(costProducts);
+        
+        if (document.getElementById('detailCostPanel')) 
+            document.getElementById('detailCostPanel').textContent = fmt(costPanel);
+
+        if (document.getElementById('detailDolar')) 
+            document.getElementById('detailDolar').textContent = report.summary.dolar_rate;
+
+        if (document.getElementById('detailRevenue')) 
+            document.getElementById('detailRevenue').textContent = fmt(report.summary.total_revenue);
+
+        if (document.getElementById('detailTotalCosts')) 
+            document.getElementById('detailTotalCosts').textContent = fmt(sumCosts);
+
+        const detailProfit = document.getElementById('detailProfit');
+        if (detailProfit) detailProfit.textContent = fmt(sumProfit);
+
+        const detailProfitLine = document.getElementById('detailProfitLine');
+        if (detailProfitLine) {
+            detailProfitLine.classList.remove('text-emerald-400', 'text-red-500');
+            detailProfitLine.classList.add(sumProfit >= 0 ? 'text-emerald-400' : 'text-red-500');
+        }
 
     } catch (err) {
         console.error('Erro ao atualizar relatório:', err);

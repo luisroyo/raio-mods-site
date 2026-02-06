@@ -45,6 +45,42 @@ def list_panel_recharges():
     return jsonify([dict(r) for r in recharges])
 
 
+def edit_panel_recharge(recharge_id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        conn = get_db_connection()
+        existing = conn.execute('SELECT * FROM panel_recharges WHERE id = ?', (recharge_id,)).fetchone()
+        if not existing:
+            conn.close()
+            return jsonify({'error': 'Recarga não encontrada'}), 404
+            
+        quantity = int(request.form.get('quantity', 0))
+        cost_per_unit_usd = float(request.form.get('cost_per_unit_usd', 0))
+        dolar_rate = float(request.form.get('dolar_rate', 0))
+        notes = request.form.get('notes', '').strip()
+        
+        if quantity <= 0 or cost_per_unit_usd <= 0 or dolar_rate <= 0:
+            conn.close()
+            return jsonify({'error': 'Dados inválidos'}), 400
+        
+        total_cost_usd = quantity * cost_per_unit_usd
+        
+        conn.execute('''
+            UPDATE panel_recharges 
+            SET quantity=?, cost_per_unit_usd=?, total_cost_usd=?, dolar_rate=?, notes=?
+            WHERE id=?
+        ''', (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes, recharge_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Recarga atualizada com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 def delete_panel_recharge(recharge_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401

@@ -339,6 +339,10 @@ def add_panel_recharge():
 def list_panel_recharges():
     return recharges_module.list_panel_recharges()
 
+@admin_bp.route('/admin/panel/recharge/edit/<int:recharge_id>', methods=['POST'])
+def edit_panel_recharge(recharge_id):
+    return recharges_module.edit_panel_recharge(recharge_id)
+
 @admin_bp.route('/admin/panel/recharge/delete/<int:recharge_id>', methods=['POST'])
 def delete_panel_recharge(recharge_id):
     return recharges_module.delete_panel_recharge(recharge_id)

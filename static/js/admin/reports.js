@@ -1,39 +1,109 @@
 /* =========================
-   REPORTS - Relatório de Vendas
+   REPORTS - Relatório de Vendas e Dashboard
 ========================= */
 
+let dashboardInterval = null;
+
 async function loadSalesReport() {
+    // Carrega dados iniciais
+    await updateSalesData();
+
+    // Configura atualização automática se não estiver configurada (evita duplicação)
+    if (!dashboardInterval) {
+        // Atualiza a cada 30 segundos
+        dashboardInterval = setInterval(updateSalesData, 30000);
+        console.log('Auto-refresh do dashboard iniciado (30s)');
+
+        // Configura listener do botão de atualizar dólar
+        setupDollarRefresh();
+    }
+}
+
+async function updateSalesData() {
     try {
         const res = await fetch('/admin/sales/report');
+        if (!res.ok) throw new Error('Falha na resposta do servidor');
+        
         const report = await res.json();
 
         const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-        const fmtUSD = (n) => '$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        // const fmtUSD = (n) => '$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
         // Online
-        document.getElementById('onlineRevenue').textContent = fmt(report.online.revenue);
-        document.getElementById('onlineCount').textContent = report.online.count + ' vendas';
+        const elOnlineRev = document.getElementById('onlineRevenue');
+        if (elOnlineRev) elOnlineRev.textContent = fmt(report.online.revenue);
+        // document.getElementById('onlineCount').textContent = report.online.count + ' vendas';
 
         // Manual
-        document.getElementById('manualRevenue').textContent = fmt(report.manual.revenue);
-        document.getElementById('manualCount').textContent = report.manual.count + ' vendas';
+        const elManualRev = document.getElementById('manualRevenue');
+        if (elManualRev) elManualRev.textContent = fmt(report.manual.revenue);
+        // document.getElementById('manualCount').textContent = report.manual.count + ' vendas';
 
         // Totais
         const totalCount = report.online.count + report.manual.count;
-        document.getElementById('totalRevenue').textContent = fmt(report.summary.total_revenue);
-        document.getElementById('totalCount').textContent = totalCount + ' vendas';
+        const elTotalRev = document.getElementById('totalRevenue');
+        if (elTotalRev) elTotalRev.textContent = fmt(report.summary.total_revenue);
+        
+        const elTotalCount = document.getElementById('totalCount');
+        if (elTotalCount) elTotalCount.textContent = totalCount; // + ' vendas' (O texto 'vendas' já está no HTML)
 
-        document.getElementById('totalCosts').textContent = fmt(report.summary.total_costs);
+        const elTotalCosts = document.getElementById('totalCosts');
+        if (elTotalCosts) elTotalCosts.textContent = fmt(report.summary.total_costs);
 
         const profitElement = document.getElementById('totalProfit');
-        profitElement.textContent = fmt(report.summary.total_profit);
-        profitElement.className = report.summary.total_profit >= 0
-            ? 'text-2xl font-bold text-green-500'
-            : 'text-2xl font-bold text-red-500';
+        if (profitElement) {
+            profitElement.textContent = fmt(report.summary.total_profit);
+            profitElement.className = report.summary.total_profit >= 0
+                ? 'text-2xl font-bold text-emerald-400'
+                : 'text-2xl font-bold text-red-500';
+        }
 
-        document.getElementById('marginProfit').textContent = report.summary.profit_margin + '%';
+        // if (document.getElementById('marginProfit')) document.getElementById('marginProfit').textContent = report.summary.profit_margin + '%';
 
     } catch (err) {
-        console.error('Erro ao carregar relatório:', err);
+        console.error('Erro ao atualizar relatório:', err);
     }
+}
+
+function setupDollarRefresh() {
+    const btn = document.getElementById('refresh_dolar');
+    if (!btn) return;
+
+    btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        btn.classList.add('animate-spin'); // Tailwind utility
+
+        try {
+            const res = await fetch('/admin/debug/dolar');
+            const data = await res.json();
+
+            // Atualiza valor (mantendo o "R$ " que está no HTML fora do span)
+            const valEl = document.getElementById('dolarValue');
+            if (valEl) {
+                valEl.textContent = parseFloat(data.dolar_rate).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            }
+
+            // Atualiza data
+            const dateEl = document.getElementById('dolarUpdated');
+            if (dateEl) {
+                // Converte timestamp (s) para milissegundos
+                const date = new Date(data.timestamp * 1000);
+                // Formato: YYYY-MM-DD HH:MM:SS
+                const formatted = date.getFullYear() + '-' +
+                    String(date.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(date.getDate()).padStart(2, '0') + ' ' +
+                    String(date.getHours()).padStart(2, '0') + ':' +
+                    String(date.getMinutes()).padStart(2, '0') + ':' +
+                    String(date.getSeconds()).padStart(2, '0');
+                
+                dateEl.textContent = formatted;
+            }
+
+        } catch (err) {
+            console.error('Erro ao atualizar dólar:', err);
+            alert('Erro ao atualizar cotação do dólar');
+        } finally {
+            setTimeout(() => btn.classList.remove('animate-spin'), 500);
+        }
+    });
 }

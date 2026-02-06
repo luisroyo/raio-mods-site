@@ -15,19 +15,19 @@
                 <span class="text-gray-400 text-xs">USD→BRL</span>
                 <button id="refresh_dolar" class="text-xs text-cyan-400 hover:text-cyan-300" title="Atualizar">🔄</button>
             </div>
-            <p class="text-xl md:text-3xl font-bold text-green-400">R$ {{ financeiro.dolar_hoje }}</p>
-            <p class="text-xs text-gray-500 mt-1 hidden md:block">{{ financeiro.dolar_updated }}</p>
+            <p class="text-xl md:text-3xl font-bold text-green-400">R$ <span id="dolarValue">{{ financeiro.dolar_hoje }}</span></p>
+            <p class="text-xs text-gray-500 mt-1 hidden md:block" id="dolarUpdated">{{ financeiro.dolar_updated }}</p>
         </div>
         <!-- Faturamento -->
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p class="text-gray-400 text-sm mb-2">Faturamento Total</p>
-            <p class="text-3xl font-bold text-cyan-400">R$ {{ financeiro.faturamento_total }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ financeiro.total_vendas }} vendas aprovadas</p>
+            <p class="text-3xl font-bold text-cyan-400" id="totalRevenue">R$ {{ financeiro.faturamento_total }}</p>
+            <p class="text-xs text-gray-500 mt-1"><span id="totalCount">{{ financeiro.total_vendas }}</span> vendas aprovadas</p>
         </div>
         <!-- Custos -->
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p class="text-gray-400 text-sm mb-2">Custos Totais</p>
-            <p class="text-3xl font-bold text-red-400">R$ {{ (financeiro.custo_vendas_total + financeiro.custo_fixo_painel_brl)|round(2) }}</p>
+            <p class="text-3xl font-bold text-red-400" id="totalCosts">R$ {{ (financeiro.custo_vendas_total + financeiro.custo_fixo_painel_brl)|round(2) }}</p>
             <p class="text-xs text-gray-500 mt-1">Produtos + Painel (IOF {{ ((financeiro.iof - 1) * 100)|round(2) }}%)</p>
         </div>
         <!-- Lucro -->
@@ -117,5 +117,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=2" defer></script>
+<script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=3" defer></script>
 {% endblock %}

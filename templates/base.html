@@ -1,81 +1,110 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <title>{% block title %}RAIO MODS - Sales Group{% endblock %}</title>
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="RAIO MODS - Sales Group">
-    <meta property="og:title" content="RAIO MODS - Sales Group">
-    <meta property="og:description" content="Loja oficial RAIO MODS. Pagamento via Pix/USDT e suporte via WhatsApp.">
+    <meta property="og:title" content="{{ seo_title if seo_title else 'RAIO MODS - Sales Group' }}">
+    <meta property="og:description"
+        content="{{ seo_description if seo_description else 'Loja oficial RAIO MODS. Pagamento via Pix/USDT e suporte via WhatsApp.' }}">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
-    <meta property="og:image:alt" content="Logo RAIO MODS">
+    <meta property="og:image"
+        content="{{ seo_image if seo_image else url_for('static', filename='logo.png', _external=True) }}">
+    <meta property="og:image:alt" content="{{ seo_title if seo_title else 'Logo RAIO MODS' }}">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="RAIO MODS - Sales Group">
-    <meta name="twitter:description" content="Loja oficial RAIO MODS. Pagamento via Pix/USDT e suporte via WhatsApp.">
-    <meta name="twitter:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
+    <meta name="twitter:title" content="{{ seo_title if seo_title else 'RAIO MODS - Sales Group' }}">
+    <meta name="twitter:description"
+        content="{{ seo_description if seo_description else 'Loja oficial RAIO MODS. Pagamento via Pix/USDT e suporte via WhatsApp.' }}">
+    <meta name="twitter:image"
+        content="{{ seo_image if seo_image else url_for('static', filename='logo.png', _external=True) }}">
 
     <meta name="theme-color" content="#050505">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    
+
     {% block analytics %}{% endblock %}
     {% block extra_css %}{% endblock %}
 </head>
+
 <body class="circuit-pattern">
-    <header class="pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pb-4 mb-4 md:mb-8 sticky top-0 bg-[#050505] bg-opacity-95 backdrop-blur-sm z-50 border-b border-neon-cyan border-opacity-30">
+    <header
+        class="pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pb-4 mb-4 md:mb-8 sticky top-0 bg-[#050505] bg-opacity-95 backdrop-blur-sm z-50 border-b border-neon-cyan border-opacity-30">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center">
                 <a href="{{ url_for('public.index') }}" class="flex items-center gap-2 md:gap-3">
-                    <img src="{{ url_for('static', filename='logo.png') }}" alt="RAIO MODS Logo" class="h-10 w-10 md:h-12 md:w-12" style="filter: drop-shadow(0 0 10px #00f2ff);">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="RAIO MODS Logo"
+                        class="h-10 w-10 md:h-12 md:w-12" style="filter: drop-shadow(0 0 10px #00f2ff);">
                     <div>
                         <h1 class="text-lg md:text-2xl font-bold neon-cyan">RAIO MODS</h1>
                         <p class="text-[10px] md:text-xs text-gray-400">SALES GROUP</p>
                     </div>
                 </a>
-                
+
                 <form action="{{ url_for('public.busca') }}" method="get" class="hidden sm:flex flex-1 max-w-xs mx-4">
-                    <input type="search" name="q" placeholder="Buscar produto..." 
-                           class="w-full px-3 py-1.5 bg-black/60 border border-neon-cyan/50 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-neon-cyan"
-                           value="{{ request.args.get('q', '') }}">
+                    <input type="search" name="q" placeholder="Buscar produto..."
+                        class="w-full px-3 py-1.5 bg-black/60 border border-neon-cyan/50 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-neon-cyan"
+                        value="{{ request.args.get('q', '') }}">
                 </form>
                 <nav class="flex items-center gap-3 md:gap-4">
                     <div class="hidden sm:flex items-center gap-3 md:gap-4">
-                        <a href="{{ url_for('public.index') }}" class="text-xs md:text-sm transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Início</a>
-                        <a href="{{ url_for('public.links') }}" class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Links</a>
-                        <a href="{{ url_for('public.pagamento') }}" class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.pagamento' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Pagamento</a>
-                        <a href="{{ url_for('public.seguranca') }}" class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Segurança</a>
+                        <a href="{{ url_for('public.index') }}"
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Início</a>
+                        <a href="{{ url_for('public.links') }}"
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Links</a>
+                        <a href="{{ url_for('public.pagamento') }}"
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.pagamento' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Pagamento</a>
+                        <a href="{{ url_for('public.seguranca') }}"
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Segurança</a>
                     </div>
-                    <a href="{{ url_for('admin.admin') }}" class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1.5">Admin</a>
-                    <button type="button" id="btn-menu-mobile" class="sm:hidden p-2 -mr-2 text-gray-300 hover:text-neon-cyan touch-manipulation" aria-label="Abrir menu">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <a href="{{ url_for('admin.admin') }}"
+                        class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1.5">Admin</a>
+                    <button type="button" id="btn-menu-mobile"
+                        class="sm:hidden p-2 -mr-2 text-gray-300 hover:text-neon-cyan touch-manipulation"
+                        aria-label="Abrir menu">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
                     </button>
                 </nav>
             </div>
         </div>
     </header>
 
-    <div id="menu-mobile-overlay" class="menu-overlay fixed inset-0 bg-black/80 z-[100] hidden" aria-hidden="true"></div>
-    <div id="menu-mobile" class="menu-drawer fixed top-0 right-0 h-full w-[280px] max-w-[85vw] bg-[#0a0a0a] border-l-2 border-neon-cyan z-[101] translate-x-full transition-transform duration-300 ease-out shadow-2xl">
-        <button type="button" id="btn-close-menu" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-lg touch-manipulation" aria-label="Fechar menu">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div id="menu-mobile-overlay" class="menu-overlay fixed inset-0 bg-black/80 z-[100] hidden" aria-hidden="true">
+    </div>
+    <div id="menu-mobile"
+        class="menu-drawer fixed top-0 right-0 h-full w-[280px] max-w-[85vw] bg-[#0a0a0a] border-l-2 border-neon-cyan z-[101] translate-x-full transition-transform duration-300 ease-out shadow-2xl">
+        <button type="button" id="btn-close-menu"
+            class="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-lg touch-manipulation"
+            aria-label="Fechar menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
         </button>
         <div class="flex flex-col pt-20 pb-6 px-4 gap-2">
             <form action="{{ url_for('public.busca') }}" method="get" class="mb-4">
-                <input type="search" name="q" placeholder="Buscar produto..." 
-                       class="w-full px-4 py-3 bg-black/60 border border-neon-cyan/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan">
+                <input type="search" name="q" placeholder="Buscar produto..."
+                    class="w-full px-4 py-3 bg-black/60 border border-neon-cyan/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan">
             </form>
-            <a href="{{ url_for('public.index') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Início</a>
-            <a href="{{ url_for('public.links') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.links' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Links</a>
-            <a href="{{ url_for('public.pagamento') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.pagamento' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Pagamento</a>
-            <a href="{{ url_for('public.seguranca') }}" class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.seguranca' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Segurança</a>
+            <a href="{{ url_for('public.index') }}"
+                class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Início</a>
+            <a href="{{ url_for('public.links') }}"
+                class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.links' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Links</a>
+            <a href="{{ url_for('public.pagamento') }}"
+                class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.pagamento' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Pagamento</a>
+            <a href="{{ url_for('public.seguranca') }}"
+                class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.seguranca' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Segurança</a>
         </div>
     </div>
 
@@ -84,37 +113,44 @@
     <footer class="border-t-2 border-neon-cyan py-6 md:py-8 mt-8 md:mt-12">
         <div class="container mx-auto px-4">
             <div class="text-center mb-4 md:mb-6">
-                <p class="neon-cyan mb-3 md:mb-4 text-sm md:text-base px-2">© 2026 <span class="neon-green">RAIO MODS</span> - Sales Group - Todos os direitos reservados</p>
+                <p class="neon-cyan mb-3 md:mb-4 text-sm md:text-base px-2">© 2026 <span class="neon-green">RAIO
+                        MODS</span> - Sales Group - Todos os direitos reservados</p>
                 <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 mb-4">
-                    <a href="https://chat.whatsapp.com/Dl4cVoFRvFALPLhGSxLlNY?mode=gi_t" 
-                       target="_blank"
-                       class="px-4 py-3 md:py-2 bg-neon-green text-black font-semibold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-sm md:text-base touch-manipulation">
+                    <a href="https://chat.whatsapp.com/Dl4cVoFRvFALPLhGSxLlNY?mode=gi_t" target="_blank"
+                        class="px-4 py-3 md:py-2 bg-neon-green text-black font-semibold rounded-lg hover:bg-opacity-80 active:bg-opacity-70 transition-all duration-300 text-sm md:text-base touch-manipulation">
                         💬 Grupo WhatsApp
                     </a>
-                    <a href="https://t.me/raiomods" 
-                       target="_blank"
-                       class="px-4 py-3 md:py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-all duration-300 text-sm md:text-base touch-manipulation">
+                    <a href="https://t.me/raiomods" target="_blank"
+                        class="px-4 py-3 md:py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-all duration-300 text-sm md:text-base touch-manipulation">
                         📱 Grupo Telegram
                     </a>
                 </div>
                 <nav class="flex flex-wrap justify-center gap-3 md:gap-4 text-xs md:text-sm">
-                    <a href="{{ url_for('public.index') }}" class="transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Início</a>
+                    <a href="{{ url_for('public.index') }}"
+                        class="transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Início</a>
                     <span class="text-gray-600">|</span>
-                    <a href="{{ url_for('public.links') }}" class="transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Links</a>
+                    <a href="{{ url_for('public.links') }}"
+                        class="transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Links</a>
                     <span class="text-gray-600">|</span>
-                    <a href="{{ url_for('public.pagamento') }}" class="transition-colors {% if request.endpoint == 'public.pagamento' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Pagamento</a>
+                    <a href="{{ url_for('public.pagamento') }}"
+                        class="transition-colors {% if request.endpoint == 'public.pagamento' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Pagamento</a>
                     <span class="text-gray-600">|</span>
-                    <a href="{{ url_for('public.seguranca') }}" class="transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Segurança</a>
+                    <a href="{{ url_for('public.seguranca') }}"
+                        class="transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Segurança</a>
                 </nav>
             </div>
         </div>
     </footer>
 
-    <div id="checkoutModal" class="fixed inset-0 bg-black/90 z-[200] hidden backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-black border-2 border-neon-cyan rounded-xl w-full max-w-md overflow-hidden shadow-[0_0_30px_rgba(0,242,255,0.2)] relative">
-            
+    <div id="checkoutModal"
+        class="fixed inset-0 bg-black/90 z-[200] hidden backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="bg-black border-2 border-neon-cyan rounded-xl w-full max-w-md overflow-hidden shadow-[0_0_30px_rgba(0,242,255,0.2)] relative">
+
             <button onclick="closeCheckout()" class="absolute top-3 right-3 text-gray-400 hover:text-white z-10">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </button>
 
             <div class="bg-neon-cyan/10 p-4 border-b border-neon-cyan/30">
@@ -129,37 +165,42 @@
                 <div class="text-center mb-4">
                     <p class="text-gray-300 text-sm">Digite seu e-mail para receber a chave:</p>
                 </div>
-                <input type="email" id="customerEmail" placeholder="seu@email.com" 
-                       class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
-                
+                <input type="email" id="customerEmail" placeholder="seu@email.com"
+                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
+
                 <div class="grid grid-cols-1 gap-3 mt-4">
-                    <button onclick="startPayment('pix')" id="btnPayPix" 
-                            class="w-full bg-neon-cyan text-black font-bold py-3 rounded-lg hover:bg-white transition-all flex justify-center items-center gap-2">
+                    <button onclick="startPayment('pix')" id="btnPayPix"
+                        class="w-full bg-neon-cyan text-black font-bold py-3 rounded-lg hover:bg-white transition-all flex justify-center items-center gap-2">
                         <img src="https://logopng.com.br/logos/pix-106.svg" class="h-5 w-5" alt="Pix">
                         <span>PIX (Preço Normal)</span>
                     </button>
-    
-                    <button onclick="startPayment('card')" id="btnPayCard" 
-                            class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-700 border border-gray-600 transition-all flex justify-center items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+
+                    <button onclick="startPayment('card')" id="btnPayCard"
+                        class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-700 border border-gray-600 transition-all flex justify-center items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
                         <span>Cartão / Outros (+7% Taxa)</span>
                     </button>
                 </div>
-                
+
                 <p class="text-[10px] text-gray-500 text-center mt-2">Pagamento seguro via Mercado Pago 🔒</p>
             </div>
 
             <div id="step-payment" class="p-6 hidden text-center">
                 <p class="text-white font-bold mb-2">Escaneie o QR Code:</p>
-                
+
                 <div class="bg-white p-2 rounded-lg inline-block mb-4 mx-auto">
                     <img id="qrImage" src="" alt="QR Code Pix" class="w-48 h-48 object-contain">
                 </div>
 
                 <div class="relative mb-4">
                     <p class="text-xs text-gray-400 mb-1">Ou copie o código:</p>
-                    <textarea id="pixCopyPaste" readonly class="w-full bg-gray-900 text-gray-300 text-xs p-2 rounded border border-gray-700 h-16"></textarea>
-                    <button onclick="copyPix()" class="absolute bottom-2 right-2 bg-neon-cyan text-black text-[10px] font-bold px-2 py-1 rounded hover:bg-white">COPIAR</button>
+                    <textarea id="pixCopyPaste" readonly
+                        class="w-full bg-gray-900 text-gray-300 text-xs p-2 rounded border border-gray-700 h-16"></textarea>
+                    <button onclick="copyPix()"
+                        class="absolute bottom-2 right-2 bg-neon-cyan text-black text-[10px] font-bold px-2 py-1 rounded hover:bg-white">COPIAR</button>
                 </div>
 
                 <div class="flex items-center justify-center gap-2 text-neon-green animate-pulse">
@@ -169,28 +210,36 @@
             </div>
 
             <div id="step-success" class="p-6 hidden text-center bg-green-900/20">
-                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(34,197,94,0.5)]">
-                    <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                <div
+                    class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(34,197,94,0.5)]">
+                    <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
                 </div>
                 <h3 class="text-2xl font-bold text-white mb-2">Pagamento Aprovado!</h3>
                 <p class="text-gray-300 text-sm mb-4">Aqui está sua chave de acesso:</p>
 
                 <div class="bg-black border-2 border-neon-green rounded-lg p-4 mb-4 relative group">
-                    <code id="finalKey" class="text-neon-green text-xl font-mono break-all font-bold">XXXX-XXXX-XXXX</code>
-                    <button onclick="copyKey()" class="absolute top-1/2 -translate-y-1/2 right-2 bg-gray-800 text-white p-2 rounded hover:bg-gray-700" title="Copiar">
+                    <code id="finalKey"
+                        class="text-neon-green text-xl font-mono break-all font-bold">XXXX-XXXX-XXXX</code>
+                    <button onclick="copyKey()"
+                        class="absolute top-1/2 -translate-y-1/2 right-2 bg-gray-800 text-white p-2 rounded hover:bg-gray-700"
+                        title="Copiar">
                         📋
                     </button>
                 </div>
 
                 <p class="text-xs text-gray-400">Salve essa chave agora! Tire um print.</p>
-                <button onclick="closeCheckout()" class="mt-6 text-gray-400 hover:text-white text-sm underline">Fechar janela</button>
+                <button onclick="closeCheckout()" class="mt-6 text-gray-400 hover:text-white text-sm underline">Fechar
+                    janela</button>
             </div>
 
         </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

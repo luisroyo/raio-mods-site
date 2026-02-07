@@ -127,11 +127,19 @@ def catalogo(parent_id):
             products_by_category[category] = []
         products_by_category[category].append(product)
     
+    
     conn.close()
+    
+    # SEO Variables
+    seo_title = f"{parent['name']} - RAIO MODS"
+    seo_description = parent['description'] or f"Confira os produtos de {parent['name']} na RAIO MODS."
+    seo_image = parent['image'] if parent['image'] else None
+    
     return render_template('catalogo.html', parent=parent, products=children,
                           products_by_category=products_by_category,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
-                          page=page, total_pages=total_pages, total=total)
+                          page=page, total_pages=total_pages, total=total,
+                          seo_title=seo_title, seo_description=seo_description, seo_image=seo_image)
 
 @public_bp.route('/links')
 def links():
@@ -175,9 +183,22 @@ def pagamento():
             row = conn.execute('SELECT COUNT(*) as total FROM product_keys WHERE product_id = ? AND is_used = 0', (product_data['id'],)).fetchone()
             product_stock = row['total'] if row else 0
     whatsapp_contact = _get_whatsapp_from_config(conn)
+    whatsapp_contact = _get_whatsapp_from_config(conn)
     conn.close()
+    
+    # SEO Variables
+    seo_title = None
+    seo_description = None
+    seo_image = None
+    
+    if product_data:
+        seo_title = f"Comprar {product_data['name']} - RAIO MODS"
+        seo_description = f"Adquira {product_data['name']} agora! {product_data['description']}"
+        seo_image = product_data['image'] if product_data['image'] else None
+        
     return render_template('pagamento.html', product=product_data, config=config, pix_qr_data=pix_qr_data,
-                          product_stock=product_stock, whatsapp_contact=whatsapp_contact)
+                          product_stock=product_stock, whatsapp_contact=whatsapp_contact,
+                          seo_title=seo_title, seo_description=seo_description, seo_image=seo_image)
 
 @public_bp.route('/seguranca')
 def seguranca():

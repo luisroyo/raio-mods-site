@@ -44,7 +44,8 @@ def create_payment():
             return jsonify({'error': 'Configuração de pagamento (Mercado Pago) ausente ou inválida.'}), 500
 
         # Preço: usa promo_price se houver promoção, senão price
-        price_str = (product.get('promo_price') or product.get('price') or product['price']) or ''
+        product_dict = dict(product)
+        price_str = (product_dict.get('promo_price') or product_dict.get('price') or product_dict.get('price')) or ''
         try:
             base_price = float(str(price_str).lower().replace('r$', '').replace(',', '.').strip())
         except:

@@ -14,6 +14,7 @@ import os
 from .helpers import (
     get_dolar_hoje, _read_cache, IOF, CUSTO_FIXO_PAINEL_USD, legacy_catalog_ids
 )
+from utils.image_utils import PILLOW_AVAILABLE
 from . import products as products_module
 from . import keys as keys_module
 from . import links as links_module
@@ -144,6 +145,7 @@ def _get_admin_data():
         'total_catalogs': len(catalogs),
         'total_links': len(all_links),
         'total_simple': len(simple_products),
+        'pillow_available': PILLOW_AVAILABLE
     }
 
     # Extract unique categories

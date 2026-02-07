@@ -13,16 +13,19 @@
         <div class="bg-gray-800 rounded-lg p-3 md:p-4 border border-gray-700">
             <div class="flex justify-between items-center mb-1">
                 <span class="text-gray-400 text-xs">USD→BRL</span>
-                <button id="refresh_dolar" class="text-xs text-cyan-400 hover:text-cyan-300" title="Atualizar">🔄</button>
+                <button id="refresh_dolar" class="text-xs text-cyan-400 hover:text-cyan-300"
+                    title="Atualizar">🔄</button>
             </div>
-            <p class="text-xl md:text-3xl font-bold text-green-400">R$ <span id="dolarValue">{{ financeiro.dolar_hoje }}</span></p>
+            <p class="text-xl md:text-3xl font-bold text-green-400">R$ <span id="dolarValue">{{ financeiro.dolar_hoje
+                    }}</span></p>
             <p class="text-xs text-gray-500 mt-1 hidden md:block" id="dolarUpdated">{{ financeiro.dolar_updated }}</p>
         </div>
         <!-- Faturamento -->
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p class="text-gray-400 text-sm mb-2">Faturamento Total</p>
             <p class="text-3xl font-bold text-cyan-400" id="totalRevenue">R$ {{ financeiro.faturamento_total }}</p>
-            <p class="text-xs text-gray-500 mt-1"><span id="totalCount">{{ financeiro.total_vendas }}</span> vendas aprovadas</p>
+            <p class="text-xs text-gray-500 mt-1"><span id="totalCount">{{ financeiro.total_vendas }}</span> vendas
+                aprovadas</p>
         </div>
         <!-- Custos -->
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
@@ -33,13 +36,14 @@
         <!-- Lucro -->
         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p class="text-gray-400 text-sm mb-2">Lucro Líquido</p>
-            <p class="text-3xl font-bold {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}" id="mainProfit">
+            <p class="text-3xl font-bold {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}"
+                id="mainProfit">
                 R$ {{ financeiro.lucro_liquido }}
             </p>
             <p class="text-xs text-gray-500 mt-1">Faturamento - Recargas</p>
         </div>
     </div>
-    
+
     <!-- Detalhes de cálculo -->
     <details class="mt-4 p-3 bg-gray-900/50 rounded text-xs text-gray-400 border border-gray-700">
         <summary class="cursor-pointer hover:text-white">📋 Ver detalhes do cálculo</summary>
@@ -49,7 +53,8 @@
             <p>---</p>
             <p>Faturamento Total: <span id="detailRevenue">R$ {{ financeiro.faturamento_total }}</span></p>
             <p>(-) Custos (Recargas): <span id="detailTotalCosts">R$ {{ financeiro.custo_total }}</span></p>
-            <p class="text-lg {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}" id="detailProfitLine">
+            <p class="text-lg {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}"
+                id="detailProfitLine">
                 = Lucro: <span id="detailProfit">R$ {{ financeiro.lucro_liquido }}</span>
             </p>
         </div>
@@ -94,6 +99,18 @@
             </div>
         </div>
     </div>
+</div>
+<div class="bg-gray-800 rounded-lg p-6 border {{ 'border-green-500' if stats.pillow_available else 'border-red-500' }}">
+    <div class="flex items-center gap-4">
+        <span class="text-4xl">🖼️</span>
+        <div>
+            <p class="text-xl font-bold {{ 'text-green-400' if stats.pillow_available else 'text-red-400' }}">
+                {{ 'ATIVO' if stats.pillow_available else 'INATIVO' }}
+            </p>
+            <p class="text-gray-400 text-sm">Otimização Img</p>
+        </div>
+    </div>
+</div>
 </div>
 
 <!-- Relatório de Vendas Detalhado -->

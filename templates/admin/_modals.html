@@ -197,40 +197,89 @@
 <!-- Config Modal -->
 <div id="configModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 modal-hidden">
     <div
-        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-4 md:p-6 bg-black">
-        <h3 class="text-xl font-bold text-yellow-500 mb-4">⚙️ Configurações</h3>
-        <form id="configForm" class="space-y-4" data-url="{{ url_for('admin.update_config') }}">
-            <div>
-                <label class="block text-sm text-gray-400">Chave Pix (Manual):</label>
-                <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}"
-                    class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
-            </div>
-            <div class="border-t border-b border-gray-800 py-4 my-2">
-                <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado Pago):</label>
-                <input type="password" name="mercado_pago_token"
-                    value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}"
-                    class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
-                    placeholder="Cole seu Access Token (APP_USR-...)">
-                <p class="text-xs text-gray-500 mt-1">Deixe em branco para não alterar o token já salvo.</p>
-            </div>
-            <div>
-                <label class="block text-sm text-gray-400">PIX Copia e Cola (opcional):</label>
-                <textarea name="pix_copia_cola" rows="3"
-                    class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
-            </div>
-            <div>
-                <label class="block text-sm text-gray-400">WhatsApp Suporte:</label>
-                <input type="text" name="contact_whatsapp"
-                    value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}"
-                    class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
-            </div>
-            <div id="config_message" class="mt-2 hidden"></div>
-            <div class="flex gap-2 mt-6">
-                <button type="button" onclick="closeModal('configModal')"
-                    class="flex-1 py-2 border border-red-500 text-red-500 rounded">Fechar</button>
-                <button type="submit" class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded">Salvar</button>
-            </div>
-        </form>
+        class="m-auto w-full max-w-md max-h-[90vh] overflow-y-auto border-2 border-yellow-500 rounded-lg p-0 bg-black flex flex-col">
+
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-yellow-500">⚙️ Configurações</h3>
+            <button type="button" onclick="closeModal('configModal')"
+                class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-800">
+            <button type="button" onclick="switchConfigTab('payment')" id="tab-config-payment"
+                class="flex-1 py-3 font-bold text-yellow-500 border-b-2 border-yellow-500 bg-gray-900 transition-colors">
+                💰 Pagamentos
+            </button>
+            <button type="button" onclick="switchConfigTab('system')" id="tab-config-system"
+                class="flex-1 py-3 font-bold text-gray-500 hover:text-white transition-colors">
+                💾 Sistema
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+            <form id="configForm" class="space-y-4" data-url="{{ url_for('admin.update_config') }}">
+
+                <!-- Tab: Pagamentos -->
+                <div id="view-config-payment">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400">Chave Pix (Manual):</label>
+                            <input type="text" name="pix_key" value="{{ config.pix_key if config else '' }}"
+                                class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400">PIX Copia e Cola (opcional):</label>
+                            <textarea name="pix_copia_cola" rows="3"
+                                class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white text-sm">{{ config['pix_copia_cola'] if config and 'pix_copia_cola' in config.keys() and config['pix_copia_cola'] else '' }}</textarea>
+                        </div>
+                        <div class="border-t border-b border-gray-800 py-4 my-2">
+                            <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado
+                                Pago):</label>
+                            <input type="password" name="mercado_pago_token"
+                                value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}"
+                                class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
+                                placeholder="Cole seu Access Token (APP_USR-...)">
+                            <p class="text-xs text-gray-500 mt-1">Deixe em branco para não alterar o token já salvo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Sistema -->
+                <div id="view-config-system" class="hidden">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400">WhatsApp Suporte:</label>
+                            <input type="text" name="contact_whatsapp"
+                                value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}"
+                                class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-gray-800">
+                            <p class="text-sm text-gray-400 mb-2">Backup de Segurança:</p>
+                            <a href="{{ url_for('admin.backup_database') }}" target="_blank"
+                                class="block w-full py-3 bg-blue-600/20 border border-blue-500 text-blue-400 text-center font-bold rounded hover:bg-blue-600/30 transition flex items-center justify-center gap-2">
+                                <span>💾</span>
+                                Baixar Backup (database.db)
+                            </a>
+                            <p class="text-[10px] text-gray-500 mt-1 text-center">Recomendado fazer semanalmente.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="config_message" class="mt-2 hidden text-center font-bold"></div>
+
+                <div class="flex gap-2 mt-6 pt-4 border-t border-gray-800">
+                    <button type="button" onclick="closeModal('configModal')"
+                        class="flex-1 py-2 border border-red-500 text-red-500 rounded hover:bg-red-900/10">Cancelar</button>
+                    <button type="submit"
+                        class="flex-1 py-2 bg-yellow-600 text-black font-bold rounded hover:bg-yellow-500">Salvar
+                        Alterações</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

@@ -276,6 +276,10 @@ def product_info(pid):
 def update_config():
     return config_module.update_config()
 
+@admin_bp.route('/admin/config/backup', methods=['GET'])
+def backup_database():
+    return config_module.backup_database()
+
 
 # --- ROTAS DE CHAVES ---
 @admin_bp.route('/admin/keys/add', methods=['POST'])

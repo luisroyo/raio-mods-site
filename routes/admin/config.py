@@ -1,8 +1,11 @@
 """
 Config - Configurações do projeto
 """
-from flask import request, jsonify, session
+from flask import request, jsonify, session, send_file
 from database.models import get_db_connection
+from database.connection import get_db_path
+import os
+import time
 
 
 def update_config():
@@ -36,3 +39,24 @@ def update_config():
         return jsonify({'error': str(e)}), 500
     conn.close()
     return jsonify({'success': True})
+
+
+def backup_database():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'Não autorizado'}), 401
+    
+    try:
+        db_path = get_db_path()
+        if not os.path.exists(db_path):
+            return jsonify({'error': 'Arquivo de banco de dados não encontrado'}), 404
+            
+        timestamp = int(time.time())
+        filename = f"backup_database_{timestamp}.db"
+        
+        return send_file(
+            db_path, 
+            as_attachment=True, 
+            download_name=filename
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

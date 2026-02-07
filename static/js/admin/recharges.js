@@ -61,6 +61,8 @@ async function loadPanelRecharges() {
         const res = await fetch('/admin/panel/recharge/list');
         const recharges = await res.json();
 
+        const tbody = document.getElementById('panelRechargesTable');
+
         if (!recharges.data || recharges.data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma recarga registrada</td></tr>';
             return;

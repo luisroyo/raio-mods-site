@@ -151,6 +151,14 @@ def _get_admin_data():
     # Extract unique categories
     categories = sorted(list(set(p['category'] for p in all_products if p['category'] and p['category'].strip() != '')))
 
+    # Security Audit
+    security_warnings = []
+    if current_app.config.get('SECRET_KEY') == 'dev-secret-key-change-me':
+        security_warnings.append('SECRET_KEY insegura detectada (valor padrão). Configure uma chave forte no .env.')
+    
+    if current_app.config.get('ADMIN_PASSWORD') == 'admin123':
+        security_warnings.append('ADMIN_PASSWORD insegura detectada (padrão "admin123"). Altere imediatamente no .env.')
+
     conn.close()
     
     return {
@@ -163,7 +171,8 @@ def _get_admin_data():
         'links': all_links,
         'config': config,
         'stats': stats,
-        'financeiro': financeiro
+        'financeiro': financeiro,
+        'security_warnings': security_warnings
     }
 
 

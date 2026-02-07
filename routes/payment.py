@@ -16,128 +16,137 @@ def get_mp_sdk():
 
 @payment_bp.route('/api/checkout', methods=['POST'])
 def create_payment():
-    data = request.json
-    product_id = data.get('product_id')
-    email = data.get('email')
-    payment_type = data.get('type', 'pix') # 'pix' ou 'card'
-    
-    if not product_id or not email:
-        return jsonify({'error': 'Dados incompletos'}), 400
-
-    conn = get_db_connection()
-    
-    # Verifica Estoque
-    key_check = conn.execute('SELECT id FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
-    if not key_check:
-        conn.close()
-        return jsonify({'error': 'Produto esgotado! Contate o suporte.'}), 409
-
-    product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
-    conn.close()
-    
-    if not product:
-        return jsonify({'error': 'Produto não encontrado'}), 404
-
-    sdk = get_mp_sdk()
-    if not sdk:
-        return jsonify({'error': 'Configuração de pagamento ausente.'}), 500
-
-    # Preço: usa promo_price se houver promoção, senão price
-    price_str = (product.get('promo_price') or product.get('price') or product['price']) or ''
     try:
-        base_price = float(str(price_str).lower().replace('r$', '').replace(',', '.').strip())
-    except:
-        base_price = 1.00
+        data = request.json
+        product_id = data.get('product_id')
+        email = data.get('email')
+        payment_type = data.get('type', 'pix') # 'pix' ou 'card'
+        
+        if not product_id or not email:
+            return jsonify({'error': 'Dados incompletos'}), 400
 
-    # Gera ID único do pedido
-    order_ref = f"ORD-{uuid.uuid4().hex[:12]}"
+        conn = get_db_connection()
+        
+        # Verifica Estoque
+        key_check = conn.execute('SELECT id FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
+        if not key_check:
+            conn.close()
+            return jsonify({'error': 'Produto esgotado! Contate o suporte.'}), 409
 
-    # --- PIX (PREÇO ORIGINAL) ---
-    if payment_type == 'pix':
-        payment_data = {
-            "transaction_amount": base_price,
-            "description": f"{product['name']} (Key)",
-            "payment_method_id": "pix",
-            "external_reference": order_ref,
-            "payer": {
-                "email": email,
-                "first_name": email.split('@')[0]
-            },
-            "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
-        }
+        product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+        conn.close()
+        
+        if not product:
+            return jsonify({'error': 'Produto não encontrado'}), 404
 
+        sdk = get_mp_sdk()
+        if not sdk:
+            return jsonify({'error': 'Configuração de pagamento (Mercado Pago) ausente ou inválida.'}), 500
+
+        # Preço: usa promo_price se houver promoção, senão price
+        price_str = (product.get('promo_price') or product.get('price') or product['price']) or ''
         try:
-            mp_res = sdk.payment().create(payment_data)
-            payment = mp_res["response"]
-            
-            if 'error' in payment:
-                 return jsonify({'error': 'Erro ao criar Pix.'}), 400
+            base_price = float(str(price_str).lower().replace('r$', '').replace(',', '.').strip())
+        except:
+            base_price = 1.00
 
-            qr_code = payment['point_of_interaction']['transaction_data']['qr_code']
-            qr_base64 = payment['point_of_interaction']['transaction_data']['qr_code_base64']
-            
-            # Salva Pedido (Preço Base)
-            conn = get_db_connection()
-            conn.execute('''
-                INSERT INTO orders (external_reference, product_id, customer_email, amount, status, qr_code, qr_code_base64)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (order_ref, product_id, email, base_price, 'pending', qr_code, qr_base64))
-            conn.commit(); conn.close()
+        # Gera ID único do pedido
+        order_ref = f"ORD-{uuid.uuid4().hex[:12]}"
 
-            return jsonify({
-                'success': True, 'type': 'pix',
-                'qr_code': qr_code, 'qr_code_base64': qr_base64, 'order_ref': order_ref
-            })
+        # --- PIX (PREÇO ORIGINAL) ---
+        if payment_type == 'pix':
+            payment_data = {
+                "transaction_amount": base_price,
+                "description": f"{product['name']} (Key)",
+                "payment_method_id": "pix",
+                "external_reference": order_ref,
+                "payer": {
+                    "email": email,
+                    "first_name": email.split('@')[0]
+                },
+                "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
+            }
 
-        except Exception as e:
-            return jsonify({'error': f'Erro Pix: {str(e)}'}), 500
+            try:
+                mp_res = sdk.payment().create(payment_data)
+                payment = mp_res["response"]
+                
+                if 'error' in payment:
+                     return jsonify({'error': f"Erro MP: {payment.get('message', 'Erro desconhecido')}"}), 400
 
-    # --- CARTÃO (PREÇO + 7%) ---
-    else:
-        # APLICA A TAXA DE 7%
-        card_price = base_price * 1.07
-        card_price = round(card_price, 2) # Arredonda (ex: 30.00 -> 32.10)
+                qr_code = payment['point_of_interaction']['transaction_data']['qr_code']
+                qr_base64 = payment['point_of_interaction']['transaction_data']['qr_code_base64']
+                
+                # Salva Pedido (Preço Base)
+                conn = get_db_connection()
+                conn.execute('''
+                    INSERT INTO orders (external_reference, product_id, customer_email, amount, status, qr_code, qr_code_base64)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (order_ref, product_id, email, base_price, 'pending', qr_code, qr_base64))
+                conn.commit(); conn.close()
 
-        preference_data = {
-            "items": [
-                {
-                    "title": f"Key: {product['name']} (+Taxa Cartão)",
-                    "quantity": 1,
-                    "currency_id": "BRL",
-                    "unit_price": card_price # USA O PREÇO COM ACRESCIMO
-                }
-            ],
-            "payer": {"email": email},
-            "external_reference": order_ref,
-            "back_urls": {
-                "success": "https://raiomodsgames.pythonanywhere.com",
-                "failure": "https://raiomodsgames.pythonanywhere.com",
-                "pending": "https://raiomodsgames.pythonanywhere.com"
-            },
-            "auto_return": "approved",
-            "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
-        }
+                return jsonify({
+                    'success': True, 'type': 'pix',
+                    'qr_code': qr_code, 'qr_code_base64': qr_base64, 'order_ref': order_ref
+                })
 
-        try:
-            pref_res = sdk.preference().create(preference_data)
-            preference = pref_res["response"]
-            checkout_url = preference["init_point"]
+            except Exception as e:
+                import traceback
+                print(traceback.format_exc())
+                return jsonify({'error': f'Erro na criação do Pix: {str(e)}'}), 500
 
-            # Salva Pedido (Preço Com Acréscimo)
-            conn = get_db_connection()
-            conn.execute('''
-                INSERT INTO orders (external_reference, product_id, customer_email, amount, status)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (order_ref, product_id, email, card_price, 'pending'))
-            conn.commit(); conn.close()
+        # --- CARTÃO (PREÇO + 7%) ---
+        else:
+            # APLICA A TAXA DE 7%
+            card_price = base_price * 1.07
+            card_price = round(card_price, 2) # Arredonda (ex: 30.00 -> 32.10)
 
-            return jsonify({
-                'success': True, 'type': 'card',
-                'checkout_url': checkout_url, 'order_ref': order_ref
-            })
-            
-        except Exception as e:
-            return jsonify({'error': f'Erro Link: {str(e)}'}), 500
+            preference_data = {
+                "items": [
+                    {
+                        "title": f"Key: {product['name']} (+Taxa Cartão)",
+                        "quantity": 1,
+                        "currency_id": "BRL",
+                        "unit_price": card_price # USA O PREÇO COM ACRESCIMO
+                    }
+                ],
+                "payer": {"email": email},
+                "external_reference": order_ref,
+                "back_urls": {
+                    "success": "https://raiomodsgames.pythonanywhere.com",
+                    "failure": "https://raiomodsgames.pythonanywhere.com",
+                    "pending": "https://raiomodsgames.pythonanywhere.com"
+                },
+                "auto_return": "approved",
+                "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
+            }
+
+            try:
+                pref_res = sdk.preference().create(preference_data)
+                preference = pref_res["response"]
+                checkout_url = preference["init_point"]
+
+                # Salva Pedido (Preço Com Acréscimo)
+                conn = get_db_connection()
+                conn.execute('''
+                    INSERT INTO orders (external_reference, product_id, customer_email, amount, status)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (order_ref, product_id, email, card_price, 'pending'))
+                conn.commit(); conn.close()
+
+                return jsonify({
+                    'success': True, 'type': 'card',
+                    'checkout_url': checkout_url, 'order_ref': order_ref
+                })
+                
+            except Exception as e:
+                return jsonify({'error': f'Erro Link: {str(e)}'}), 500
+                
+    except Exception as e:
+        import traceback
+        trace = traceback.format_exc()
+        print(trace)
+        return jsonify({'error': f'CRASH NO BACKEND: {str(e)}', 'details': trace}), 500
 
 
 @payment_bp.route('/webhook/mp', methods=['POST'])

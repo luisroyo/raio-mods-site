@@ -46,9 +46,9 @@ def index():
     offset = (page - 1) * per_page
 
     conn = get_db_connection()
-    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id IS NULL').fetchone()[0]
+    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id IS NULL AND is_active = 1').fetchone()[0]
     products = conn.execute(
-        'SELECT * FROM products WHERE parent_id IS NULL ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
+        'SELECT * FROM products WHERE parent_id IS NULL AND is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
         (per_page, offset)
     ).fetchall()
 
@@ -80,7 +80,7 @@ def busca():
     term = f'%{q}%'
     conn = get_db_connection()
     results = conn.execute(
-        'SELECT * FROM products WHERE (name LIKE ? OR description LIKE ? OR category LIKE ?) ORDER BY sort_order ASC, name ASC',
+        'SELECT * FROM products WHERE (name LIKE ? OR description LIKE ? OR category LIKE ?) AND is_active = 1 ORDER BY sort_order ASC, name ASC',
         (term, term, term)
     ).fetchall()
     # Buscar nomes das capas para produtos que têm parent_id
@@ -108,9 +108,9 @@ def catalogo(parent_id):
     if not parent:
         conn.close()
         return redirect(url_for('public.index'))
-    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id = ?', (parent_id,)).fetchone()[0]
+    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id = ? AND is_active = 1', (parent_id,)).fetchone()[0]
     children = conn.execute(
-        'SELECT * FROM products WHERE parent_id = ? ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
+        'SELECT * FROM products WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
         (parent_id, per_page, offset)
     ).fetchall()
     child_ids = [p['id'] for p in children]

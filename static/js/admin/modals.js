@@ -17,7 +17,7 @@ function openAddSubproductModal(pid, name) {
 function openEditModal(
     id, name, desc, price, cat, img,
     tagline, sort, pid, isCat,
-    payUrl, promoPrice, promoLabel, costUsd
+    payUrl, promoPrice, promoLabel, costUsd, applyIoF, isActive
 ) {
     setVal('edit_id', id);
     setVal('edit_name', name);
@@ -31,11 +31,10 @@ function openEditModal(
     setVal('edit_promo_price', promoPrice);
     setVal('edit_promo_label', promoLabel);
     setVal('edit_cost_usd', costUsd || 0);
-    // set apply_iof checkbox if provided (backwards compatible)
-    if (typeof arguments !== 'undefined' && arguments.length > 14) {
-        const applyIoF = arguments[14];
-        try { setVal('edit_apply_iof', applyIoF); } catch (e) { /* ignore */ }
-    }
+    setVal('edit_apply_iof', applyIoF !== undefined ? applyIoF : 1);
+    
+    // isActive (default 1)
+    setVal('edit_is_active', isActive !== undefined ? isActive : 1);
     setVal('edit_image_url', '');
 
     const preview = document.getElementById('edit_preview');

@@ -35,6 +35,16 @@ def add_product():
             apply_iof = int(request.form.get('apply_iof', 1) or 1)
     except:
         apply_iof = 1
+
+    # is_active checkbox
+    try:
+        vals_active = request.form.getlist('is_active')
+        if vals_active:
+            is_active = int(vals_active[-1])
+        else:
+            is_active = int(request.form.get('is_active', 1) or 1)
+    except:
+        is_active = 1
     
     try:
         is_catalog = int(request.form.get('is_catalog', 0))
@@ -57,8 +67,8 @@ def add_product():
     conn = get_db_connection()
     try:
         conn.execute(
-            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof)
+            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, is_active)
         )
         conn.commit()
     except sqlite3.OperationalError as e:
@@ -116,6 +126,16 @@ def edit_product(pid):
                 apply_iof = int(request.form.get('apply_iof', existing.get('apply_iof', 1)) or 1)
         except:
             apply_iof = int(existing.get('apply_iof', 1) or 1)
+
+        # is_active
+        try:
+            vals_active = request.form.getlist('is_active')
+            if vals_active:
+                is_active = int(vals_active[-1])
+            else:
+                is_active = int(request.form.get('is_active', existing.get('is_active', 1)) or 1)
+        except:
+            is_active = int(existing.get('is_active', 1) or 1)
         
         try:
             is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
@@ -137,8 +157,8 @@ def edit_product(pid):
         img = handle_image_upload(request, existing.get('image', ''))
 
         conn.execute(
-            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, apply_iof=? WHERE id=?',
-            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, pid)
+            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, apply_iof=?, is_active=? WHERE id=?',
+            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, is_active, pid)
         )
         conn.commit()
         conn.close()
@@ -159,7 +179,7 @@ def product_info(pid):
         return jsonify({'error': '401'}), 401
     try:
         conn = get_db_connection()
-        row = conn.execute('SELECT id, cost_usd, apply_iof FROM products WHERE id = ?', (pid,)).fetchone()
+        row = conn.execute('SELECT id, cost_usd, apply_iof, is_active FROM products WHERE id = ?', (pid,)).fetchone()
         conn.close()
         if not row:
             return jsonify({'error': '404'}), 404
@@ -180,6 +200,7 @@ def product_info(pid):
             'id': row['id'],
             'cost_usd': round(cost_usd, 2),
             'apply_iof': apply_iof,
+            'is_active': int(row['is_active']) if 'is_active' in row.keys() and row['is_active'] is not None else 1,
             'dolar_rate': round(dolar_rate, 4),
             'calculated_cost_brl': calculated_cost_brl
         })

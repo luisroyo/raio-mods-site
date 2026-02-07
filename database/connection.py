@@ -21,7 +21,8 @@ def init_db():
             description TEXT NOT NULL,
             price TEXT NOT NULL,
             image TEXT NOT NULL,
-            category TEXT NOT NULL
+            category TEXT NOT NULL,
+            is_active INTEGER DEFAULT 1
         )
     ''')
     
@@ -125,7 +126,8 @@ def init_db():
         ('promo_price', 'TEXT DEFAULT ""'),
         ('promo_label', 'TEXT DEFAULT ""'),
         ('cost_usd', 'REAL DEFAULT 0'),
-        ('apply_iof', 'INTEGER DEFAULT 1')
+        ('apply_iof', 'INTEGER DEFAULT 1'),
+        ('is_active', 'INTEGER DEFAULT 1')
     ]
 
     for col_name, col_type in new_columns_products:

@@ -146,8 +146,8 @@ def create_payment():
     except Exception as e:
         import traceback
         trace = traceback.format_exc()
-        print(trace)
-        return jsonify({'error': f'CRASH NO BACKEND: {str(e)}', 'details': trace}), 500
+        print(f"ERRO CRITICO CHECKOUT: {trace}") # Log no servidor
+        return jsonify({'error': 'Erro interno ao processar pagamento. Contate o suporte.'}), 500
 
 
 @payment_bp.route('/webhook/mp', methods=['POST'])

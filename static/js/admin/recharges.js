@@ -35,7 +35,7 @@ function setupPanelRechargeForm() {
         try {
             const res = await fetch(`/admin/panel/recharge/edit/${id}`, { method: 'POST', body: formData });
             const data = await res.json();
-            
+
             if (data.success) {
                 msg.textContent = '✅ ' + data.message;
                 msg.className = 'mt-4 text-center font-bold text-green-400';
@@ -60,18 +60,16 @@ async function loadPanelRecharges() {
     try {
         const res = await fetch('/admin/panel/recharge/list');
         const recharges = await res.json();
-        
-        // Update global variable
-        window.panelRecharges = recharges;
 
-        const tbody = document.getElementById('panelRechargesTable');
-
-        if (recharges.length === 0) {
+        if (!recharges.data || recharges.data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma recarga registrada</td></tr>';
             return;
         }
 
-        tbody.innerHTML = recharges.map((r, index) => {
+        // Update global variable
+        window.panelRecharges = recharges.data;
+
+        tbody.innerHTML = recharges.data.map((r, index) => {
             const totalBRL = (r.total_cost_usd * r.dolar_rate).toFixed(2);
             const data = new Date(r.created_at).toLocaleDateString('pt-BR');
 
@@ -120,7 +118,7 @@ function openEditPanelRecharge(index) {
     document.getElementById('edit_recharge_cost_usd').value = r.cost_per_unit_usd;
     document.getElementById('edit_recharge_dolar').value = r.dolar_rate;
     document.getElementById('edit_recharge_notes').value = r.notes || '';
-    
+
     document.getElementById('editRechargeMessage').classList.add('hidden');
     openModal('editPanelRechargeModal');
 }

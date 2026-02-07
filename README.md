@@ -1,50 +1,91 @@
-# ⚡ Raio Mods Site
+# ⚡ Raio Mods - E-commerce de Produtos Digitais
 
-Painel de administração para gerenciamento de vendas manuais, produtos e links de downloads.
+Plataforma completa para venda automática de chaves (keys), contas e produtos digitais, com integração Pix (Mercado Pago), painel administrativo robusto e otimização para SEO.
 
-## 📋 Funcionalidades
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Flask](https://img.shields.io/badge/Flask-3.0-green.svg)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.0-informational.svg)
+![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey.svg)
 
-- **Dashboard Financeiro**: Visão geral de lucro, vendas e custos.
-- **Gestão de Produtos**: Adicionar, editar e remover produtos e catálogos.
-- **Vendas Manuais**: Registrar vendas feitas fora do site automático, com cálculo de lucro.
-- **Relatórios**: Histórico detalhado de vendas e recargas.
-- **Links Dinâmicos**: Gerenciamento de links de download (Google Drive, Discord, etc).
+## � Funcionalidades Principais
 
-## 🚀 Como Rodar Localmente
+### 🛒 Loja & Catálogo
+- **Venda de Produtos Digitais**: Entrega automática de chaves (keys) após pagamento.
+- **Catálogo Dinâmico**: Suporte a produtos simples e catálogos (agrupamento de produtos).
+- **Busca Inteligente**: Pesquisa por nome e categoria.
+- **SEO Dinâmico**: Meta tags (Open Graph) automáticas para compartilhamento bonito no WhatsApp/Telegram.
+- **Performance**: Imagens com carregamento lento (`lazy loading`) e otimização WebP.
 
-1. **Instale as dependências**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 💰 Pagamentos & Financeiro
+- **Integração Mercado Pago**: 
+    - Pix Automático (QR Code Copy & Paste).
+    - Cartão de Crédito (Checkout Transparente).
+- **Cotação Dólar**: Atualização automática da taxa de câmbio (com cache de 10min) para precificação de custos.
+- **Dashboard Financeiro**: 
+    - Visão geral de lucro, faturamento e custos.
+    - Gráficos e indicadores de performance.
 
-2. **Configure as variáveis de ambiente**:
-   Crie um arquivo `.env` na raiz (use `.env.example` como base):
-   ```ini
-   SECRET_KEY=sua_chave_secreta
-   ADMIN_PASSWORD=sua_senha_admin
-   ```
+### 🛡️ Administração & Segurança
+- **Painel Admin Completo**: 
+    - Gerenciamento de Produtos (Adicionar, Editar, Ocultar/Exibir).
+    - Gerenciamento de Estoque de Chaves.
+    - Gerenciamento de Links Utéis.
+- **Segurança Reforçada**: Auditoria automática de senhas fracas.
+- **Backup**: Download do banco de dados (`database.db`) direto pelo painel.
 
-3. **Inicie o servidor**:
-   ```bash
-   python app.py
-   ```
-   O sistema verificará e criará o banco de dados `database.db` automaticamente.
+---
 
-4. **Acesse**:
-   - Site: `http://localhost:5000`
-   - Admin: `http://localhost:5000/admin`
+## 🛠️ Tecnologias Utilizadas
 
-## 🛠️ Tecnologias
-
-- **Backend**: Flask (Python)
+- **Backend**: Python (Flask)
+- **Frontend**: HTML5, JavaScript (Vanilla), Tailwind CSS
 - **Banco de Dados**: SQLite
-- **Frontend**: HTML5, TailwindCSS (via CDN), JavaScript Vanilla
-- **Integrações**: Mercado Pago (preparado)
+- **Pagamentos**: SDK Mercado Pago
+- **Imagens**: Pillow (Processamento e Otimização)
 
-## 📂 Estrutura
+---
 
-- `app.py`: Entrada da aplicação.
-- `routes/`: Rotas separadas (admin, public, payment).
-- `database/`: Conexão e migrações manuais do SQLite.
-- `static/`: Arquivos estáticos (CSS, JS, Imagens).
-- `templates/`: Templates HTML (Jinja2).
+## ⚙️ Instalação e Configuração
+
+### 1. Requisitos
+- Python 3.10 ou superior
+- Conta no Mercado Pago (para credenciais de API)
+
+### 2. Instalação
+Clone o repositório e instale as dependências:
+
+```bash
+git clone https://github.com/seu-usuario/raio-mods-site.git
+cd raio-mods-site
+pip install -r requirements.txt
+```
+
+### 3. Configuração (.env)
+Crie um arquivo `.env` na raiz do projeto com as suas configurações:
+
+```env
+SECRET_KEY=sua_chave_secreta_super_segura
+ADMIN_PASSWORD=sua_senha_admin
+```
+
+> **Nota**: O Token do Mercado Pago e outras configs são gerenciados direto pelo Painel Admin no banco de dados.
+
+### 4. Executando
+```bash
+python app.py
+```
+O site estará acessível em `http://localhost:5000`.
+
+---
+
+## � Segurança em Produção (Deploy)
+
+Para rodar em produção (ex: PythonAnywhere, VPS):
+1.  Garanta que o `SECRET_KEY` e `ADMIN_PASSWORD` no `.env` sejam fortes.
+2.  O sistema alertará no Dashboard se detectar configurações padrão inseguras.
+3.  Utilize um servidor WSGI (Gunicorn, uWSGI) ou a configuração padrão do seu host.
+
+---
+
+## 📜 Licença
+Este projeto é de uso privado/proprietário.

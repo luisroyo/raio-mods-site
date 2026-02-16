@@ -72,6 +72,25 @@ async function updateSalesData() {
             }
         });
 
+        // Atualiza contadores específicos (Vendas Page)
+        if (document.getElementById('onlineCount'))
+            document.getElementById('onlineCount').textContent = report.online.count + ' vendas';
+
+        if (document.getElementById('manualCount'))
+            document.getElementById('manualCount').textContent = report.manual.count + ' vendas';
+
+        // Atualiza Margem de Lucro (Vendas Page)
+        if (document.getElementById('marginProfit')) {
+            const margin = report.summary.profit_margin;
+            const marginEl = document.getElementById('marginProfit');
+            marginEl.textContent = margin + '%';
+            marginEl.classList.remove('text-emerald-400', 'text-red-500', 'text-gray-500');
+            
+            if (margin > 0) marginEl.classList.add('text-emerald-400');
+            else if (margin < 0) marginEl.classList.add('text-red-500');
+            else marginEl.classList.add('text-gray-500');
+        }
+
         // 3. Detalhes (Dashboard)
         // Atualizados para refletir Regime de Caixa
         if (document.getElementById('detailOnlineRev')) 

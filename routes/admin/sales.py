@@ -72,37 +72,88 @@ def list_manual_sales():
         date_start = request.args.get('date_start', '')
         date_end = request.args.get('date_end', '')
         
-        query = '''
-            SELECT ms.*, p.name as product_name, p.category
+        dolar_hoje = get_dolar_hoje()
+        
+        # Base Query Structure
+        # We use a CTE or subquery to combine them then filter/paginate
+        
+        query_manual = '''
+            SELECT 
+                'manual' as type,
+                ms.id, 
+                p.name as product_name, 
+                p.category,
+                ms.quantity, 
+                ms.unit_price, 
+                ms.cost_per_unit_brl, 
+                ms.total_price, 
+                (ms.total_price - (ms.quantity * ms.cost_per_unit_brl)) as profit,
+                ms.notes as client_info,
+                ms.created_at
             FROM manual_sales ms
             JOIN products p ON ms.product_id = p.id
+        '''
+        
+        # Para online, calculamos o custo estimado com base no dólar de HOJE (como no relatório)
+        # Se quiser histórico exato, precisaríamos salvar o custo histórico no pedido.
+        # Assumindo cálculo dinâmico conforme regra do relatório.
+        
+        query_online = f'''
+            SELECT 
+                'online' as type,
+                o.id, 
+                p.name as product_name,
+                p.category,
+                1 as quantity,
+                o.amount as unit_price,
+                (p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END)) as cost_per_unit_brl,
+                o.amount as total_price,
+                (o.amount - (p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END))) as profit,
+                o.customer_email as client_info,
+                o.created_at
+            FROM orders o
+            JOIN products p ON o.product_id = p.id
+            WHERE o.status IN ('approved', 'paid_no_key')
+        '''
+
+        combined_query = f'''
+            SELECT * FROM (
+                {query_manual}
+                UNION ALL
+                {query_online}
+            ) as all_sales
             WHERE 1=1
         '''
+        
         params = []
         
         if category:
-            query += ' AND p.category = ?'
+            combined_query += ' AND category = ?'
             params.append(category)
             
         if date_start:
-            query += ' AND date(ms.created_at) >= ?'
+            combined_query += ' AND date(created_at) >= ?'
             params.append(date_start)
             
         if date_end:
-            query += ' AND date(ms.created_at) <= ?'
+            combined_query += ' AND date(created_at) <= ?'
             params.append(date_end)
             
-        # Count total filtered items
-        count_query = f'SELECT COUNT(*) FROM ({query})'
+        # Count total
+        count_query = f'SELECT COUNT(*) FROM ({combined_query}) as counted' # nested to be safe
+        # SQLite doesn't like same param list twice usually if passed directly, 
+        # but here we build the string.
+        # Actually proper way:
+        # We need to execute the count with params, then the data select with params.
+        
         conn = get_db_connection()
         total_items = conn.execute(count_query, params).fetchone()[0]
         
-        # Fetch paginated data
-        query += ' ORDER BY ms.created_at DESC LIMIT ? OFFSET ?'
+        # Paginate
+        combined_query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
         params.extend([limit, offset])
         
-        sales = conn.execute(query, params).fetchall()
-        
+        sales = conn.execute(combined_query, params).fetchall()
         conn.close()
         
         return jsonify({
@@ -113,6 +164,8 @@ def list_manual_sales():
             'pages': (total_items + limit - 1) // limit if limit > 0 else 0
         })
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 

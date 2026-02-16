@@ -155,32 +155,51 @@ async function loadManualSales() {
         const tbody = document.getElementById('manualSalesTable');
         
         if (sales.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma venda registrada</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="p-4 text-center text-gray-500">Nenhuma venda registrada</td></tr>';
             return;
         }
         
         tbody.innerHTML = sales.map(sale => {
-            const totalVenda = (sale.quantity * sale.unit_price).toFixed(2);
+            const totalVenda = (sale.total_price).toFixed(2);
+            // Custo pode ser 0 para online se não calculado
             const totalCusto = (sale.quantity * sale.cost_per_unit_brl).toFixed(2);
-            const lucro = (totalVenda - totalCusto).toFixed(2);
-            const dataStr = new Date(sale.created_at).toLocaleDateString('pt-BR');
+            const lucro = (sale.profit).toFixed(2);
+            const dataStr = new Date(sale.created_at).toLocaleDateString('pt-BR') + ' ' + new Date(sale.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             
+            let typeBadge = '';
+            let clientInfo = '';
+            let actions = '';
+
+            if (sale.type === 'online') {
+                typeBadge = '<span class="px-2 py-1 bg-green-900/50 text-green-400 rounded text-xs border border-green-500/30">Online</span>';
+                clientInfo = `<span class="text-xs text-gray-300">${sale.client_info || 'N/A'}</span>`;
+                actions = '<span class="text-gray-600 text-xs">-</span>';
+            } else {
+                typeBadge = '<span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs border border-purple-500/30">Manual</span>';
+                clientInfo = `<span class="text-xs text-gray-400 italic">${sale.client_info || '-'}</span>`;
+                actions = `
+                    <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.client_info || "")})' class="text-blue-400 hover:text-blue-300 mr-2" title="Editar">✏️</button>
+                    <button onclick="deleteManualSale(${sale.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
+                `;
+            }
+
             return `<tr class="border-b border-purple-500/30 hover:bg-purple-900/20">
+                <td class="p-2 text-center">${typeBadge}</td>
                 <td class="p-2">${sale.product_name}</td>
                 <td class="p-2 text-center">${sale.quantity}</td>
                 <td class="p-2 text-right">R$ ${sale.unit_price.toFixed(2)}</td>
-                <td class="p-2 text-right">R$ ${sale.cost_per_unit_brl.toFixed(2)}</td>
+                <td class="p-2 text-right text-gray-500">R$ ${sale.cost_per_unit_brl.toFixed(2)}</td>
                 <td class="p-2 text-right font-bold text-green-400">R$ ${totalVenda}</td>
                 <td class="p-2 text-right font-bold text-yellow-400">R$ ${lucro}</td>
-                <td class="p-2 text-center text-xs">${dataStr}</td>
+                <td class="p-2 text-left">${clientInfo}</td>
+                <td class="p-2 text-center text-xs text-gray-500">${dataStr}</td>
                 <td class="p-2 text-center">
-                    <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.notes || "")})' class="text-blue-400 hover:text-blue-300 mr-2">✏️</button>
-                    <button onclick="deleteManualSale(${sale.id})" class="text-red-400 hover:text-red-300">🗑️</button>
+                    ${actions}
                 </td>
             </tr>`;
         }).join('');
     } catch (err) {
-        console.error('Erro ao carregar vendas manuais:', err);
+        console.error('Erro ao carregar vendas:', err);
     }
 }
 

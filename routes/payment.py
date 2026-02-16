@@ -152,30 +152,86 @@ def create_payment():
 
 @payment_bp.route('/webhook/mp', methods=['POST'])
 def webhook():
-    topic = request.args.get('topic') or request.args.get('type')
-    p_id = request.args.get('id') or request.args.get('data.id')
+    import logging
+    # Configura um logger específico para pagamentos
+    logger = logging.getLogger('payment_webhook')
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
 
-    if topic == 'payment':
-        sdk = get_mp_sdk()
-        if not sdk: return jsonify({'status': 'error_config'}), 500
+    try:
+        topic = request.args.get('topic') or request.args.get('type')
+        p_id = request.args.get('id') or request.args.get('data.id')
         
-        try:
-            payment_info = sdk.payment().get(p_id)
-            payment = payment_info['response']
-            order_ref = payment.get('external_reference')
+        # Log da entrada do webhook
+        logger.info(f"Webhook recebido: topic={topic}, id={p_id}")
+
+        if topic == 'payment' and p_id:
+            sdk = get_mp_sdk()
+            if not sdk:
+                logger.error("Erro: SDK Mercado Pago não configurado.")
+                return jsonify({'status': 'error_config'}), 500
             
-            if payment['status'] == 'approved' and order_ref:
-                conn = get_db_connection()
-                order = conn.execute('SELECT * FROM orders WHERE external_reference = ?', (order_ref,)).fetchone()
+            try:
+                payment_info = sdk.payment().get(p_id)
+                payment = payment_info['response']
                 
-                if order and order['status'] != 'approved':
-                    key = conn.execute('SELECT * FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (order['product_id'],)).fetchone()
-                    if key:
-                        conn.execute('UPDATE product_keys SET is_used = 1 WHERE id = ?', (key['id'],))
-                        conn.execute('UPDATE orders SET status = "approved", key_assigned_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', (key['id'], order['id']))
-                        conn.commit()
-                conn.close()
-        except: pass
+                # Verifica se houve erro na resposta do MP
+                if 'error' in payment or 'status' not in payment:
+                    logger.error(f"Erro ao buscar pagamento {p_id}: {payment}")
+                    return jsonify({'status': 'error_mp'}), 400
+
+                status = payment['status']
+                order_ref = payment.get('external_reference')
+                logger.info(f"Processando pagamento {p_id}: Status={status}, OrderRef={order_ref}")
+                
+                if status == 'approved' and order_ref:
+                    conn = get_db_connection()
+                    order = conn.execute('SELECT * FROM orders WHERE external_reference = ?', (order_ref,)).fetchone()
+                    
+                    if not order:
+                        logger.warning(f"Pedido não encontrado para OrderRef: {order_ref}")
+                        conn.close()
+                        return jsonify({'status': 'order_not_found'}), 404
+
+                    if order['status'] != 'approved':
+                        logger.info(f"Atualizando pedido {order['id']} (Status atual: {order['status']})")
+                        
+                        # Tenta encontrar uma chave disponível
+                        key = conn.execute('SELECT * FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (order['product_id'],)).fetchone()
+                        
+                        if key:
+                            logger.info(f"Chave encontrada: ID {key['id']}")
+                            conn.execute('UPDATE product_keys SET is_used = 1 WHERE id = ?', (key['id'],))
+                            conn.execute('UPDATE orders SET status = "approved", key_assigned_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', (key['id'], order['id']))
+                            conn.commit()
+                            logger.info(f"Pedido {order['id']} aprovado com chave {key['id']}")
+                        else:
+                            # ERRO CRÍTICO: SEM ESTOQUE
+                            logger.critical(f"SEM ESTOQUE para o produto {order['product_id']} no pedido {order['id']}!")
+                            # Marca como pago_sem_chave para auditoria
+                            conn.execute('UPDATE orders SET status = "paid_no_key", updated_at = CURRENT_TIMESTAMP WHERE id = ?', (order['id'],))
+                            conn.commit()
+                    else:
+                        logger.info(f"Pedido {order['id']} já estava aprovado.")
+                    
+                    conn.close()
+                else:
+                    logger.info(f"Pagamento {p_id} ignorado (Status: {status}, Ref: {order_ref})")
+
+            except Exception as e:
+                import traceback
+                logger.error(f"Exceção no processamento do pagamento {p_id}: {str(e)}")
+                logger.error(traceback.format_exc())
+                return jsonify({'status': 'error_processing'}), 500
+
+    except Exception as e:
+        import traceback
+        print(f"ERRO GERAL WEBHOOK: {traceback.format_exc()}")
+        return jsonify({'status': 'error_general'}), 500
 
     return jsonify({'status': 'ok'}), 200
 

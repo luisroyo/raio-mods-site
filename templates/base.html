@@ -34,6 +34,26 @@
 
     {% block analytics %}{% endblock %}
     {% block extra_css %}{% endblock %}
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('public.manifest') }}">
+    <meta name="theme-color" content="#050505">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{{ url_for('public.service_worker') }}")
+                    .then(registration => {
+                        console.log('ServiceWorker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </head>
 
 <body class="circuit-pattern">

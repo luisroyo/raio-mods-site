@@ -1,0 +1,22 @@
+{
+  "name": "RAIO MODS - Loja Oficial",
+  "short_name": "RAIO MODS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "description": "Loja oficial RAIO MODS. Adquira seus mods com segurança e agilidade via Pix ou Cartão.",
+  "icons": [
+    {
+      "src": "/static/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait-primary"
+}

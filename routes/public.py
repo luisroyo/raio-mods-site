@@ -208,3 +208,17 @@ def seguranca():
 def uploaded_file(filename):
     uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
     return send_from_directory(uploads_dir, filename)
+
+@public_bp.route('/sw.js')
+def service_worker():
+    response = send_from_directory(os.path.join(current_app.root_path, 'static'), 'sw.js')
+    response.headers['Cache-Control'] = 'no-cache'
+    return response
+
+@public_bp.route('/manifest.json')
+def manifest():
+    return send_from_directory(os.path.join(current_app.root_path, 'static'), 'manifest.json')
+
+@public_bp.route('/offline.html')
+def offline():
+    return render_template('offline.html')

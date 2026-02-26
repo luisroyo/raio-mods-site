@@ -157,6 +157,9 @@
                     <span class="text-gray-600">|</span>
                     <a href="{{ url_for('public.seguranca') }}"
                         class="transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Segurança</a>
+                    <span class="text-gray-600">|</span>
+                    <a href="{{ url_for('public.termos') }}"
+                        class="transition-colors {% if request.endpoint == 'public.termos' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Termos</a>
                 </nav>
             </div>
         </div>
@@ -182,11 +185,28 @@
             </div>
 
             <div id="step-email" class="p-6 space-y-4">
-                <div class="text-center mb-4">
-                    <p class="text-gray-300 text-sm">Digite seu e-mail para receber a chave:</p>
+                <div class="text-center mb-2">
+                    <p class="text-gray-300 text-sm">Preencha seus dados para finalizar:</p>
                 </div>
-                <input type="email" id="customerEmail" placeholder="seu@email.com"
+                <input type="text" id="customerName" placeholder="Nome Completo *"
                     class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
+                <input type="text" id="customerCPF" placeholder="CPF *" maxlength="14"
+                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
+                <input type="email" id="customerEmail" placeholder="E-mail *"
+                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
+                <input type="tel" id="customerPhone" placeholder="WhatsApp (com DDD)"
+                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
+
+                <label class="flex items-start gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="customerTerms"
+                        class="mt-1 accent-cyan-400 w-4 h-4 flex-shrink-0">
+                    <span class="text-[11px] text-gray-400 leading-snug">
+                        Declaro que li e aceito os <a href="/termos" target="_blank" class="text-cyan-400 underline hover:text-white">Termos de Serviço</a>.
+                        Entendo que, por se tratar de um produto digital de entrega automática e imediata,
+                        <strong class="text-gray-300">não há possibilidade de devolução ou reembolso após a ativação</strong>.
+                        Confirmo ser o titular do cartão/conta e que os dados informados são verdadeiros.
+                    </span>
+                </label>
 
                 <div class="grid grid-cols-1 gap-3 mt-4">
                     <button onclick="startPayment('pix')" id="btnPayPix"

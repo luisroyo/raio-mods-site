@@ -172,6 +172,25 @@ def init_db():
             cursor.execute('ALTER TABLE links ADD COLUMN image TEXT')
         except: pass
 
+    # --- MIGRAÇÃO: Colunas de Proteção Anti-Chargeback (orders) ---
+    chargeback_columns = [
+        ('customer_name', 'TEXT DEFAULT ""'),
+        ('customer_cpf', 'TEXT DEFAULT ""'),
+        ('customer_phone', 'TEXT DEFAULT ""'),
+        ('ip_purchase', 'TEXT DEFAULT ""'),
+        ('ip_delivery', 'TEXT DEFAULT ""'),
+        ('terms_accepted_at', 'TIMESTAMP'),
+        ('delivered_at', 'TIMESTAMP'),
+    ]
+    for col_name, col_type in chargeback_columns:
+        try:
+            cursor.execute(f'SELECT {col_name} FROM orders LIMIT 1')
+        except sqlite3.OperationalError:
+            try:
+                print(f"--> Adicionando coluna {col_name} em orders...")
+                cursor.execute(f'ALTER TABLE orders ADD COLUMN {col_name} {col_type}')
+            except: pass
+
     conn.commit()
     conn.close()
     print("[OK] Banco de dados inicializado/atualizado com sucesso!")

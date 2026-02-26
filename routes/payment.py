@@ -3,8 +3,17 @@ from flask import Blueprint, request, jsonify, current_app, url_for
 from database.models import get_db_connection
 import json
 import uuid
+from datetime import datetime
 
 payment_bp = Blueprint('payment', __name__)
+
+
+def _get_client_ip():
+    """Captura o IP real do cliente, considerando proxies (PythonAnywhere, Render, etc)."""
+    forwarded = request.headers.get('X-Forwarded-For', '')
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+    return request.remote_addr or 'unknown'
 
 def get_mp_sdk():
     conn = get_db_connection()
@@ -21,9 +30,20 @@ def create_payment():
         product_id = data.get('product_id')
         email = data.get('email')
         payment_type = data.get('type', 'pix') # 'pix' ou 'card'
+        customer_name = (data.get('name') or '').strip()
+        customer_cpf = (data.get('cpf') or '').strip().replace('.', '').replace('-', '')
+        customer_phone = (data.get('phone') or '').strip()
+        terms_accepted = data.get('terms_accepted', False)
         
         if not product_id or not email:
             return jsonify({'error': 'Dados incompletos'}), 400
+
+        if not customer_name or not customer_cpf or not terms_accepted:
+            return jsonify({'error': 'Preencha todos os campos obrigatórios e aceite os termos.'}), 400
+
+        # Captura IP do comprador
+        client_ip = _get_client_ip()
+        terms_ts = datetime.utcnow().isoformat() if terms_accepted else None
 
         conn = get_db_connection()
         
@@ -53,6 +73,10 @@ def create_payment():
 
         # Gera ID único do pedido
         order_ref = f"ORD-{uuid.uuid4().hex[:12]}"
+        
+        # Dados do pagador para enviar ao Mercado Pago (melhora score anti-fraude)
+        first_name = customer_name.split()[0] if customer_name else email.split('@')[0]
+        last_name = ' '.join(customer_name.split()[1:]) if len(customer_name.split()) > 1 else ''
 
         # --- PIX (PREÇO ORIGINAL) ---
         if payment_type == 'pix':
@@ -63,10 +87,17 @@ def create_payment():
                 "external_reference": order_ref,
                 "payer": {
                     "email": email,
-                    "first_name": email.split('@')[0]
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "identification": {
+                        "type": "CPF",
+                        "number": customer_cpf
+                    }
                 },
                 "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
             }
+            if customer_phone:
+                payment_data["payer"]["phone"] = {"number": customer_phone}
 
             try:
                 mp_res = sdk.payment().create(payment_data)
@@ -78,12 +109,14 @@ def create_payment():
                 qr_code = payment['point_of_interaction']['transaction_data']['qr_code']
                 qr_base64 = payment['point_of_interaction']['transaction_data']['qr_code_base64']
                 
-                # Salva Pedido (Preço Base)
+                # Salva Pedido (Preço Base + dados anti-chargeback)
                 conn = get_db_connection()
                 conn.execute('''
-                    INSERT INTO orders (external_reference, product_id, customer_email, amount, status, qr_code, qr_code_base64)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (order_ref, product_id, email, base_price, 'pending', qr_code, qr_base64))
+                    INSERT INTO orders (external_reference, product_id, customer_email, amount, status, qr_code, qr_code_base64,
+                                        customer_name, customer_cpf, customer_phone, ip_purchase, terms_accepted_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (order_ref, product_id, email, base_price, 'pending', qr_code, qr_base64,
+                      customer_name, customer_cpf, customer_phone, client_ip, terms_ts))
                 conn.commit(); conn.close()
 
                 return jsonify({
@@ -102,6 +135,18 @@ def create_payment():
             card_price = base_price * 1.07
             card_price = round(card_price, 2) # Arredonda (ex: 30.00 -> 32.10)
 
+            payer_info = {
+                "email": email,
+                "name": first_name,
+                "surname": last_name,
+                "identification": {
+                    "type": "CPF",
+                    "number": customer_cpf
+                }
+            }
+            if customer_phone:
+                payer_info["phone"] = {"area_code": "", "number": customer_phone}
+
             preference_data = {
                 "items": [
                     {
@@ -111,7 +156,7 @@ def create_payment():
                         "unit_price": card_price # USA O PREÇO COM ACRESCIMO
                     }
                 ],
-                "payer": {"email": email},
+                "payer": payer_info,
                 "external_reference": order_ref,
                 "back_urls": {
                     "success": "https://raiomodsgames.pythonanywhere.com",
@@ -127,12 +172,14 @@ def create_payment():
                 preference = pref_res["response"]
                 checkout_url = preference["init_point"]
 
-                # Salva Pedido (Preço Com Acréscimo)
+                # Salva Pedido (Preço Com Acréscimo + dados anti-chargeback)
                 conn = get_db_connection()
                 conn.execute('''
-                    INSERT INTO orders (external_reference, product_id, customer_email, amount, status)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (order_ref, product_id, email, card_price, 'pending'))
+                    INSERT INTO orders (external_reference, product_id, customer_email, amount, status,
+                                        customer_name, customer_cpf, customer_phone, ip_purchase, terms_accepted_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (order_ref, product_id, email, card_price, 'pending',
+                      customer_name, customer_cpf, customer_phone, client_ip, terms_ts))
                 conn.commit(); conn.close()
 
                 return jsonify({
@@ -239,8 +286,21 @@ def webhook():
 def check_status(order_ref):
     conn = get_db_connection()
     order = conn.execute('SELECT o.*, k.key_value FROM orders o LEFT JOIN product_keys k ON o.key_assigned_id = k.id WHERE o.external_reference = ?', (order_ref,)).fetchone()
-    conn.close()
-    if not order: return jsonify({'status': 'not_found'})
+    if not order:
+        conn.close()
+        return jsonify({'status': 'not_found'})
     if order['status'] == 'approved' and order['key_value']:
+        # Registra IP e momento da entrega da chave (prova de entrega)
+        if not order['delivered_at']:
+            delivery_ip = _get_client_ip()
+            now = datetime.utcnow().isoformat()
+            try:
+                conn.execute('UPDATE orders SET delivered_at = ?, ip_delivery = ? WHERE id = ?',
+                             (now, delivery_ip, order['id']))
+                conn.commit()
+            except Exception as e:
+                print(f"Erro ao registrar entrega: {e}")
+        conn.close()
         return jsonify({'status': 'approved', 'key': order['key_value']})
+    conn.close()
     return jsonify({'status': order['status']})

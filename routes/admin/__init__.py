@@ -339,6 +339,10 @@ def delete_manual_sale(sale_id):
 def sales_report():
     return sales_module.sales_report()
 
+@admin_bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])
+def order_proof(order_id):
+    return sales_module.get_order_proof(order_id)
+
 
 # --- ROTAS DE RECARGAS ---
 @admin_bp.route('/admin/panel/recharge', methods=['POST'])

@@ -46,7 +46,11 @@ function openCheckout(id, name, price) {
     document.getElementById('step-email').classList.remove('hidden');
     document.getElementById('step-payment').classList.add('hidden');
     document.getElementById('step-success').classList.add('hidden');
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerCPF').value = '';
     document.getElementById('customerEmail').value = '';
+    document.getElementById('customerPhone').value = '';
+    document.getElementById('customerTerms').checked = false;
     
     // Reseta visualização do QR Code/Aviso
     document.getElementById('qrImage').style.display = 'block';
@@ -72,12 +76,28 @@ function closeCheckout() {
 
 // Inicia o pagamento (chama o backend)
 async function startPayment(type) {
-    const email = document.getElementById('customerEmail').value;
+    const name = document.getElementById('customerName').value.trim();
+    const cpf = document.getElementById('customerCPF').value.trim();
+    const email = document.getElementById('customerEmail').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+    const termsChecked = document.getElementById('customerTerms').checked;
     const btnPix = document.getElementById('btnPayPix');
     const btnCard = document.getElementById('btnPayCard');
     
+    if (!name) {
+        alert('Por favor, digite seu nome completo.');
+        return;
+    }
+    if (!cpf || cpf.replace(/\D/g, '').length < 11) {
+        alert('Por favor, digite um CPF válido.');
+        return;
+    }
     if (!email || !email.includes('@')) {
         alert('Por favor, digite um e-mail válido.');
+        return;
+    }
+    if (!termsChecked) {
+        alert('Você precisa aceitar os Termos de Serviço para prosseguir.');
         return;
     }
 
@@ -96,7 +116,11 @@ async function startPayment(type) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 product_id: currentProductId,
+                name: name,
+                cpf: cpf,
                 email: email,
+                phone: phone,
+                terms_accepted: termsChecked,
                 type: type // 'pix' ou 'card'
             })
         });
@@ -207,3 +231,17 @@ function showSuccess(key) {
     document.getElementById('step-success').classList.remove('hidden');
     document.getElementById('finalKey').innerText = key;
 }
+
+// Máscara de CPF (###.###.###-##)
+document.addEventListener('DOMContentLoaded', () => {
+    const cpfInput = document.getElementById('customerCPF');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function(e) {
+            let v = e.target.value.replace(/\D/g, '').substring(0, 11);
+            if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+            else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+            else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+            e.target.value = v;
+        });
+    }
+});

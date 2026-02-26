@@ -367,3 +367,45 @@ def sales_report():
             'profit_margin': round((total_profit / total_revenue * 100) if total_revenue > 0 else 0, 2)
         }
     })
+
+
+def get_order_proof(order_id):
+    """Retorna dossiê anti-fraude com todas as provas de uma venda online."""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+
+    conn = get_db_connection()
+    order = conn.execute('''
+        SELECT o.*, p.name as product_name, k.key_value
+        FROM orders o
+        JOIN products p ON o.product_id = p.id
+        LEFT JOIN product_keys k ON o.key_assigned_id = k.id
+        WHERE o.id = ?
+    ''', (order_id,)).fetchone()
+    conn.close()
+
+    if not order:
+        return jsonify({'error': 'Pedido não encontrado'}), 404
+
+    d = dict(order)
+    return jsonify({
+        'success': True,
+        'proof': {
+            'order_id': d.get('id'),
+            'external_reference': d.get('external_reference', ''),
+            'product_name': d.get('product_name', ''),
+            'amount': d.get('amount', 0),
+            'status': d.get('status', ''),
+            'customer_name': d.get('customer_name', ''),
+            'customer_cpf': d.get('customer_cpf', ''),
+            'customer_email': d.get('customer_email', ''),
+            'customer_phone': d.get('customer_phone', ''),
+            'ip_purchase': d.get('ip_purchase', ''),
+            'ip_delivery': d.get('ip_delivery', ''),
+            'terms_accepted_at': d.get('terms_accepted_at', ''),
+            'delivered_at': d.get('delivered_at', ''),
+            'key_delivered': d.get('key_value', ''),
+            'created_at': d.get('created_at', ''),
+            'updated_at': d.get('updated_at', ''),
+        }
+    })

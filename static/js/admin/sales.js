@@ -173,7 +173,7 @@ async function loadManualSales() {
             if (sale.type === 'online') {
                 typeBadge = '<span class="px-2 py-1 bg-green-900/50 text-green-400 rounded text-xs border border-green-500/30">Online</span>';
                 clientInfo = `<span class="text-xs text-gray-300">${sale.client_info || 'N/A'}</span>`;
-                actions = '<span class="text-gray-600 text-xs">-</span>';
+                actions = `<button onclick="viewOrderProof(${sale.id})" class="text-cyan-400 hover:text-cyan-300" title="Dossiê Anti-Fraude">🛡️</button>`;
             } else {
                 typeBadge = '<span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs border border-purple-500/30">Manual</span>';
                 clientInfo = `<span class="text-xs text-gray-400 italic">${sale.client_info || '-'}</span>`;
@@ -226,5 +226,69 @@ async function deleteManualSale(id) {
         }
     } catch {
         alert('Erro ao excluir');
+    }
+}
+
+// --- DOSSIÊ ANTI-FRAUDE ---
+async function viewOrderProof(orderId) {
+    try {
+        const res = await fetch(`/admin/sales/proof/${orderId}`);
+        const data = await res.json();
+        if (!data.success) {
+            alert('Erro: ' + (data.error || 'Pedido não encontrado'));
+            return;
+        }
+        const p = data.proof;
+
+        const formatDate = (d) => {
+            if (!d) return '—';
+            try { return new Date(d).toLocaleString('pt-BR'); } catch { return d; }
+        };
+
+        // Build modal content
+        const html = `
+        <div class="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm" id="proofModal" onclick="if(event.target===this)this.remove()">
+            <div class="bg-gray-900 border-2 border-cyan-500 rounded-xl w-full max-w-lg overflow-y-auto max-h-[90vh] shadow-[0_0_30px_rgba(0,242,255,0.2)] relative">
+                <div class="bg-cyan-500/10 p-4 border-b border-cyan-500/30 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-cyan-400">🛡️ Dossiê Anti-Fraude</h3>
+                    <button onclick="document.getElementById('proofModal').remove()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+                </div>
+                <div class="p-5 space-y-3 text-sm">
+                    <div class="border border-cyan-500/20 rounded p-3 bg-black/40">
+                        <p class="text-cyan-400 font-bold mb-2">📦 Pedido</p>
+                        <p class="text-gray-300">Ref: <span class="text-white font-mono">${p.external_reference || '—'}</span></p>
+                        <p class="text-gray-300">Produto: <span class="text-white">${p.product_name}</span></p>
+                        <p class="text-gray-300">Valor: <span class="text-green-400 font-bold">R$ ${(p.amount || 0).toFixed(2)}</span></p>
+                        <p class="text-gray-300">Status: <span class="text-yellow-400">${p.status}</span></p>
+                    </div>
+                    <div class="border border-purple-500/20 rounded p-3 bg-black/40">
+                        <p class="text-purple-400 font-bold mb-2">👤 Comprador</p>
+                        <p class="text-gray-300">Nome: <span class="text-white">${p.customer_name || '—'}</span></p>
+                        <p class="text-gray-300">CPF: <span class="text-white font-mono">${p.customer_cpf || '—'}</span></p>
+                        <p class="text-gray-300">E-mail: <span class="text-white">${p.customer_email || '—'}</span></p>
+                        <p class="text-gray-300">WhatsApp: <span class="text-white">${p.customer_phone || '—'}</span></p>
+                    </div>
+                    <div class="border border-green-500/20 rounded p-3 bg-black/40">
+                        <p class="text-green-400 font-bold mb-2">🌐 IPs & Datas</p>
+                        <p class="text-gray-300">IP da Compra: <span class="text-white font-mono">${p.ip_purchase || '—'}</span></p>
+                        <p class="text-gray-300">IP da Entrega: <span class="text-white font-mono">${p.ip_delivery || '—'}</span></p>
+                        <p class="text-gray-300">Termos Aceitos em: <span class="text-white">${formatDate(p.terms_accepted_at)}</span></p>
+                        <p class="text-gray-300">Compra em: <span class="text-white">${formatDate(p.created_at)}</span></p>
+                        <p class="text-gray-300">Chave entregue em: <span class="text-white">${formatDate(p.delivered_at)}</span></p>
+                    </div>
+                    <div class="border border-yellow-500/20 rounded p-3 bg-black/40">
+                        <p class="text-yellow-400 font-bold mb-2">🔑 Chave Entregue</p>
+                        <p class="text-white font-mono break-all">${p.key_delivered || '—'}</p>
+                    </div>
+                    <p class="text-[10px] text-gray-600 text-center mt-4">Tire um print desta tela para utilizar como prova em disputas.</p>
+                </div>
+            </div>
+        </div>`;
+
+        // Remove existing modal if any
+        document.getElementById('proofModal')?.remove();
+        document.body.insertAdjacentHTML('beforeend', html);
+    } catch (err) {
+        alert('Erro ao carregar provas: ' + err);
     }
 }

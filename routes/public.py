@@ -204,6 +204,10 @@ def pagamento():
 def seguranca():
     return render_template('seguranca.html')
 
+@public_bp.route('/termos')
+def termos():
+    return render_template('termos.html')
+
 @public_bp.route('/static/uploads/<path:filename>')
 def uploaded_file(filename):
     uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')

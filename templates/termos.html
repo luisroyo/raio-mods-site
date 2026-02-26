@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Termos de Serviço - RAIO MODS{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16 max-w-3xl">
+    <div class="mb-4 md:mb-6">
+        <a href="{{ url_for('public.index') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors text-sm py-2 touch-manipulation">
+            ← Voltar para a loja
+        </a>
+    </div>
+    <div class="text-center mb-8 md:mb-12" data-aos="fade-up">
+        <h1 class="text-3xl md:text-4xl font-bold neon-cyan mb-4">📜 Termos de Serviço</h1>
+        <p class="text-gray-400 text-sm">Última atualização: Fevereiro de 2026</p>
+    </div>
+
+    <div class="space-y-8 text-gray-300 text-sm leading-relaxed" data-aos="fade-up">
+
+        <section class="border border-cyan-500/30 rounded-lg p-6 bg-cyan-500/5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">1. Natureza do Produto</h2>
+            <p>Todos os produtos comercializados na <strong class="text-white">RAIO MODS</strong> são <strong class="text-cyan-400">produtos digitais</strong> (chaves de ativação, licenças de software, contas e afins). A entrega é <strong class="text-cyan-400">automática e imediata</strong> após a confirmação do pagamento pelo gateway (Mercado Pago).</p>
+        </section>
+
+        <section class="border border-red-500/30 rounded-lg p-6 bg-red-500/5">
+            <h2 class="text-xl font-bold text-red-400 mb-3">2. Política de Não Reembolso</h2>
+            <p>Devido à natureza digital dos produtos, <strong class="text-red-400">não é possível realizar devoluções ou reembolsos após a entrega da chave/licença</strong>. Ao prosseguir com a compra, o cliente declara ciência de que:</p>
+            <ul class="list-disc list-inside mt-3 space-y-2 text-gray-400">
+                <li>A chave/licença será entregue instantaneamente.</li>
+                <li>Uma vez entregue, o produto não pode ser "devolvido".</li>
+                <li>Não será possível a reversão do pagamento após a ativação.</li>
+            </ul>
+        </section>
+
+        <section class="border border-yellow-500/30 rounded-lg p-6 bg-yellow-500/5">
+            <h2 class="text-xl font-bold text-yellow-400 mb-3">3. Responsabilidade do Comprador</h2>
+            <ul class="list-disc list-inside space-y-2 text-gray-400">
+                <li>O comprador declara ser o <strong class="text-white">titular do cartão de crédito, conta Pix ou meio de pagamento utilizado</strong>.</li>
+                <li>O uso de cartão de terceiros sem autorização é de inteira responsabilidade do comprador e constitui fraude.</li>
+                <li>Os dados informados no checkout (Nome, CPF, E-mail, WhatsApp) devem ser verdadeiros.</li>
+            </ul>
+        </section>
+
+        <section class="border border-purple-500/30 rounded-lg p-6 bg-purple-500/5">
+            <h2 class="text-xl font-bold text-purple-400 mb-3">4. Registro e Segurança</h2>
+            <p>Para garantir a segurança das transações e a proteção contra uso indevido, registramos as seguintes informações no momento da compra e da entrega:</p>
+            <ul class="list-disc list-inside mt-3 space-y-2 text-gray-400">
+                <li>Nome completo e CPF do comprador</li>
+                <li>Endereço de e-mail e telefone/WhatsApp informados</li>
+                <li>Endereço IP no momento da compra</li>
+                <li>Endereço IP no momento da entrega/visualização da chave</li>
+                <li>Data e hora exatas da compra, aceite dos termos e da entrega</li>
+                <li>ID da transação junto ao Mercado Pago</li>
+            </ul>
+            <p class="mt-3 text-yellow-500 text-xs">Esses dados poderão ser utilizados como prova em caso de contestação ou disputa de pagamento.</p>
+        </section>
+
+        <section class="border border-green-500/30 rounded-lg p-6 bg-green-500/5">
+            <h2 class="text-xl font-bold text-green-400 mb-3">5. Contestações e Chargebacks</h2>
+            <p>Em caso de contestação indevida (chargeback) junto ao emissor do cartão ou ao Mercado Pago, a RAIO MODS se reserva o direito de:</p>
+            <ul class="list-disc list-inside mt-3 space-y-2 text-gray-400">
+                <li>Apresentar todas as provas técnicas de entrega (IP, data/hora, aceite de termos, CPF).</li>
+                <li>Revogar a chave/licença entregue ao comprador.</li>
+                <li>Tomar as medidas legais cabíveis.</li>
+            </ul>
+        </section>
+
+        <section class="border border-gray-500/30 rounded-lg p-6 bg-gray-500/5">
+            <h2 class="text-xl font-bold text-gray-400 mb-3">6. Suporte</h2>
+            <p>Para dúvidas, problemas técnicos com a chave entregue ou questões sobre seu pedido, entre em contato pelo nosso WhatsApp de suporte disponível no site. Nosso objetivo é sempre resolver de forma amigável antes de qualquer disputa.</p>
+        </section>
+
+        <section class="border border-cyan-500/30 rounded-lg p-6 bg-cyan-500/5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">7. Aceite dos Termos</h2>
+            <p>Ao marcar a caixa de termos no checkout e efetuar a compra, o cliente declara ter lido, compreendido e aceito integralmente estes Termos de Serviço.</p>
+        </section>
+
+    </div>
+</main>
+{% endblock %}

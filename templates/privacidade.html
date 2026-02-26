@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Política de Privacidade - RAIO MODS{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16 max-w-3xl">
+    <div class="mb-4 md:mb-6">
+        <a href="{{ url_for('public.index') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors text-sm py-2 touch-manipulation">
+            ← Voltar para a loja
+        </a>
+    </div>
+    <div class="text-center mb-8 md:mb-12" data-aos="fade-up">
+        <h1 class="text-3xl md:text-4xl font-bold neon-cyan mb-4">🔒 Política de Privacidade</h1>
+        <p class="text-gray-400 text-sm">Última atualização: Fevereiro de 2026</p>
+        <p class="text-gray-500 text-xs mt-1">Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018)</p>
+    </div>
+
+    <div class="space-y-8 text-gray-300 text-sm leading-relaxed" data-aos="fade-up">
+
+        <section class="border border-cyan-500/30 rounded-lg p-6 bg-cyan-500/5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">1. Controlador dos Dados</h2>
+            <p>A <strong class="text-white">RAIO MODS</strong> é responsável pelo tratamento dos dados pessoais descritos nesta política. Para exercer seus direitos ou esclarecer dúvidas sobre o tratamento dos seus dados, entre em contato pelo nosso WhatsApp de suporte disponível no site.</p>
+        </section>
+
+        <section class="border border-purple-500/30 rounded-lg p-6 bg-purple-500/5">
+            <h2 class="text-xl font-bold text-purple-400 mb-3">2. Dados Pessoais Coletados</h2>
+            <p class="mb-3">Coletamos os seguintes dados pessoais durante o processo de compra:</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border border-gray-700 rounded">
+                    <thead class="bg-purple-900/30 text-purple-400">
+                        <tr>
+                            <th class="p-2 text-left border-b border-gray-700">Dado</th>
+                            <th class="p-2 text-left border-b border-gray-700">Finalidade</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-400">
+                        <tr><td class="p-2 border-b border-gray-800">Nome Completo</td><td class="p-2 border-b border-gray-800">Identificação do comprador e envio ao gateway de pagamento</td></tr>
+                        <tr><td class="p-2 border-b border-gray-800">CPF</td><td class="p-2 border-b border-gray-800">Verificação de identidade e prevenção a fraudes</td></tr>
+                        <tr><td class="p-2 border-b border-gray-800">E-mail</td><td class="p-2 border-b border-gray-800">Vinculação do pedido e comunicação</td></tr>
+                        <tr><td class="p-2 border-b border-gray-800">WhatsApp/Telefone</td><td class="p-2 border-b border-gray-800">Suporte e comprovação de vínculo com a compra</td></tr>
+                        <tr><td class="p-2 border-b border-gray-800">Endereço IP</td><td class="p-2 border-b border-gray-800">Segurança, prevenção a fraudes e prova de entrega</td></tr>
+                        <tr><td class="p-2">Data/hora das ações</td><td class="p-2">Registro de aceite dos termos e momento da entrega</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="border border-green-500/30 rounded-lg p-6 bg-green-500/5">
+            <h2 class="text-xl font-bold text-green-400 mb-3">3. Base Legal (LGPD Art. 7º)</h2>
+            <p class="mb-3">O tratamento dos seus dados pessoais é fundamentado nas seguintes bases legais:</p>
+            <ul class="list-disc list-inside space-y-2 text-gray-400">
+                <li><strong class="text-white">Execução de contrato</strong> (Art. 7º, V) — Necessário para processar a compra e entregar o produto digital.</li>
+                <li><strong class="text-white">Exercício regular de direitos</strong> (Art. 7º, VI) — Proteção contra contestações indevidas e fraudes.</li>
+                <li><strong class="text-white">Legítimo interesse</strong> (Art. 7º, IX) — Prevenção a fraudes e segurança das transações.</li>
+                <li><strong class="text-white">Consentimento</strong> (Art. 7º, I) — Obtido de forma explícita no checkout por meio da aceitação dos Termos de Serviço.</li>
+            </ul>
+        </section>
+
+        <section class="border border-blue-500/30 rounded-lg p-6 bg-blue-500/5">
+            <h2 class="text-xl font-bold text-blue-400 mb-3">4. Compartilhamento de Dados</h2>
+            <p class="mb-3">Seus dados podem ser compartilhados com:</p>
+            <ul class="list-disc list-inside space-y-2 text-gray-400">
+                <li><strong class="text-white">Mercado Pago</strong> — Gateway de pagamento responsável pelo processamento da transação. Os dados de nome, CPF e e-mail são enviados para viabilizar o pagamento e melhorar a análise antifraude.</li>
+            </ul>
+            <p class="mt-3 text-gray-500 text-xs">Não vendemos, alugamos ou compartilhamos seus dados com terceiros para fins de marketing.</p>
+        </section>
+
+        <section class="border border-yellow-500/30 rounded-lg p-6 bg-yellow-500/5">
+            <h2 class="text-xl font-bold text-yellow-400 mb-3">5. Prazo de Retenção</h2>
+            <p>Os dados pessoais associados a pedidos são armazenados pelo prazo de <strong class="text-white">12 (doze) meses</strong> a partir da data da compra, período necessário para proteção contra disputas de pagamento e cumprimento de obrigações legais. Após esse período, os dados podem ser anonimizados ou excluídos.</p>
+        </section>
+
+        <section class="border border-red-500/30 rounded-lg p-6 bg-red-500/5">
+            <h2 class="text-xl font-bold text-red-400 mb-3">6. Seus Direitos (LGPD Art. 18)</h2>
+            <p class="mb-3">Como titular dos dados, você tem direito a:</p>
+            <ul class="list-disc list-inside space-y-2 text-gray-400">
+                <li><strong class="text-white">Acesso</strong> — Solicitar quais dados pessoais temos sobre você.</li>
+                <li><strong class="text-white">Correção</strong> — Solicitar a correção de dados incompletos ou inexatos.</li>
+                <li><strong class="text-white">Eliminação</strong> — Solicitar a exclusão dos seus dados, exceto quando houver obrigação legal de retenção.</li>
+                <li><strong class="text-white">Informação</strong> — Saber com quem seus dados são compartilhados.</li>
+                <li><strong class="text-white">Revogação do consentimento</strong> — Retirar seu consentimento a qualquer momento.</li>
+            </ul>
+            <p class="mt-3 text-yellow-500 text-xs">Para exercer qualquer um desses direitos, entre em contato pelo WhatsApp de suporte disponível no site.</p>
+        </section>
+
+        <section class="border border-gray-500/30 rounded-lg p-6 bg-gray-500/5">
+            <h2 class="text-xl font-bold text-gray-400 mb-3">7. Segurança dos Dados</h2>
+            <p>Adotamos medidas técnicas e organizacionais para proteger seus dados pessoais contra acesso não autorizado, destruição, perda ou alteração. O acesso aos dados é restrito ao administrador da plataforma e ao gateway de pagamento (Mercado Pago).</p>
+        </section>
+
+        <section class="border border-cyan-500/30 rounded-lg p-6 bg-cyan-500/5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">8. Alterações nesta Política</h2>
+            <p>Esta política pode ser atualizada a qualquer momento. Recomendamos que você a consulte periodicamente. A data da última atualização será sempre indicada no topo da página.</p>
+        </section>
+
+    </div>
+</main>
+{% endblock %}

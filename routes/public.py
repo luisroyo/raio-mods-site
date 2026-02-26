@@ -208,6 +208,10 @@ def seguranca():
 def termos():
     return render_template('termos.html')
 
+@public_bp.route('/privacidade')
+def privacidade():
+    return render_template('privacidade.html')
+
 @public_bp.route('/static/uploads/<path:filename>')
 def uploaded_file(filename):
     uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')

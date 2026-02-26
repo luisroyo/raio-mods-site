@@ -160,6 +160,9 @@
                     <span class="text-gray-600">|</span>
                     <a href="{{ url_for('public.termos') }}"
                         class="transition-colors {% if request.endpoint == 'public.termos' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Termos</a>
+                    <span class="text-gray-600">|</span>
+                    <a href="{{ url_for('public.privacidade') }}"
+                        class="transition-colors {% if request.endpoint == 'public.privacidade' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Privacidade</a>
                 </nav>
             </div>
         </div>
@@ -201,7 +204,8 @@
                     <input type="checkbox" id="customerTerms"
                         class="mt-1 accent-cyan-400 w-4 h-4 flex-shrink-0">
                     <span class="text-[11px] text-gray-400 leading-snug">
-                        Declaro que li e aceito os <a href="/termos" target="_blank" class="text-cyan-400 underline hover:text-white">Termos de Serviço</a>.
+                        Declaro que li e aceito os <a href="/termos" target="_blank" class="text-cyan-400 underline hover:text-white">Termos de Serviço</a>
+                        e a <a href="/privacidade" target="_blank" class="text-cyan-400 underline hover:text-white">Política de Privacidade</a>.
                         Entendo que, por se tratar de um produto digital de entrega automática e imediata,
                         <strong class="text-gray-300">não há possibilidade de devolução ou reembolso após a ativação</strong>.
                         Confirmo ser o titular do cartão/conta e que os dados informados são verdadeiros.

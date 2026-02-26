@@ -272,13 +272,20 @@ async function viewOrderProof(orderId) {
                         <p class="text-green-400 font-bold mb-2">🌐 IPs & Datas</p>
                         <p class="text-gray-300">IP da Compra: <span class="text-white font-mono">${p.ip_purchase || '—'}</span></p>
                         <p class="text-gray-300">IP da Entrega: <span class="text-white font-mono">${p.ip_delivery || '—'}</span></p>
+                        <p class="text-gray-300">User-Agent: <span class="text-white font-mono text-[10px] break-all">${p.user_agent_delivery || '—'}</span></p>
                         <p class="text-gray-300">Termos Aceitos em: <span class="text-white">${formatDate(p.terms_accepted_at)}</span></p>
                         <p class="text-gray-300">Compra em: <span class="text-white">${formatDate(p.created_at)}</span></p>
-                        <p class="text-gray-300">Chave entregue em: <span class="text-white">${formatDate(p.delivered_at)}</span></p>
+                        <p class="text-gray-300">Chave revelada em: <span class="text-white">${formatDate(p.delivered_at)}</span></p>
                     </div>
                     <div class="border border-yellow-500/20 rounded p-3 bg-black/40">
                         <p class="text-yellow-400 font-bold mb-2">🔑 Chave Entregue</p>
                         <p class="text-white font-mono break-all">${p.key_delivered || '—'}</p>
+                        <p class="text-gray-500 text-[10px] mt-1">SHA-256: <span class="font-mono">${p.key_hash || '—'}</span></p>
+                    </div>
+                    <div class="border border-orange-500/20 rounded p-3 bg-black/40">
+                        <p class="text-orange-400 font-bold mb-2">📋 Resposta Padrão p/ Reembolso</p>
+                        <p class="text-gray-400 text-[11px] leading-relaxed" id="refundMsg">Prezado(a) ${p.customer_name || 'cliente'},\n\nAgradecemos seu contato. Conforme nossos registros, a compra (Ref: ${p.external_reference}) foi concluída e a chave digital foi revelada e visualizada com sucesso em ${formatDate(p.delivered_at)}, a partir do IP ${p.ip_delivery || '—'}.\n\nOs termos de serviço aceitos no momento da compra informam que, por se tratar de produto digital com entrega imediata, não há possibilidade de reembolso após a visualização da chave.\n\nEstamos à disposição pelo suporte para resolver qualquer questão técnica.</p>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('refundMsg').innerText);this.innerText='✅ Copiado!';setTimeout(()=>this.innerText='Copiar',1500)" class="mt-2 text-[10px] bg-orange-500/20 text-orange-400 px-3 py-1 rounded hover:bg-orange-500/30">Copiar</button>
                     </div>
                     <p class="text-[10px] text-gray-600 text-center mt-4">Tire um print desta tela para utilizar como prova em disputas.</p>
                 </div>

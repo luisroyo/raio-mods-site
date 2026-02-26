@@ -402,6 +402,8 @@ def get_order_proof(order_id):
             'customer_phone': d.get('customer_phone', ''),
             'ip_purchase': d.get('ip_purchase', ''),
             'ip_delivery': d.get('ip_delivery', ''),
+            'user_agent_delivery': d.get('user_agent_delivery', ''),
+            'key_hash': d.get('key_hash', ''),
             'terms_accepted_at': d.get('terms_accepted_at', ''),
             'delivered_at': d.get('delivered_at', ''),
             'key_delivered': d.get('key_value', ''),

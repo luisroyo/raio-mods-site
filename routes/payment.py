@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, current_app, url_for
 from database.models import get_db_connection
 import json
 import uuid
+import hashlib
 from datetime import datetime
 
 payment_bp = Blueprint('payment', __name__)
@@ -285,22 +286,54 @@ def webhook():
 @payment_bp.route('/api/check_status/<order_ref>', methods=['GET'])
 def check_status(order_ref):
     conn = get_db_connection()
-    order = conn.execute('SELECT o.*, k.key_value FROM orders o LEFT JOIN product_keys k ON o.key_assigned_id = k.id WHERE o.external_reference = ?', (order_ref,)).fetchone()
+    order = conn.execute('SELECT o.status, o.key_assigned_id FROM orders o WHERE o.external_reference = ?', (order_ref,)).fetchone()
+    conn.close()
+    if not order:
+        return jsonify({'status': 'not_found'})
+    if order['status'] == 'approved' and order['key_assigned_id']:
+        # Não retorna a chave — apenas sinaliza que está pronta para revelar
+        return jsonify({'status': 'ready_to_reveal'})
+    return jsonify({'status': order['status']})
+
+
+@payment_bp.route('/api/reveal_key/<order_ref>', methods=['POST'])
+def reveal_key(order_ref):
+    """Registra prova de consumo e retorna a chave.
+    Logs: IP, User-Agent, DateTime, SHA-256 hash da chave."""
+    conn = get_db_connection()
+    order = conn.execute('''
+        SELECT o.*, k.key_value
+        FROM orders o
+        LEFT JOIN product_keys k ON o.key_assigned_id = k.id
+        WHERE o.external_reference = ?
+    ''', (order_ref,)).fetchone()
+
     if not order:
         conn.close()
-        return jsonify({'status': 'not_found'})
-    if order['status'] == 'approved' and order['key_value']:
-        # Registra IP e momento da entrega da chave (prova de entrega)
-        if not order['delivered_at']:
-            delivery_ip = _get_client_ip()
-            now = datetime.utcnow().isoformat()
-            try:
-                conn.execute('UPDATE orders SET delivered_at = ?, ip_delivery = ? WHERE id = ?',
-                             (now, delivery_ip, order['id']))
-                conn.commit()
-            except Exception as e:
-                print(f"Erro ao registrar entrega: {e}")
+        return jsonify({'error': 'Pedido não encontrado'}), 404
+
+    if order['status'] != 'approved' or not order['key_value']:
         conn.close()
-        return jsonify({'status': 'approved', 'key': order['key_value']})
+        return jsonify({'error': 'Chave ainda não disponível'}), 400
+
+    key_value = order['key_value']
+
+    # Registra as provas de consumo (apenas na primeira vez)
+    if not order['delivered_at']:
+        delivery_ip = _get_client_ip()
+        user_agent = request.headers.get('User-Agent', 'unknown')
+        now = datetime.utcnow().isoformat()
+        key_sha256 = hashlib.sha256(key_value.encode('utf-8')).hexdigest()
+
+        try:
+            conn.execute('''
+                UPDATE orders
+                SET delivered_at = ?, ip_delivery = ?, user_agent_delivery = ?, key_hash = ?
+                WHERE id = ?
+            ''', (now, delivery_ip, user_agent, key_sha256, order['id']))
+            conn.commit()
+        except Exception as e:
+            print(f"Erro ao registrar consumo: {e}")
+
     conn.close()
-    return jsonify({'status': order['status']})
+    return jsonify({'status': 'revealed', 'key': key_value})

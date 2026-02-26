@@ -181,6 +181,8 @@ def init_db():
         ('ip_delivery', 'TEXT DEFAULT ""'),
         ('terms_accepted_at', 'TIMESTAMP'),
         ('delivered_at', 'TIMESTAMP'),
+        ('user_agent_delivery', 'TEXT DEFAULT ""'),
+        ('key_hash', 'TEXT DEFAULT ""'),
     ]
     for col_name, col_type in chargeback_columns:
         try:

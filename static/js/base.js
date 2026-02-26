@@ -206,7 +206,10 @@ function copyKey() {
 }
 
 // Verifica status a cada 5 segundos
+let currentOrderRef = null;
+
 function startPolling(orderId) {
+    currentOrderRef = orderId;
     if (paymentCheckInterval) clearInterval(paymentCheckInterval);
 
     paymentCheckInterval = setInterval(async () => {
@@ -214,10 +217,10 @@ function startPolling(orderId) {
             const response = await fetch(`/api/check_status/${orderId}`);
             const data = await response.json();
 
-            if (data.status === 'approved' && data.key) {
-                // PAGAMENTO APROVADO!
+            if (data.status === 'ready_to_reveal') {
+                // PAGAMENTO APROVADO — mostra botão de revelar
                 clearInterval(paymentCheckInterval);
-                showSuccess(data.key);
+                showRevealStep();
             }
         } catch (e) {
             console.error("Erro no polling", e);
@@ -225,9 +228,48 @@ function startPolling(orderId) {
     }, 5000); // 5 segundos
 }
 
+// Mostra o passo intermediário com botão "Revelar Minha Chave"
+function showRevealStep() {
+    document.getElementById('step-payment').classList.add('hidden');
+    document.getElementById('step-email').classList.add('hidden');
+    document.getElementById('step-reveal').classList.remove('hidden');
+    document.getElementById('step-success').classList.add('hidden');
+}
+
+// Chama o backend para registrar prova de consumo e revelar a chave
+async function revealKey() {
+    const btn = document.getElementById('btnRevealKey');
+    btn.disabled = true;
+    btn.innerHTML = '🔄 Carregando chave...';
+
+    try {
+        const response = await fetch(`/api/reveal_key/${currentOrderRef}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await response.json();
+
+        if (data.status === 'revealed' && data.key) {
+            document.getElementById('finalKey').innerText = data.key;
+            document.getElementById('step-reveal').classList.add('hidden');
+            document.getElementById('step-success').classList.remove('hidden');
+        } else {
+            alert('Erro ao revelar a chave: ' + (data.error || 'Tente novamente.'));
+            btn.disabled = false;
+            btn.innerHTML = '🔓 Revelar Minha Chave';
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao conectar com o servidor.');
+        btn.disabled = false;
+        btn.innerHTML = '🔓 Revelar Minha Chave';
+    }
+}
+
 // Exibe a tela final com a chave
 function showSuccess(key) {
     document.getElementById('step-payment').classList.add('hidden');
+    document.getElementById('step-reveal').classList.add('hidden');
     document.getElementById('step-success').classList.remove('hidden');
     document.getElementById('finalKey').innerText = key;
 }

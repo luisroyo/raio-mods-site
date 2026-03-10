@@ -69,8 +69,12 @@ def verify_webhook_signature(request) -> bool:
             return False
             
         # O payload para o HMAC é montar 'id_url-request_id-ts' (MercadoPago docs)
-        # O ID da transação no request.args
-        data_id = request.args.get('data.id') or request.args.get('id', '')
+        # O ID da transação no request.args ou no body (JSON)
+        data_id = request.args.get('data.id') or request.args.get('id')
+        if not data_id and request.is_json:
+            body = request.json or {}
+            data_id = body.get('data', {}).get('id') or body.get('id')
+        data_id = str(data_id) if data_id else ''
         
         manifest = f"id:{data_id};request-id:{x_request_id};ts:{ts};"
         
@@ -298,6 +302,11 @@ def webhook():
     try:
         topic = request.args.get('topic') or request.args.get('type')
         p_id = request.args.get('id') or request.args.get('data.id')
+        
+        if not topic and request.is_json:
+            body = request.json or {}
+            topic = body.get('type') or body.get('topic')
+            p_id = body.get('data', {}).get('id') or body.get('id')
         
         logger.info(f"Webhook recebido: topic={topic}, id={p_id}")
         

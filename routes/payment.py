@@ -210,7 +210,7 @@ def create_payment():
                 "payment_method_id": "pix",
                 "external_reference": order_ref,
                 "payer": payer_info,
-                "notification_url": f"{request.url_root.rstrip('/')}/webhook/mp"
+                "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
             }
 
             mp_res = sdk.payment().create(payment_data)
@@ -253,12 +253,12 @@ def create_payment():
                 "payer": card_payer,
                 "external_reference": order_ref,
                 "back_urls": {
-                    "success": request.url_root.rstrip('/'),
-                    "failure": request.url_root.rstrip('/'),
-                    "pending": request.url_root.rstrip('/')
+                    "success": "https://raiomodsgames.pythonanywhere.com",
+                    "failure": "https://raiomodsgames.pythonanywhere.com",
+                    "pending": "https://raiomodsgames.pythonanywhere.com"
                 },
                 "auto_return": "approved",
-                "notification_url": f"{request.url_root.rstrip('/')}/webhook/mp"
+                "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
             }
 
             pref_res = sdk.preference().create(preference_data)

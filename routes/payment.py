@@ -32,14 +32,22 @@ def _get_client_ip() -> str:
 
 def get_mp_sdk():
     """Recupera o SDK do Mercado Pago inicializado com o token salvo no banco de dados ou .env."""
-    # Prioridade máxima: Variável de ambiente (Seguro)
-    token = os.getenv('MP_ACCESS_TOKEN')
+    token = None
     
-    # Fallback: Banco de Dados SQLite
-    if not token:
+    # Prioridade máxima: Banco de Dados (Admin Panel) - permite trocar facilmente
+    try:
         with closing(get_db_connection()) as conn:
             config = conn.execute('SELECT mercado_pago_token FROM config WHERE id = 1').fetchone()
-            token = config['mercado_pago_token'] if config and 'mercado_pago_token' in config.keys() else None
+            if config and 'mercado_pago_token' in config.keys():
+                db_token = config['mercado_pago_token']
+                if db_token and db_token.strip():
+                    token = db_token.strip()
+    except Exception as e:
+        logger.warning(f"Erro ao ler token do banco: {e}")
+    
+    # Fallback: Variável de ambiente (.env)
+    if not token:
+        token = os.getenv('MP_ACCESS_TOKEN')
 
     return mercadopago.SDK(token) if token else None
 
@@ -267,7 +275,7 @@ def create_payment():
 
             pref_res = sdk.preference().create(preference_data)
             response_body = pref_res.get("response", {})
-            checkout_url = response_body.get("sandbox_init_point") or response_body.get("init_point")
+            checkout_url = response_body.get("init_point") or response_body.get("sandbox_init_point")
 
             if not checkout_url:
                 logger.error(f"Erro MP Preference: {pref_res}")

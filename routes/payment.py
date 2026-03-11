@@ -355,7 +355,9 @@ def webhook():
 
 @payment_bp.route('/api/check_status/<order_ref>', methods=['GET'])
 def check_status(order_ref):
-    """Verifica e retorna o status em tempo real do pedido via poll do cliente."""
+    """Verifica e retorna o status em tempo real do pedido via poll do cliente.
+    Inclui fallback ativo: se o webhook falhar, consulta o MP diretamente.
+    """
     with closing(get_db_connection()) as conn:
         order = conn.execute('SELECT status, key_assigned_id FROM orders WHERE external_reference = ?', (order_ref,)).fetchone()
     
@@ -363,8 +365,22 @@ def check_status(order_ref):
         return jsonify({'status': 'not_found'})
         
     if order['status'] == 'approved' and order['key_assigned_id']:
-        # Sinaliza proatividade sem exibir a chave real ainda
         return jsonify({'status': 'ready_to_reveal'})
+    
+    # Fallback: se ainda está pendente, consulta o MP diretamente
+    if order['status'] == 'pending':
+        try:
+            sdk = get_mp_sdk()
+            if sdk:
+                search_result = sdk.payment().search({"external_reference": order_ref})
+                results = search_result.get("response", {}).get("results", [])
+                for payment in results:
+                    if payment.get("status") == "approved":
+                        logger.info(f"Fallback ativo: pagamento aprovado encontrado para {order_ref} (Payment ID: {payment.get('id')})")
+                        process_approved_payment(order_ref, str(payment.get("id", "")))
+                        return jsonify({'status': 'ready_to_reveal'})
+        except Exception as e:
+            logger.warning(f"Erro no fallback de verificação ativa: {e}")
         
     return jsonify({'status': order['status']})
 

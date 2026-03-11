@@ -200,6 +200,12 @@ def pagamento():
                           product_stock=product_stock, whatsapp_contact=whatsapp_contact,
                           seo_title=seo_title, seo_description=seo_description, seo_image=seo_image)
 
+@public_bp.route('/pedido/<order_ref>')
+def pedido_status(order_ref):
+    """Página de status do pedido - destino do redirect após pagamento no Mercado Pago."""
+    mp_status = request.args.get('collection_status') or request.args.get('status', '')
+    return render_template('pedido.html', order_ref=order_ref, mp_status=mp_status)
+
 @public_bp.route('/seguranca')
 def seguranca():
     return render_template('seguranca.html')

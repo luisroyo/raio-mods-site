@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Status do Pedido - RAIO MODS{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-lg">
+    <div class="bg-black border-2 border-neon-cyan rounded-xl overflow-hidden shadow-[0_0_30px_rgba(0,242,255,0.2)]">
+        
+        <div class="bg-neon-cyan/10 p-4 border-b border-neon-cyan/30">
+            <h2 class="text-xl font-bold text-neon-cyan flex items-center gap-2">
+                📦 Status do Pedido
+            </h2>
+            <p class="text-gray-400 text-xs mt-1">Referência: <code class="text-gray-300">{{ order_ref }}</code></p>
+        </div>
+
+        <!-- STATUS: PROCESSANDO -->
+        <div id="status-pending" class="p-8 text-center">
+            <div class="w-16 h-16 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-white mb-2">Processando Pagamento...</h3>
+            <p class="text-gray-400 text-sm mb-2">Estamos verificando seu pagamento. Isso pode levar alguns segundos.</p>
+            <div class="flex items-center justify-center gap-2 text-neon-green animate-pulse mt-4">
+                <div class="w-2 h-2 bg-neon-green rounded-full"></div>
+                <span class="text-sm font-bold">Aguardando confirmação...</span>
+            </div>
+        </div>
+
+        <!-- STATUS: REVELAR CHAVE -->
+        <div id="status-reveal" class="p-8 text-center hidden">
+            <div class="w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(0,242,255,0.5)] animate-pulse">
+                <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Pagamento Confirmado! ✅</h3>
+            <p class="text-gray-300 text-sm mb-2">Sua chave está pronta.</p>
+            <p class="text-gray-500 text-xs mb-6">Ao clicar no botão abaixo, você confirma o recebimento do produto digital.</p>
+
+            <button id="btnRevealKeyPage" onclick="revealKeyPage()"
+                class="w-full bg-gradient-to-r from-cyan-500 to-green-500 text-black font-bold py-4 rounded-lg hover:from-cyan-400 hover:to-green-400 transition-all text-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)]">
+                🔓 Revelar Minha Chave
+            </button>
+
+            <p class="text-[10px] text-gray-600 mt-4">Ao revelar, você confirma que o produto foi entregue com sucesso.</p>
+        </div>
+
+        <!-- STATUS: CHAVE REVELADA -->
+        <div id="status-success" class="p-8 text-center hidden bg-green-900/20">
+            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(34,197,94,0.5)]">
+                <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Pagamento Aprovado!</h3>
+            <p class="text-gray-300 text-sm mb-4">Aqui está sua chave de acesso:</p>
+
+            <div class="bg-black border-2 border-neon-green rounded-lg p-4 mb-4 relative group">
+                <code id="finalKeyPage" class="text-neon-green text-xl font-mono break-all font-bold">XXXX-XXXX-XXXX</code>
+                <button onclick="copyKeyPage()"
+                    class="absolute top-1/2 -translate-y-1/2 right-2 bg-gray-800 text-white p-2 rounded hover:bg-gray-700"
+                    title="Copiar">
+                    📋
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-400">Salve essa chave agora! Tire um print.</p>
+            <a href="{{ url_for('public.index') }}" class="mt-6 inline-block text-neon-cyan hover:text-white text-sm underline">
+                ← Voltar para a loja
+            </a>
+        </div>
+
+        <!-- STATUS: ERRO / NÃO ENCONTRADO -->
+        <div id="status-error" class="p-8 text-center hidden">
+            <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Pagamento não aprovado</h3>
+            <p class="text-gray-400 text-sm mb-4">O pagamento não foi concluído ou foi recusado. Tente novamente.</p>
+            <a href="{{ url_for('public.index') }}" class="inline-block bg-neon-cyan text-black font-bold py-3 px-6 rounded-lg hover:bg-white transition-all">
+                ← Voltar para a loja
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const ORDER_REF = "{{ order_ref }}";
+const MP_STATUS = "{{ mp_status }}";
+let pollInterval = null;
+
+function startOrderPolling() {
+    pollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/check_status/${ORDER_REF}`);
+            const data = await response.json();
+
+            if (data.status === 'ready_to_reveal') {
+                clearInterval(pollInterval);
+                document.getElementById('status-pending').classList.add('hidden');
+                document.getElementById('status-reveal').classList.remove('hidden');
+            } else if (data.status === 'not_found') {
+                clearInterval(pollInterval);
+                document.getElementById('status-pending').classList.add('hidden');
+                document.getElementById('status-error').classList.remove('hidden');
+            }
+        } catch (e) {
+            console.error("Erro no polling", e);
+        }
+    }, 4000);
+}
+
+async function revealKeyPage() {
+    const btn = document.getElementById('btnRevealKeyPage');
+    btn.disabled = true;
+    btn.innerHTML = '🔄 Carregando chave...';
+
+    try {
+        const response = await fetch(`/api/reveal_key/${ORDER_REF}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await response.json();
+
+        if (data.status === 'revealed' && data.key) {
+            document.getElementById('finalKeyPage').innerText = data.key;
+            document.getElementById('status-reveal').classList.add('hidden');
+            document.getElementById('status-success').classList.remove('hidden');
+        } else {
+            alert('Erro ao revelar a chave: ' + (data.error || 'Tente novamente.'));
+            btn.disabled = false;
+            btn.innerHTML = '🔓 Revelar Minha Chave';
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao conectar com o servidor.');
+        btn.disabled = false;
+        btn.innerHTML = '🔓 Revelar Minha Chave';
+    }
+}
+
+function copyKeyPage() {
+    const keyText = document.getElementById("finalKeyPage").innerText;
+    navigator.clipboard.writeText(keyText).then(() => {
+        alert("Chave copiada!");
+    });
+}
+
+// Inicializa ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+    if (MP_STATUS === 'failure') {
+        document.getElementById('status-pending').classList.add('hidden');
+        document.getElementById('status-error').classList.remove('hidden');
+    } else {
+        // Verifica imediatamente e depois faz polling
+        (async () => {
+            try {
+                const response = await fetch(`/api/check_status/${ORDER_REF}`);
+                const data = await response.json();
+                if (data.status === 'ready_to_reveal') {
+                    document.getElementById('status-pending').classList.add('hidden');
+                    document.getElementById('status-reveal').classList.remove('hidden');
+                } else if (data.status === 'not_found') {
+                    document.getElementById('status-pending').classList.add('hidden');
+                    document.getElementById('status-error').classList.remove('hidden');
+                } else {
+                    startOrderPolling();
+                }
+            } catch (e) {
+                startOrderPolling();
+            }
+        })();
+    }
+});
+</script>
+{% endblock %}

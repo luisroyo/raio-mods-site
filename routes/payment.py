@@ -257,16 +257,17 @@ def create_payment():
                 "payer": card_payer,
                 "external_reference": order_ref,
                 "back_urls": {
-                    "success": "https://raiomodsgames.pythonanywhere.com",
-                    "failure": "https://raiomodsgames.pythonanywhere.com",
-                    "pending": "https://raiomodsgames.pythonanywhere.com"
+                    "success": f"https://raiomodsgames.pythonanywhere.com/pedido/{order_ref}",
+                    "failure": f"https://raiomodsgames.pythonanywhere.com/pedido/{order_ref}?status=failure",
+                    "pending": f"https://raiomodsgames.pythonanywhere.com/pedido/{order_ref}?status=pending"
                 },
                 "auto_return": "approved",
                 "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
             }
 
             pref_res = sdk.preference().create(preference_data)
-            checkout_url = pref_res.get("response", {}).get("init_point")
+            response_body = pref_res.get("response", {})
+            checkout_url = response_body.get("sandbox_init_point") or response_body.get("init_point")
 
             if not checkout_url:
                 logger.error(f"Erro MP Preference: {pref_res}")

@@ -30,8 +30,7 @@
         {# LÓGICA DE CATÁLOGO (PASTAS) #}
         {% if product.id in catalog_ids %}
         <a href="{{ url_for('public.catalogo', parent_id=product.id) }}"
-            class="card-base card-catalog" data-aos="fade-up">
-            data-aos="fade-up">
+            class="card-base card-catalog p-4 sm:p-5" data-aos="fade-up">
             <div
                 class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50">
                 <span class="relative flex h-2 w-2">
@@ -42,16 +41,15 @@
                 <span class="text-[10px] font-bold text-green-400 tracking-wider">ON</span>
             </div>
             {% if product.image %}
-            <div
-            <div class="img-container mb-4 w-full aspect-square overflow-hidden group-hover:border-accent-purple transition-colors">
+            <div class="img-container mb-3 w-10/12 mx-auto aspect-square overflow-hidden group-hover:border-accent-purple transition-colors">
                 <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
                     class="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500">
             </div>
             {% endif %}
             <div class="text-center">
-                <h3 class="text-2xl md:text-3xl font-bold catalog-title mb-2">{{ product.name }}</h3>
-                <p class="text-gray-400 text-sm mb-5 min-h-[40px] leading-relaxed">{{ product.description }}</p>
-                <div class="catalog-btn">
+                <h3 class="text-xl md:text-2xl font-bold catalog-title mb-1">{{ product.name }}</h3>
+                <p class="text-gray-400 text-xs mb-4 min-h-[30px] leading-relaxed">{{ product.description }}</p>
+                <div class="catalog-btn py-1.5 px-4 text-xs">
                     <span>📂 ABRIR CATÁLOGO</span>
                 </div>
             </div>
@@ -59,7 +57,7 @@
 
         {# LÓGICA DE PRODUTOS SOLTOS #}
         {% else %}
-        <div class="card-base card-product group" data-aos="fade-up">
+        <div class="card-base card-product group p-4 sm:p-5" data-aos="fade-up">
             {% if loop.index == 3 %}
             <span class="badge-best-value">MELHOR VALOR ✨</span>
             {% endif %}
@@ -69,9 +67,9 @@
             </div>
 
             {% if product.image %}
-            <div class="mb-5 w-full aspect-square rounded-[14px] overflow-hidden bg-black/40 border border-white/5 group-hover:border-accent-cyan transition-colors">
+            <div class="mb-4 w-10/12 mx-auto aspect-square rounded-[14px] overflow-hidden bg-black/40 border border-white/5 group-hover:border-accent-cyan transition-colors">
                 <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
-                    class="w-full h-full object-contain p-3 hover:scale-110 transition-transform duration-500">
+                    class="w-full h-full object-contain p-2 hover:scale-110 transition-transform duration-500">
             </div>
             {% endif %}
             {% if product.promo_price or product.promo_label %}
@@ -80,23 +78,23 @@
                     product.promo_label or 'PROMO' }}</span>
             </div>
             {% endif %}
-            <h3 class="text-xl font-bold text-gradient mb-2">{{ product.name }}</h3>
-            <p class="text-gray-400 mb-5 text-sm flex-grow leading-relaxed">{{ product.description }}</p>
+            <h3 class="text-lg font-bold text-gradient mb-1">{{ product.name }}</h3>
+            <p class="text-gray-400 mb-4 text-xs flex-grow leading-relaxed">{{ product.description }}</p>
             <div class="mt-auto">
                 {% if product.promo_price %}
-                <p class="text-lg text-gray-500 line-through mb-0.5">{{ product.price }}</p>
-                <p class="price-shimmer text-3xl font-extrabold mb-1">{{ product.promo_price }}</p>
+                <p class="text-sm text-gray-500 line-through mb-0.5">{{ product.price }}</p>
+                <p class="price-shimmer text-2xl font-extrabold mb-1">{{ product.promo_price }}</p>
                 {% else %}
-                <p class="price-shimmer text-3xl font-extrabold mb-1">{{ product.price }}</p>
+                <p class="price-shimmer text-2xl font-extrabold mb-1">{{ product.price }}</p>
                 {% endif %}
                 {% if product.tagline %}
-                <p class="text-xs text-gray-500 mb-5 font-medium">{{ product.tagline }}</p>
+                <p class="text-[11px] text-gray-500 mb-4 font-medium">{{ product.tagline }}</p>
                 {% endif %}
 
                 {% set display_price = product.promo_price or product.price %}
                 {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
                 <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')"
-                    class="btn-gradient w-full flex items-center justify-center gap-2">
+                    class="btn-gradient w-full flex items-center justify-center gap-2 py-2 text-sm">
                     🛒 Comprar Agora
                 </button>
                 {% else %}

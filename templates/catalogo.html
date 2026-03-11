@@ -13,7 +13,7 @@
             class="inline-flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors text-sm md:text-base mb-4">
             ← Voltar para a loja
         </a>
-        <h1 class="text-2xl md:text-4xl font-bold neon-cyan">{{ parent.name }}</h1>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-gradient" style="font-family: 'Sora', sans-serif;">{{ parent.name }}</h1>
         <p class="text-gray-400 mt-2">Escolha uma opção abaixo</p>
     </div>
 
@@ -21,25 +21,19 @@
     {% if products_by_category %}
     {% for category, category_products in products_by_category.items() | sort %}
     <div class="mb-12 md:mb-16" data-aos="fade-up">
-        <div class="mb-6 md:mb-8">
-            <h2 class="text-2xl md:text-3xl font-bold neon-cyan border-b-2 border-neon-cyan pb-3">📁 {{ category }}</h2>
+        <div class="category-header">
+            <h2>📁 {{ category }}</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {% for product in category_products %}
             <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-                <div
-                    class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50 z-10">
-                    <span class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    <span class="text-[10px] font-bold text-green-400 tracking-wider">ATUALIZADO</span>
+                <div class="badge-status absolute top-4 right-4 z-10">
+                    <div class="dot"></div>
+                    ATUALIZADO
                 </div>
                 {% if product.promo_price or product.promo_label %}
-                <div class="absolute top-3 left-3 z-10">
-                    <span class="px-2 py-1 rounded text-xs font-bold bg-amber-500 text-black border border-amber-400">{{
-                        product.promo_label or 'PROMO' }}</span>
+                <div class="badge-promo">
+                    {{ product.promo_label or 'PROMO' }}
                 </div>
                 {% endif %}
                 {% if product.image %}
@@ -49,18 +43,18 @@
                 </div>
                 {% endif %}
 
-                <h3 class="text-xl md:text-2xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
+                <h3 class="text-2xl font-bold catalog-title mb-2">{{ product.name }}</h3>
 
-                <p class="text-gray-300 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm md:text-base flex-grow">
+                <p class="text-gray-400 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm flex-grow leading-relaxed">
                     {{ product.description }}
                 </p>
 
                 <div class="mb-4 md:mb-6 mt-auto">
                     {% if product.promo_price %}
-                    <p class="text-lg md:text-xl text-gray-500 line-through mb-0.5">{{ product.price }}</p>
-                    <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.promo_price }}</p>
+                    <p class="text-lg text-gray-500 line-through mb-0.5">{{ product.price }}</p>
+                    <p class="price-shimmer text-3xl md:text-4xl font-extrabold mb-2">{{ product.promo_price }}</p>
                     {% else %}
-                    <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
+                    <p class="price-shimmer text-3xl md:text-4xl font-extrabold mb-2">{{ product.price }}</p>
                     {% endif %}
                     {% if product.tagline %}
                     <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>
@@ -97,19 +91,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-20">
         {% for product in products %}
         <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-            <div
-                class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50 z-10">
-                <span class="relative flex h-2 w-2">
-                    <span
-                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                <span class="text-[10px] font-bold text-green-400 tracking-wider">ATUALIZADO</span>
+            <div class="badge-status absolute top-4 right-4 z-10">
+                <div class="dot"></div>
+                ATUALIZADO
             </div>
             {% if product.promo_price or product.promo_label %}
-            <div class="absolute top-3 left-3 z-10">
-                <span class="px-2 py-1 rounded text-xs font-bold bg-amber-500 text-black border border-amber-400">{{
-                    product.promo_label or 'PROMO' }}</span>
+            <div class="badge-promo">
+                {{ product.promo_label or 'PROMO' }}
             </div>
             {% endif %}
             {% if product.image %}
@@ -119,18 +107,18 @@
             </div>
             {% endif %}
 
-            <h3 class="text-xl md:text-2xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
+            <h3 class="text-2xl font-bold catalog-title mb-2">{{ product.name }}</h3>
 
-            <p class="text-gray-300 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm md:text-base flex-grow">
+            <p class="text-gray-400 mb-3 md:mb-4 min-h-[40px] md:min-h-[50px] text-sm flex-grow leading-relaxed">
                 {{ product.description }}
             </p>
 
             <div class="mb-4 md:mb-6 mt-auto">
                 {% if product.promo_price %}
-                <p class="text-lg md:text-xl text-gray-500 line-through mb-0.5">{{ product.price }}</p>
-                <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.promo_price }}</p>
+                <p class="text-lg text-gray-500 line-through mb-0.5">{{ product.price }}</p>
+                <p class="price-shimmer text-3xl md:text-4xl font-extrabold mb-2">{{ product.promo_price }}</p>
                 {% else %}
-                <p class="text-3xl md:text-4xl font-bold neon-green mb-2">{{ product.price }}</p>
+                <p class="price-shimmer text-3xl md:text-4xl font-extrabold mb-2">{{ product.price }}</p>
                 {% endif %}
                 {% if product.tagline %}
                 <p class="text-xs md:text-sm text-gray-400">{{ product.tagline }}</p>

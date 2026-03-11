@@ -1,88 +1,127 @@
-/* --- Efeito Glitch no título --- */
-.hero-title {
-    position: relative;
-    display: inline-block;
-    transition: all 0.3s ease;
-}
-.hero-title:hover {
-    animation: glitch 0.3s ease-in-out;
-}
-@keyframes glitch {
-    0% { text-shadow: 0 0 5px #00f2ff, 0 0 10px rgba(0, 242, 255, 0.5); transform: translate(0); }
-    20% { text-shadow: -2px 0 #ff00ff, 2px 0 #00f2ff; transform: translate(-2px, 2px); }
-    40% { text-shadow: 2px 0 #00f2ff, -2px 0 #ff00ff; transform: translate(2px, -2px); }
-    60% { text-shadow: -2px 0 #00ff00, 2px 0 #ff00ff; transform: translate(-1px, -1px); }
-    80% { text-shadow: 2px 0 #ff00ff, -2px 0 #00f2ff; transform: translate(1px, 1px); }
-    100% { text-shadow: 0 0 5px #00f2ff, 0 0 10px rgba(0, 242, 255, 0.5); transform: translate(0); }
-}
-
-.hero-gradient {
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0, 242, 255, 0.08) 50%, rgba(0,0,0,0) 100%);
-}
-
-/* --- Estilos da Hero Section --- */
+/* --- Hero Section Premium --- */
 .hero-section {
+    position: relative;
     text-align: center;
-    padding: 2rem 0;
-    margin-bottom: 2rem;
-    border-top: 2px solid #00f2ff;
-    border-bottom: 2px solid #00f2ff;
-    /* Hero Gradient que estava no HTML */
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0, 242, 255, 0.1) 50%, rgba(0,0,0,0) 100%);
+    padding: 3rem 1rem;
+    margin-bottom: 3rem;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-accent);
+}
+
+.hero-gradient-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at top center, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
 }
 
 @media (min-width: 768px) {
-    .hero-section { padding: 4rem 0; margin-bottom: 4rem; }
+    .hero-section { padding: 5rem 1rem; margin-bottom: 4rem; }
+}
+
+/* --- Efeito Glitch Refinado no título --- */
+.hero-title {
+    position: relative;
+    display: inline-block;
+    transition: var(--transition);
+    font-family: 'Sora', sans-serif;
+    letter-spacing: -0.02em;
+}
+
+.hero-title:hover {
+    animation: glitch-subtle 0.4s ease-in-out;
+}
+
+@keyframes glitch-subtle {
+    0% { transform: translate(0); text-shadow: var(--glow-cyan); }
+    20% { transform: translate(-1px, 1px); text-shadow: -1px 0 var(--accent-purple), 1px 0 var(--accent-cyan); }
+    40% { transform: translate(1px, -1px); text-shadow: 1px 0 var(--accent-cyan), -1px 0 var(--accent-purple); }
+    60% { transform: translate(-1px, -1px); text-shadow: -1px 0 rgba(34, 197, 94, 0.8), 1px 0 var(--accent-purple); }
+    80% { transform: translate(1px, 1px); text-shadow: 1px 0 var(--accent-purple), -1px 0 var(--accent-cyan); }
+    100% { transform: translate(0); text-shadow: var(--glow-cyan); }
 }
 
 /* --- Cards de Produto (Base) --- */
 .card-base {
     position: relative;
     padding: 1.5rem;
-    border-radius: 0.75rem;
-    transition: all 0.3s ease;
+    border-radius: var(--radius-xl);
+    transition: var(--transition);
 }
 
-/* Card de Catálogo (Roxo) */
+/* Card de Catálogo (Home) */
 .card-catalog {
     display: block;
     cursor: pointer;
-    border: 2px solid #7000ff; /* neon-purple */
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid rgba(139, 92, 246, 0.3); /* purple accent */
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transition: var(--transition);
 }
 
 .card-catalog:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(112, 0, 255, 0.4);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.6);
 }
 
 .card-catalog .img-container {
-    border: 2px solid #00f2ff;
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: var(--transition);
+}
+
+.card-catalog:hover .img-container {
+    border-color: rgba(139, 92, 246, 0.4);
 }
 
 .catalog-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem 1.5rem;
-    border: 1px solid #00f2ff;
+    padding: 0.6rem 1.5rem;
+    border: 1px solid rgba(6, 182, 212, 0.4);
     border-radius: 9999px;
-    color: #00f2ff;
-    font-weight: bold;
-    background-color: rgba(0, 0, 0, 0.5);
-    transition: all 0.3s;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    background-color: rgba(0, 0, 0, 0.3);
+    transition: var(--transition);
 }
 
 .card-catalog:hover .catalog-btn {
-    background-color: #00f2ff;
-    color: black;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    border-color: transparent;
+    color: #000;
+    box-shadow: var(--glow-cyan);
 }
 
 /* Card de Produto Solto (Cyan) */
 .card-product {
     display: flex;
     flex-direction: column;
-    border: 1px solid #00f2ff;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    transition: var(--transition);
+}
+
+.card-product:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-accent);
+    box-shadow: 0 10px 30px rgba(6, 182, 212, 0.15);
 }
 
 .badge-best-value {
@@ -90,38 +129,68 @@
     top: -0.75rem;
     left: 50%;
     transform: translateX(-50%);
-    padding: 0.25rem 0.75rem;
+    padding: 0.3rem 1rem;
     border-radius: 9999px;
     font-size: 0.75rem;
-    font-weight: bold;
-    background-color: #00f2ff;
-    color: black;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    color: #000;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    z-index: 10;
 }
 
-.btn-buy {
-    display: block;
-    width: 100%;
-    padding: 0.75rem 0;
-    background-color: #00f2ff;
-    color: black;
-    font-weight: bold;
-    border-radius: 0.5rem;
+/* --- Cards de Benefícios / Stats --- */
+.card-stat {
     text-align: center;
-    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
-    transition: opacity 0.3s;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    transition: var(--transition);
 }
 
-.btn-buy:hover { opacity: 0.8; }
+.card-stat:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-accent);
+    background: var(--bg-card-hover);
+}
 
-/* --- Cards de Benefícios --- */
 .card-benefit {
     text-align: center;
-    padding: 1rem;
-    border: 2px solid #00f2ff;
-    border-radius: 0.5rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    transition: var(--transition);
+    height: 100%;
 }
 
-@media (min-width: 768px) {
-    .card-benefit { padding: 1.5rem; }
+.card-benefit:hover {
+    transform: translateY(-4px);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15);
+}
+
+.benefit-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(139, 92, 246, 0.1));
+    border: 1px solid rgba(255,255,255,0.05);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+}
+
+.card-benefit:hover .benefit-icon {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2));
+    border-color: rgba(139, 92, 246, 0.3);
 }

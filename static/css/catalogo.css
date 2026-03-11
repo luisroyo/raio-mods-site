@@ -3,55 +3,138 @@
     min-height: 60vh;
 }
 
-/* Card de Produto no Catálogo - Glassmorphism */
+/* --- Cabeçalho de Categoria Premium --- */
+.category-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.15) 0%, transparent 100%);
+    border-left: 4px solid var(--accent-cyan);
+    border-radius: 0 12px 12px 0;
+    margin-bottom: 2rem;
+}
+
+.category-header h2 {
+    font-family: 'Sora', sans-serif;
+    margin: 0;
+    padding: 0;
+    border: none; /* override antigo */
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+@media (min-width: 768px) {
+    .category-header h2 { font-size: 1.875rem; }
+}
+
+/* Card de Produto no Catálogo - Glassmorphism Premium */
 .catalog-product-card {
-    background: rgba(17, 24, 39, 0.5);
-    border: 1px solid rgba(0, 242, 255, 0.35);
-    backdrop-filter: blur(12px);
-    transition: all 0.3s ease;
-    border-radius: 0.75rem;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
     padding: 1.5rem;
     position: relative;
     display: flex;
     flex-direction: column;
+    transition: var(--transition);
 }
 
 .catalog-product-card:hover {
-    transform: translateY(-6px);
-    border-color: rgba(0, 242, 255, 0.6);
-    box-shadow: 0 0 25px rgba(0, 242, 255, 0.25), 0 0 40px rgba(0, 242, 255, 0.1);
+    transform: translateY(-8px);
+    border-color: var(--border-accent);
+    box-shadow: 0 15px 35px rgba(6, 182, 212, 0.15);
+    background: var(--bg-card-hover);
 }
 
+/* Container de Imagem Refinado */
 .catalog-img-container {
-    margin-bottom: 1rem;
-    border-radius: 0.5rem;
+    position: relative;
+    margin-bottom: 1.25rem;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     aspect-ratio: 1 / 1;
-    border: 1px solid #00f2ff;
-    background-color: black;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: var(--transition);
 }
 
+.catalog-product-card:hover .catalog-img-container {
+    border-color: rgba(6, 182, 212, 0.3);
+}
+
+.catalog-img-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+/* Badge Promo */
+.badge-promo {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10;
+    padding: 0.3rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--accent-amber), #d97706);
+    color: #000;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Botão Comprar Catálogo */
 .catalog-btn-buy {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     width: 100%;
-    padding: 0.75rem;
-    background-color: #00f2ff; /* neon-cyan */
-    color: black;
-    font-weight: bold;
-    border-radius: 0.5rem;
-    text-align: center;
-    transition: all 0.3s;
-    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+    padding: 0.875rem;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    color: #000;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 12px;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.25);
+    border: none;
+    cursor: pointer;
 }
 
 .catalog-btn-buy:hover {
-    opacity: 0.8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+    filter: brightness(1.1);
 }
 
-/* Área Vazia */
+/* Título e Textos */
+.catalog-title {
+    font-family: 'Sora', sans-serif;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.catalog-product-card:hover .catalog-title {
+    color: var(--accent-cyan);
+}
+
+/* Área Vazia Glass */
 .empty-catalog {
     text-align: center;
-    padding: 3rem;
-    border: 2px solid #00f2ff;
-    border-radius: 0.5rem;
+    padding: 4rem 2rem;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px dashed var(--border-accent);
+    border-radius: var(--radius-xl);
 }

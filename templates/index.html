@@ -7,13 +7,14 @@
 {% endblock %}
 
 {% block content %}
-<section class="text-center py-8 md:py-16 mb-8 md:mb-16 hero-gradient border-y-2 border-neon-cyan" data-aos="fade-up">
-    <div class="container mx-auto px-4">
-        <h2 class="hero-title text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold neon-cyan mb-3 md:mb-4 px-2">
+<section class="hero-section" data-aos="fade-up">
+    <div class="hero-gradient-overlay"></div>
+    <div class="container mx-auto px-4 hero-content">
+        <h2 class="hero-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-gradient mb-4 px-2 tracking-tight">
             DOMINE O JOGO
         </h2>
-        <p class="hero-subtitle text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 px-2">
-            Escolha seu jogo abaixo para ver os hacks disponíveis
+        <p class="hero-subtitle text-base md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 px-2 max-w-2xl mx-auto leading-relaxed">
+            Escolha seu jogo abaixo para ver os hacks e mods disponíveis
         </p>
     </div>
 </section>
@@ -29,7 +30,7 @@
         {# LÓGICA DE CATÁLOGO (PASTAS) #}
         {% if product.id in catalog_ids %}
         <a href="{{ url_for('public.catalogo', parent_id=product.id) }}"
-            class="group block rounded-xl p-6 relative hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-neon-purple/50 bg-gray-900/40 backdrop-blur-md hover:border-neon-purple hover:shadow-[0_0_25px_rgba(112,0,255,0.3)]"
+            class="card-base card-catalog" data-aos="fade-up">
             data-aos="fade-up">
             <div
                 class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50">
@@ -42,48 +43,35 @@
             </div>
             {% if product.image %}
             <div
-                class="mb-4 w-full aspect-square rounded-lg overflow-hidden bg-black/50 border border-white/10 group-hover:border-neon-cyan/50 transition-colors">
+            <div class="img-container mb-4 w-full aspect-square overflow-hidden group-hover:border-accent-purple transition-colors">
                 <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
-                    class="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500">
+                    class="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500">
             </div>
             {% endif %}
             <div class="text-center">
-                <h3 class="text-2xl md:text-3xl font-bold neon-cyan mb-2 group-hover:text-white transition-colors">{{
-                    product.name }}</h3>
-                <p class="text-gray-400 text-sm mb-4 min-h-[40px]">{{ product.description }}</p>
-                <span
-                    class="inline-flex items-center gap-2 px-6 py-2 border border-neon-cyan/50 rounded-full text-neon-cyan font-bold bg-black/40 group-hover:bg-neon-cyan group-hover:text-black transition-all">
-                    📂 ABRIR OPÇÕES
-                </span>
+                <h3 class="text-2xl md:text-3xl font-bold catalog-title mb-2">{{ product.name }}</h3>
+                <p class="text-gray-400 text-sm mb-5 min-h-[40px] leading-relaxed">{{ product.description }}</p>
+                <div class="catalog-btn">
+                    <span>📂 ABRIR CATÁLOGO</span>
+                </div>
             </div>
         </a>
 
         {# LÓGICA DE PRODUTOS SOLTOS #}
         {% else %}
-        <div class="group rounded-xl p-6 relative flex flex-col border border-neon-cyan/30 bg-gray-900/40 backdrop-blur-md hover:border-neon-cyan/60 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,242,255,0.15)]"
-            data-aos="fade-up">
+        <div class="card-base card-product group" data-aos="fade-up">
             {% if loop.index == 3 %}
-            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span
-                    class="px-3 py-1 rounded-full text-xs font-bold shadow-lg bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50">MELHOR
-                    VALOR ✨</span>
-            </div>
+            <span class="badge-best-value">MELHOR VALOR ✨</span>
             {% endif %}
-            <div
-                class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50">
-                <span class="relative flex h-2 w-2">
-                    <span
-                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                <span class="text-[10px] font-bold text-green-400 tracking-wider">ATUALIZADO</span>
+            <div class="badge-status absolute top-4 right-4 z-10">
+                <div class="dot"></div>
+                ATUALIZADO
             </div>
 
             {% if product.image %}
-            <div
-                class="mb-4 w-full aspect-square rounded-lg overflow-hidden bg-black/50 border border-white/10 group-hover:border-neon-cyan/50 transition-colors">
+            <div class="mb-5 w-full aspect-square rounded-[14px] overflow-hidden bg-black/40 border border-white/5 group-hover:border-accent-cyan transition-colors">
                 <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
-                    class="w-full h-full object-contain p-2 hover:scale-105 transition-transform duration-500">
+                    class="w-full h-full object-contain p-3 hover:scale-110 transition-transform duration-500">
             </div>
             {% endif %}
             {% if product.promo_price or product.promo_label %}
@@ -92,24 +80,24 @@
                     product.promo_label or 'PROMO' }}</span>
             </div>
             {% endif %}
-            <h3 class="text-xl font-bold neon-cyan mb-2">{{ product.name }}</h3>
-            <p class="text-gray-300 mb-4 text-sm flex-grow">{{ product.description }}</p>
+            <h3 class="text-xl font-bold text-gradient mb-2">{{ product.name }}</h3>
+            <p class="text-gray-400 mb-5 text-sm flex-grow leading-relaxed">{{ product.description }}</p>
             <div class="mt-auto">
                 {% if product.promo_price %}
                 <p class="text-lg text-gray-500 line-through mb-0.5">{{ product.price }}</p>
-                <p class="product-price text-3xl font-bold neon-green mb-1">{{ product.promo_price }}</p>
+                <p class="price-shimmer text-3xl font-extrabold mb-1">{{ product.promo_price }}</p>
                 {% else %}
-                <p class="product-price text-3xl font-bold neon-green mb-1">{{ product.price }}</p>
+                <p class="price-shimmer text-3xl font-extrabold mb-1">{{ product.price }}</p>
                 {% endif %}
                 {% if product.tagline %}
-                <p class="text-xs text-gray-400 mb-4">{{ product.tagline }}</p>
+                <p class="text-xs text-gray-500 mb-5 font-medium">{{ product.tagline }}</p>
                 {% endif %}
 
                 {% set display_price = product.promo_price or product.price %}
                 {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
                 <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')"
-                    class="block w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:opacity-90 transition-all text-center shadow-[0_0_10px_rgba(0,242,255,0.3)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] flex items-center justify-center gap-2">
-                    <span>🛒 Comprar Agora</span>
+                    class="btn-gradient w-full flex items-center justify-center gap-2">
+                    🛒 Comprar Agora
                 </button>
                 {% else %}
                 <div class="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-center">

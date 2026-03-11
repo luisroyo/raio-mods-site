@@ -30,6 +30,11 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
+    <!-- Google Fonts: Sora & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 
     {% block analytics %}{% endblock %}
@@ -58,15 +63,15 @@
 
 <body class="circuit-pattern">
     <header
-        class="pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pb-4 mb-4 md:mb-8 sticky top-0 bg-[#050505] bg-opacity-95 backdrop-blur-sm z-50 border-b border-neon-cyan border-opacity-30">
+        class="pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pb-4 mb-4 md:mb-8 sticky top-0 bg-black/40 backdrop-blur-md z-50 border-b border-white/5 shadow-sm">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center">
-                <a href="{{ url_for('public.index') }}" class="flex items-center gap-2 md:gap-3">
+                <a href="{{ url_for('public.index') }}" class="flex items-center gap-2 md:gap-3 group">
                     <img src="{{ url_for('static', filename='logo.png') }}" alt="RAIO MODS Logo"
-                        class="h-10 w-10 md:h-12 md:w-12" style="filter: drop-shadow(0 0 10px #00f2ff);">
+                        class="h-10 w-10 md:h-12 md:w-12 transition-transform group-hover:scale-105" style="filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.5));">
                     <div>
-                        <h1 class="text-lg md:text-2xl font-bold neon-cyan">RAIO MODS</h1>
-                        <p class="text-[10px] md:text-xs text-gray-400">SALES GROUP</p>
+                        <h1 class="text-lg md:text-2xl font-extrabold text-gradient tracking-tight" style="font-family: 'Sora', sans-serif;">RAIO MODS</h1>
+                        <p class="text-[10px] md:text-xs text-gray-400 font-medium tracking-widest uppercase">SALES GROUP</p>
                     </div>
                 </a>
 
@@ -130,7 +135,7 @@
 
     {% block content %}{% endblock %}
 
-    <footer class="border-t-2 border-neon-cyan py-6 md:py-8 mt-8 md:mt-12">
+    <footer class="mt-8 md:mt-12 bg-black/40 backdrop-blur-md border-t border-white/5 py-8 md:py-12">
         <div class="container mx-auto px-4">
             <div class="text-center mb-4 md:mb-6">
                 <p class="neon-cyan mb-3 md:mb-4 text-sm md:text-base px-2">© 2026 <span class="neon-green">RAIO
@@ -169,18 +174,18 @@
     </footer>
 
     <div id="checkoutModal"
-        class="fixed inset-0 bg-black/90 z-[200] hidden backdrop-blur-sm flex items-center justify-center p-4">
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4">
         <div
-            class="bg-black border-2 border-neon-cyan rounded-xl w-full max-w-md overflow-hidden shadow-[0_0_30px_rgba(0,242,255,0.2)] relative">
+            class="glass-card w-full max-w-md overflow-hidden relative shadow-2xl">
 
-            <button onclick="closeCheckout()" class="absolute top-3 right-3 text-gray-400 hover:text-white z-10">
+            <button onclick="closeCheckout()" class="absolute top-3 right-3 text-gray-400 hover:text-white z-10 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
 
-            <div class="bg-neon-cyan/10 p-4 border-b border-neon-cyan/30">
-                <h3 class="text-xl font-bold text-neon-cyan flex items-center gap-2">
+            <div class="bg-white/5 p-4 border-b border-white/10">
+                <h3 class="text-xl font-bold flex items-center gap-2 text-gradient" style="font-family: 'Sora', sans-serif;">
                     🛒 Checkout Rápido
                 </h3>
                 <p id="modalProductName" class="text-white text-sm mt-1 font-semibold">Produto...</p>
@@ -214,13 +219,13 @@
 
                 <div class="grid grid-cols-1 gap-3 mt-4">
                     <button onclick="startPayment('pix')" id="btnPayPix"
-                        class="w-full bg-neon-cyan text-black font-bold py-3 rounded-lg hover:bg-white transition-all flex justify-center items-center gap-2">
-                        <img src="https://logopng.com.br/logos/pix-106.svg" class="h-5 w-5" alt="Pix">
-                        <span>PIX (Preço Normal)</span>
+                        class="w-full btn-gradient flex justify-center items-center gap-2 py-3 rounded-xl font-bold">
+                        <img src="https://logopng.com.br/logos/pix-106.svg" class="h-5 w-5" alt="Pix" style="filter: brightness(0);">
+                        <span class="text-black">PIX (Preço Normal)</span>
                     </button>
 
                     <button onclick="startPayment('card')" id="btnPayCard"
-                        class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-700 border border-gray-600 transition-all flex justify-center items-center gap-2">
+                        class="w-full bg-white/5 text-white font-bold py-3 rounded-xl hover:bg-white/10 border border-white/10 transition-all flex justify-center items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -255,7 +260,7 @@
 
             <!-- PASSO 2.5: REVELAR CHAVE (Prova de Consumo) -->
             <div id="step-reveal" class="p-6 hidden text-center">
-                <div class="w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(0,242,255,0.5)] animate-pulse">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); animation: pulse-glow 2s infinite;">
                     <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                     </svg>
@@ -265,7 +270,7 @@
                 <p class="text-gray-500 text-xs mb-6">Ao clicar no botão abaixo, você confirma o recebimento do produto digital.</p>
 
                 <button id="btnRevealKey" onclick="revealKey()"
-                    class="w-full bg-gradient-to-r from-cyan-500 to-green-500 text-black font-bold py-4 rounded-lg hover:from-cyan-400 hover:to-green-400 transition-all text-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)]">
+                    class="w-full btn-gradient py-4 text-lg">
                     🔓 Revelar Minha Chave
                 </button>
 

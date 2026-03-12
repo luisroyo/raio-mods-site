@@ -44,16 +44,10 @@ function openEditModal(
     const parentSel = document.getElementById('edit_parent_id');
 
     if (parentDiv && parentSel) {
-        // Se for catálogo, esconde a opção de escolher pai
-        if (isCat == 1) {
-            parentDiv.style.display = 'none';
-            parentSel.value = '';
-        } else {
-            parentDiv.style.display = 'block';
-            parentSel.value = pid || '';
-            // Desabilita a opção de selecionar a si mesmo como pai (evita loop)
-            [...parentSel.options].forEach(o => o.disabled = o.value == id);
-        }
+        parentDiv.style.display = 'block';
+        parentSel.value = pid || '';
+        // Desabilita a opção de selecionar a si mesmo como pai (evita loop)
+        [...parentSel.options].forEach(o => o.disabled = o.value == id);
     }
 
     document.getElementById('editModal')?.classList.add('modal-active');

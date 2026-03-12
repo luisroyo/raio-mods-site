@@ -109,16 +109,16 @@ def _get_admin_data():
         pid = p['parent_id'] if 'parent_id' in keys else None
         is_cat = p['is_catalog'] if 'is_catalog' in keys else 0
 
-        if pid is None and (is_cat == 1 or p['id'] in legacy_catalog_ids):
+        if is_cat == 1 or p['id'] in legacy_catalog_ids:
             parent_products.append(p_dict)
+            if p['id'] not in subproducts_by_parent:
+                subproducts_by_parent[p['id']] = []
+            if p['id'] not in subproducts_by_category:
+                subproducts_by_category[p['id']] = {}
 
         if pid is None:
             if is_cat == 1 or p['id'] in legacy_catalog_ids:
                 catalogs.append(p_dict)
-                if p['id'] not in subproducts_by_parent:
-                    subproducts_by_parent[p['id']] = []
-                if p['id'] not in subproducts_by_category:
-                    subproducts_by_category[p['id']] = {}
             else:
                 simple_products.append(p_dict) 
         else:

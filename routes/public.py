@@ -113,7 +113,12 @@ def catalogo(parent_id):
         'SELECT * FROM products WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
         (parent_id, per_page, offset)
     ).fetchall()
-    child_ids = [p['id'] for p in children]
+    catalog_ids = set()
+    for p in children:
+        is_cat = p['is_catalog'] if 'is_catalog' in p.keys() else 0
+        if is_cat == 1: catalog_ids.add(p['id'])
+        
+    child_ids = [p['id'] for p in children if p['id'] not in catalog_ids]
     stock_map = _get_stock_map(conn, child_ids)
     whatsapp_contact = _get_whatsapp_from_config(conn)
     total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
@@ -139,7 +144,7 @@ def catalogo(parent_id):
                           products_by_category=products_by_category,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
                           page=page, total_pages=total_pages, total=total,
-                          seo_title=seo_title, seo_description=seo_description, seo_image=seo_image)
+                          seo_title=seo_title, seo_description=seo_description, seo_image=seo_image, catalog_ids=catalog_ids)
 
 @public_bp.route('/links')
 def links():

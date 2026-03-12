@@ -26,6 +26,33 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {% for product in category_products %}
+            {% if product.id in catalog_ids %}
+            <a href="{{ url_for('public.catalogo', parent_id=product.id) }}"
+                class="card-base card-catalog catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}" style="display: block; text-decoration: none;">
+                <div
+                    class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="text-[10px] font-bold text-green-400 tracking-wider">ON</span>
+                </div>
+                {% if product.image %}
+                <div class="catalog-img-container mb-3 w-10/12 mx-auto aspect-square overflow-hidden group-hover:border-accent-purple transition-colors">
+                    <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
+                        class="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500">
+                </div>
+                {% endif %}
+                <div class="text-center">
+                    <h3 class="text-xl md:text-2xl font-bold catalog-title mb-1">{{ product.name }}</h3>
+                    <p class="text-gray-400 text-xs mb-4 min-h-[30px] leading-relaxed">{{ product.description }}</p>
+                    <div class="catalog-btn py-1.5 px-4 text-xs font-bold w-full mx-auto inline-block border border-purple-500 rounded text-purple-400 hover:bg-purple-500 hover:text-white transition">
+                        <span>📂 ABRIR CATÁLOGO</span>
+                    </div>
+                </div>
+            </a>
+            {% else %}
             <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
                 <div class="badge-status absolute top-4 right-4 z-10">
                     <div class="dot"></div>
@@ -83,6 +110,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
             {% endfor %}
         </div>
     </div>
@@ -90,6 +118,33 @@
     {% else %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-20">
         {% for product in products %}
+        {% if product.id in catalog_ids %}
+        <a href="{{ url_for('public.catalogo', parent_id=product.id) }}"
+            class="card-base card-catalog catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}" style="display: block; text-decoration: none;">
+            <div
+                class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50">
+                <span class="relative flex h-2 w-2">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span class="text-[10px] font-bold text-green-400 tracking-wider">ON</span>
+            </div>
+            {% if product.image %}
+            <div class="catalog-img-container mb-3 w-10/12 mx-auto aspect-square overflow-hidden group-hover:border-accent-purple transition-colors">
+                <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
+                    class="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500">
+            </div>
+            {% endif %}
+            <div class="text-center">
+                <h3 class="text-xl md:text-2xl font-bold catalog-title mb-1">{{ product.name }}</h3>
+                <p class="text-gray-400 text-xs mb-4 min-h-[30px] leading-relaxed">{{ product.description }}</p>
+                <div class="catalog-btn py-1.5 px-4 text-xs font-bold w-full mx-auto inline-block border border-purple-500 rounded text-purple-400 hover:bg-purple-500 hover:text-white transition">
+                    <span>📂 ABRIR CATÁLOGO</span>
+                </div>
+            </div>
+        </a>
+        {% else %}
         <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
             <div class="badge-status absolute top-4 right-4 z-10">
                 <div class="dot"></div>
@@ -147,6 +202,7 @@
             </div>
             {% endif %}
         </div>
+        {% endif %}
         {% endfor %}
     </div>
     {% endif %}

@@ -148,10 +148,8 @@ def edit_product(pid):
         
         pid_val = request.form.get('parent_id')
         
-        # Se for catálogo, não pode ter pai
-        if is_catalog == 1:
-            pid_val = None
-        elif pid_val == str(pid) or not pid_val or str(pid_val).strip() == '':
+        # Opcional ter pai, mesmo se for catalogo
+        if pid_val == str(pid) or not pid_val or str(pid_val).strip() == '':
             pid_val = None
         
         img = handle_image_upload(request, existing.get('image', ''))

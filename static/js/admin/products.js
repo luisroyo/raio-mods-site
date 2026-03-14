@@ -74,3 +74,16 @@ async function deleteProduct(id) {
     await fetch(`/admin/delete/${id}`, { method: 'POST' });
     location.reload();
 }
+
+// Copia para a área de transferência o link direto de pagamento de um produto
+function copyPaymentLink(productId) {
+    const url = `${window.location.origin}/pagamento?product_id=${productId}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url)
+            .then(() => alert('Link de pagamento copiado:\n' + url))
+            .catch(() => alert('Não foi possível copiar automaticamente. Link:\n' + url));
+    } else {
+        // Fallback simples
+        alert('Link de pagamento:\n' + url);
+    }
+}

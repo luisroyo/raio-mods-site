@@ -75,9 +75,12 @@ async function deleteProduct(id) {
     location.reload();
 }
 
-// Copia para a área de transferência o link direto de pagamento de um produto
-function copyPaymentLink(productId) {
-    const url = `${window.location.origin}/pagamento?product_id=${productId}`;
+// Copia para a área de transferência o link do Mercado Pago (caso configurado no produto).
+// Se não houver link do Mercado Pago, usa o link da página de pagamento da loja como fallback.
+function copyPaymentLink(productId, mpUrl) {
+    const url = mpUrl && mpUrl.trim()
+        ? mpUrl.trim()
+        : `${window.location.origin}/pagamento?product_id=${productId}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url)
             .then(() => alert('Link de pagamento copiado:\n' + url))

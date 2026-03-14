@@ -179,14 +179,32 @@ def pagamento():
         pix_copia_cola = (config['pix_copia_cola'] or '').strip() if 'pix_copia_cola' in config.keys() and (config['pix_copia_cola'] or '').strip() else ''
     pix_qr_data = {'pix_key': pix_key, 'pix_copia_cola': pix_copia_cola}
 
-    produto_nome = request.args.get('produto')
+    # Suporta duas formas de link:
+    # 1) /pagamento?product_id=123  (recomendado para link direto ao cliente)
+    # 2) /pagamento?produto=Nome   (legado, por nome)
     product_data = None
     product_stock = 0
-    if produto_nome:
-        product_data = conn.execute('SELECT * FROM products WHERE name = ?', (produto_nome,)).fetchone()
-        if product_data:
-            row = conn.execute('SELECT COUNT(*) as total FROM product_keys WHERE product_id = ? AND is_used = 0', (product_data['id'],)).fetchone()
-            product_stock = row['total'] if row else 0
+
+    product_id = request.args.get('product_id', type=int)
+    produto_nome = request.args.get('produto')
+
+    if product_id:
+        product_data = conn.execute(
+            'SELECT * FROM products WHERE id = ? AND is_active = 1',
+            (product_id,)
+        ).fetchone()
+    elif produto_nome:
+        product_data = conn.execute(
+            'SELECT * FROM products WHERE name = ? AND is_active = 1',
+            (produto_nome,)
+        ).fetchone()
+
+    if product_data:
+        row = conn.execute(
+            'SELECT COUNT(*) as total FROM product_keys WHERE product_id = ? AND is_used = 0',
+            (product_data['id'],)
+        ).fetchone()
+        product_stock = row['total'] if row else 0
     whatsapp_contact = _get_whatsapp_from_config(conn)
     whatsapp_contact = _get_whatsapp_from_config(conn)
     conn.close()

@@ -6,10 +6,28 @@ function openConfigModal() {
     document.getElementById('configModal')?.classList.add('modal-active');
 }
 
-function openAddSubproductModal(pid, name) {
+// Define se o item será Produto (is_catalog=0) ou Subcategoria (is_catalog=1)
+function setSubproductType(type) {
+    const isCatInput = document.getElementById('add_sub_is_catalog');
+    if (!isCatInput) return;
+    isCatInput.value = type === 'category' ? '1' : '0';
+}
+
+function openAddSubproductModal(pid, name, isCategory) {
     setVal('sub_pid', pid);
     const lbl = document.getElementById('sub_cat_name');
     if (lbl) lbl.innerText = name;
+
+    // Ajusta o tipo padrão ao abrir
+    if (typeof isCategory !== 'undefined' && isCategory) {
+        const catRadio = document.querySelector('input[name="sub_item_type"][value="category"]');
+        if (catRadio) catRadio.checked = true;
+        setSubproductType('category');
+    } else {
+        const prodRadio = document.querySelector('input[name="sub_item_type"][value="product"]');
+        if (prodRadio) prodRadio.checked = true;
+        setSubproductType('product');
+    }
 
     document.getElementById('addSubproductModal')?.classList.add('modal-active');
 }

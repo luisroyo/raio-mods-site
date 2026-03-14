@@ -68,22 +68,31 @@
                         class="w-24 h-24 mx-auto rounded-full object-contain border-4 border-purple-500 mb-3">
                     <h3 class="text-xl font-bold text-purple-400">{{ catalog.name }}</h3>
                     <p class="text-gray-500 text-sm">{{ subproducts|length }} produtos</p>
-                    <div class="flex gap-2 justify-center mt-3">
-                        <button type="button"
-                            onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }}, {{ (catalog.is_active if catalog.is_active is defined else 1)|tojson|forceescape }})'
-                            class="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-500">✏️</button>
-                        {% if catalog.is_active is defined and catalog.is_active == 0 %}
-                        <span class="px-2 py-1 bg-gray-600 text-white text-xs rounded"
-                            title="Oculto na loja">👁️‍🗨️</span>
-                        {% endif %}
-                        <button type="button" onclick='deleteProduct({{ catalog.id }})'
-                            class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-500">🗑️</button>
+                    <div class="flex flex-col gap-2 mt-3">
+                        <div class="flex gap-2 justify-center">
+                            <button type="button"
+                                onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }}, {{ (catalog.is_active if catalog.is_active is defined else 1)|tojson|forceescape }})'
+                                class="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-500">✏️</button>
+                            {% if catalog.is_active is defined and catalog.is_active == 0 %}
+                            <span class="px-2 py-1 bg-gray-600 text-white text-xs rounded"
+                                title="Oculto na loja">👁️‍🗨️</span>
+                            {% endif %}
+                            <button type="button" onclick='deleteProduct({{ catalog.id }})'
+                                class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-500">🗑️</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button"
+                                onclick='openAddSubproductModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, false)'
+                                class="w-full py-2 bg-green-600 text-black font-bold text-xs rounded hover:bg-green-500">
+                                ➕ Produto
+                            </button>
+                            <button type="button"
+                                onclick='openAddSubproductModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, true)'
+                                class="w-full py-2 bg-blue-600 text-white font-bold text-xs rounded hover:bg-blue-500">
+                                📂 Subcategoria
+                            </button>
+                        </div>
                     </div>
-                    <button type="button"
-                        onclick='openAddSubproductModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }})'
-                        class="w-full mt-3 py-2 bg-green-600 text-black font-bold text-sm rounded hover:bg-green-500">
-                        ➕ Add Produto
-                    </button>
                 </div>
                 <div class="md:w-3/4">
                     <h4 class="font-bold text-gray-300 mb-3">Produtos em {{ catalog.name }}:</h4>

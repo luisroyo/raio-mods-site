@@ -50,6 +50,9 @@ def add_manual_sale():
         if created_at:
             # Substituir T por espaço para formato SQL
             created_at = created_at.replace('T', ' ')
+            # Se for apenas data (YYYY-MM-DD), adicionar meio-dia para evitar problemas de fuso no JS
+            if len(created_at) == 10:
+                created_at += " 12:00:00"
             conn.execute(
                 'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at) VALUES (?,?,?,?,?,?,?)',
                 (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at)
@@ -206,6 +209,8 @@ def edit_manual_sale(sale_id):
         
         if created_at:
             created_at = created_at.replace('T', ' ')
+            if len(created_at) == 10:
+                created_at += " 12:00:00"
             conn.execute('''
                 UPDATE manual_sales 
                 SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, notes=?, created_at=?

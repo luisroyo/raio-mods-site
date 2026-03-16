@@ -164,7 +164,20 @@ async function loadManualSales() {
             // Custo pode ser 0 para online se não calculado
             const totalCusto = (sale.quantity * sale.cost_per_unit_brl).toFixed(2);
             const lucro = (sale.profit).toFixed(2);
-            const dataStr = new Date(sale.created_at).toLocaleDateString('pt-BR') + ' ' + new Date(sale.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            let dataStr = '';
+            const dt = new Date(sale.created_at);
+            
+            if (sale.type === 'online') {
+                dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            } else {
+                // Para manual, forçar interpretação como data local ou usar split se for YYYY-MM-DD
+                if (sale.created_at.length >= 10) {
+                    const parts = sale.created_at.split(' ')[0].split('-');
+                    dataStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                } else {
+                    dataStr = dt.toLocaleDateString('pt-BR');
+                }
+            }
             
             let typeBadge = '';
             let clientInfo = '';

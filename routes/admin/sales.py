@@ -90,6 +90,7 @@ def list_manual_sales():
             SELECT 
                 'manual' as type,
                 ms.id, 
+                ms.product_id,
                 p.name as product_name, 
                 p.category,
                 ms.quantity, 
@@ -111,6 +112,7 @@ def list_manual_sales():
             SELECT 
                 'online' as type,
                 o.id, 
+                o.product_id,
                 p.name as product_name,
                 p.category,
                 1 as quantity,

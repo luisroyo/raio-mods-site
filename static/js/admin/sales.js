@@ -211,11 +211,11 @@ function openEditManualSale(id, pid, qty, price, cost, notes, createdAt) {
     document.getElementById('edit_sale_cost').value = cost;
     document.getElementById('edit_sale_notes').value = notes || '';
     
-    // Formatar data para o input datetime-local (YYYY-MM-DDTHH:MM)
+    // Formatar data para o input date (YYYY-MM-DD)
     if (createdAt) {
         const date = new Date(createdAt);
         const pad = (n) => n.toString().padStart(2, '0');
-        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
         document.getElementById('edit_sale_created_at').value = formatted;
     } else {
         document.getElementById('edit_sale_created_at').value = '';

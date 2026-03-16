@@ -178,7 +178,7 @@ async function loadManualSales() {
                 typeBadge = '<span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs border border-purple-500/30">Manual</span>';
                 clientInfo = `<span class="text-xs text-gray-400 italic">${sale.client_info || '-'}</span>`;
                 actions = `
-                    <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.client_info || "")})' class="text-blue-400 hover:text-blue-300 mr-2" title="Editar">✏️</button>
+                    <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.client_info || "")}, ${JSON.stringify(sale.created_at)})' class="text-blue-400 hover:text-blue-300 mr-2" title="Editar">✏️</button>
                     <button onclick="deleteManualSale(${sale.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
                 `;
             }
@@ -203,13 +203,23 @@ async function loadManualSales() {
     }
 }
 
-function openEditManualSale(id, pid, qty, price, cost, notes) {
+function openEditManualSale(id, pid, qty, price, cost, notes, createdAt) {
     document.getElementById('edit_sale_id').value = id;
     document.getElementById('edit_sale_product_id').value = pid;
     document.getElementById('edit_sale_quantity').value = qty;
     document.getElementById('edit_sale_unit_price').value = price;
     document.getElementById('edit_sale_cost').value = cost;
     document.getElementById('edit_sale_notes').value = notes || '';
+    
+    // Formatar data para o input datetime-local (YYYY-MM-DDTHH:MM)
+    if (createdAt) {
+        const date = new Date(createdAt);
+        const pad = (n) => n.toString().padStart(2, '0');
+        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        document.getElementById('edit_sale_created_at').value = formatted;
+    } else {
+        document.getElementById('edit_sale_created_at').value = '';
+    }
     
     const modal = document.getElementById('editManualSaleModal');
     modal?.classList.remove('hidden');

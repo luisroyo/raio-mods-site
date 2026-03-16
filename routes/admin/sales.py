@@ -21,6 +21,7 @@ def add_manual_sale():
         else:
             cost_per_unit_brl = float(str(raw_cost).replace('R$', '').replace(',', '.'))
         notes = request.form.get('notes', '').strip()
+        created_at = request.form.get('created_at')
         
         if not product_id or quantity <= 0 or unit_price <= 0:
             return jsonify({'error': 'Dados inválidos'}), 400
@@ -46,10 +47,18 @@ def add_manual_sale():
                 print(f"Erro ao calcular custo automático: {e}")
         
         conn = get_db_connection()
-        conn.execute(
-            'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes) VALUES (?,?,?,?,?,?)',
-            (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes)
-        )
+        if created_at:
+            # Substituir T por espaço para formato SQL
+            created_at = created_at.replace('T', ' ')
+            conn.execute(
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at) VALUES (?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at)
+            )
+        else:
+            conn.execute(
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes) VALUES (?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes)
+            )
         conn.commit()
         conn.close()
         
@@ -185,6 +194,7 @@ def edit_manual_sale(sale_id):
         unit_price = float(str(request.form.get('unit_price', 0)).replace('R$', '').replace(',', '.'))
         cost_per_unit_brl = float(str(request.form.get('cost_per_unit_brl', 0)).replace('R$', '').replace(',', '.'))
         notes = request.form.get('notes', '').strip()
+        created_at = request.form.get('created_at')
         
         if not product_id or quantity <= 0 or unit_price <= 0:
             conn.close()
@@ -192,11 +202,19 @@ def edit_manual_sale(sale_id):
         
         total_price = quantity * unit_price
         
-        conn.execute('''
-            UPDATE manual_sales 
-            SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, notes=?
-            WHERE id=?
-        ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, sale_id))
+        if created_at:
+            created_at = created_at.replace('T', ' ')
+            conn.execute('''
+                UPDATE manual_sales 
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, notes=?, created_at=?
+                WHERE id=?
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at, sale_id))
+        else:
+            conn.execute('''
+                UPDATE manual_sales 
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, notes=?
+                WHERE id=?
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, sale_id))
         
         conn.commit()
         conn.close()

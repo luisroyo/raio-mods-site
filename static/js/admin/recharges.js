@@ -73,7 +73,11 @@ async function loadPanelRecharges() {
 
         tbody.innerHTML = recharges.data.map((r, index) => {
             const totalBRL = (r.total_cost_usd * r.dolar_rate).toFixed(2);
-            const data = new Date(r.created_at).toLocaleDateString('pt-BR');
+            let dataStr = '';
+            if (r.created_at) {
+                const parts = r.created_at.split(' ')[0].split('-');
+                dataStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
 
             // Using index to pass to openEditPanelRecharge
             return `<tr class="border-b border-orange-500/30 hover:bg-orange-900/20">
@@ -83,7 +87,7 @@ async function loadPanelRecharges() {
                 <td class="p-2 text-right">R$ ${r.dolar_rate.toFixed(2)}</td>
                 <td class="p-2 text-right font-bold text-red-400">R$ ${totalBRL}</td>
                 <td class="p-2 text-sm">${r.notes || '-'}</td>
-                <td class="p-2 text-center text-xs">${data}</td>
+                <td class="p-2 text-center text-xs">${dataStr}</td>
                 <td class="p-2 text-center flex justify-center gap-2">
                     <button type="button" onclick="openEditPanelRecharge(${index})" class="text-blue-400 hover:text-blue-300" title="Editar">✏️</button>
                     <button type="button" onclick="deletePanelRecharge(${r.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
@@ -120,6 +124,14 @@ function openEditPanelRecharge(index) {
     document.getElementById('edit_recharge_cost_usd').value = r.cost_per_unit_usd;
     document.getElementById('edit_recharge_dolar').value = r.dolar_rate;
     document.getElementById('edit_recharge_notes').value = r.notes || '';
+
+    // Formatar data para o input date (YYYY-MM-DD)
+    if (r.created_at) {
+        const datePart = r.created_at.split(' ')[0];
+        document.getElementById('edit_recharge_created_at').value = datePart;
+    } else {
+        document.getElementById('edit_recharge_created_at').value = '';
+    }
 
     document.getElementById('editRechargeMessage').classList.add('hidden');
     openModal('editPanelRechargeModal');

@@ -242,14 +242,19 @@ function convertUsdToBrl() {
     <div class="mb-8 border-2 border-orange-500 rounded-lg p-6 bg-orange-500/5">
         <h3 class="text-xl font-bold text-orange-400 mb-4">📦 Registrar Recarga de Painel</h3>
         <form id="panelRechargeForm" class="space-y-4">
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="number" name="quantity" min="1" placeholder="Quantidade de Painéis" required
                     class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
                 <input type="number" name="cost_per_unit_usd" step="0.01" placeholder="Custo Unitário (USD)" required
                     class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <input type="number" name="dolar_rate" step="0.01" placeholder="Cotação USD-BRL"
                     value="{{ financeiro.dolar_hoje }}"
                     class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
+                <input type="date" name="created_at"
+                    class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white"
+                    title="Data da Recarga (opcional)">
             </div>
             <textarea name="notes" placeholder="Notas (ex: Fornecedor, data de recebimento)" rows="2"
                 class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white"></textarea>

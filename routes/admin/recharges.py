@@ -20,12 +20,22 @@ def add_panel_recharge():
             return jsonify({'error': 'Dados inválidos'}), 400
         
         total_cost_usd = quantity * cost_per_unit_usd
+        created_at = request.form.get('created_at')
         
         conn = get_db_connection()
-        conn.execute(
-            'INSERT INTO panel_recharges (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes) VALUES (?,?,?,?,?)',
-            (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes)
-        )
+        if created_at:
+            created_at = created_at.replace('T', ' ')
+            if len(created_at) == 10:
+                created_at += " 12:00:00"
+            conn.execute(
+                'INSERT INTO panel_recharges (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes, created_at) VALUES (?,?,?,?,?,?)',
+                (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes, created_at)
+            )
+        else:
+            conn.execute(
+                'INSERT INTO panel_recharges (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes) VALUES (?,?,?,?,?)',
+                (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes)
+            )
         conn.commit()
         conn.close()
         
@@ -89,12 +99,23 @@ def edit_panel_recharge(recharge_id):
             return jsonify({'error': 'Dados inválidos'}), 400
         
         total_cost_usd = quantity * cost_per_unit_usd
+        created_at = request.form.get('created_at')
         
-        conn.execute('''
-            UPDATE panel_recharges 
-            SET quantity=?, cost_per_unit_usd=?, total_cost_usd=?, dolar_rate=?, notes=?
-            WHERE id=?
-        ''', (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes, recharge_id))
+        if created_at:
+            created_at = created_at.replace('T', ' ')
+            if len(created_at) == 10:
+                created_at += " 12:00:00"
+            conn.execute('''
+                UPDATE panel_recharges 
+                SET quantity=?, cost_per_unit_usd=?, total_cost_usd=?, dolar_rate=?, notes=?, created_at=?
+                WHERE id=?
+            ''', (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes, created_at, recharge_id))
+        else:
+            conn.execute('''
+                UPDATE panel_recharges 
+                SET quantity=?, cost_per_unit_usd=?, total_cost_usd=?, dolar_rate=?, notes=?
+                WHERE id=?
+            ''', (quantity, cost_per_unit_usd, total_cost_usd, dolar_rate, notes, recharge_id))
         
         conn.commit()
         conn.close()

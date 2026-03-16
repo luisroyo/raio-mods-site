@@ -53,25 +53,30 @@ function setupPanelRechargeForm() {
     });
 }
 
-// Global variable to store recharges
+// Global variables for recharges
 window.panelRecharges = [];
+let currentRechargePage = 1;
+let rechargeLimit = 10;
+let totalRechargePages = 1;
 
-async function loadPanelRecharges() {
+async function loadPanelRecharges(page = 1) {
+    currentRechargePage = page;
     try {
-        const res = await fetch('/admin/panel/recharge/list');
-        const recharges = await res.json();
+        const res = await fetch(`/admin/panel/recharge/list?page=${currentRechargePage}&limit=${rechargeLimit}`);
+        const result = await res.json();
 
         const tbody = document.getElementById('panelRechargesTable');
 
-        if (!recharges.data || recharges.data.length === 0) {
+        if (!result.data || result.data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma recarga registrada</td></tr>';
             return;
         }
 
         // Update global variable
-        window.panelRecharges = recharges.data;
+        window.panelRecharges = result.data;
+        totalRechargePages = result.pages;
 
-        tbody.innerHTML = recharges.data.map((r, index) => {
+        tbody.innerHTML = result.data.map((r, index) => {
             const totalBRL = (r.total_cost_usd * r.dolar_rate).toFixed(2);
             let dataStr = '';
             if (r.created_at) {
@@ -79,7 +84,6 @@ async function loadPanelRecharges() {
                 dataStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
             }
 
-            // Using index to pass to openEditPanelRecharge
             return `<tr class="border-b border-orange-500/30 hover:bg-orange-900/20">
                 <td class="p-2 text-center">${r.quantity}</td>
                 <td class="p-2 text-right">$${r.cost_per_unit_usd.toFixed(2)}</td>
@@ -94,9 +98,33 @@ async function loadPanelRecharges() {
                 </td>
             </tr>`;
         }).join('');
+
+        // Update UI
+        document.getElementById('rechargesPageDisplay').textContent = currentRechargePage;
+        document.getElementById('rechargesTotalPages').textContent = totalRechargePages;
+        document.getElementById('btnPrevRecharges').disabled = currentRechargePage <= 1;
+        document.getElementById('btnNextRecharges').disabled = currentRechargePage >= totalRechargePages;
+
     } catch (err) {
         console.error('Erro ao carregar recargas:', err);
     }
+}
+
+function nextRechargesPage() {
+    if (currentRechargePage < totalRechargePages) {
+        loadPanelRecharges(currentRechargePage + 1);
+    }
+}
+
+function prevRechargesPage() {
+    if (currentRechargePage > 1) {
+        loadPanelRecharges(currentRechargePage - 1);
+    }
+}
+
+function changeRechargesLimit() {
+    rechargeLimit = parseInt(document.getElementById('rechargesLimit').value);
+    loadPanelRecharges(1);
 }
 
 async function deletePanelRecharge(id) {
@@ -104,7 +132,7 @@ async function deletePanelRecharge(id) {
     try {
         const res = await fetch(`/admin/panel/recharge/delete/${id}`, { method: 'POST' });
         if (res.ok) {
-            loadPanelRecharges();
+            loadPanelRecharges(currentRechargePage);
             loadSalesReport();
         }
     } catch {

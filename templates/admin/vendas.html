@@ -331,13 +331,14 @@ function showSalesTab(tab) {
         activeTab.classList.add('text-purple-400', 'border-purple-400');
     } else {
         activeTab.classList.add('text-orange-400', 'border-orange-400');
+        if (typeof loadPanelRecharges === 'function') loadPanelRecharges(1);
     }
 }
 </script>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=5" defer></script>
-<script src="{{ url_for('static', filename='js/admin/recharges.js') }}?v=4" defer></script>
-<script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=3" defer></script>
+<script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=10" defer></script>
+<script src="{{ url_for('static', filename='js/admin/recharges.js') }}?v=10" defer></script>
+<script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=10" defer></script>
 {% endblock %}

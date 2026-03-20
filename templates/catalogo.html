@@ -19,7 +19,7 @@
 
     {% if products %}
     {% if products_by_category %}
-    {% for category, category_products in products_by_category.items() | sort %}
+    {% for category, category_products in products_by_category.items() %}
     <div class="mb-12 md:mb-16" data-aos="fade-up">
         <div class="category-header">
             <h2>📁 {{ category }}</h2>

@@ -139,7 +139,15 @@ def _get_admin_data():
                 if 'Sem categoria' not in subproducts_by_category[pid]:
                     subproducts_by_category[pid]['Sem categoria'] = []
                 subproducts_by_category[pid]['Sem categoria'].append(p_dict)
-    
+                
+    # Ordenar categorias baseadas no menor sort_order
+    for pid in subproducts_by_category:
+        sorted_items = sorted(
+            subproducts_by_category[pid].items(),
+            key=lambda item: min(p.get('sort_order', 0) for p in item[1]) if item[1] else 0
+        )
+        subproducts_by_category[pid] = {k: v for k, v in sorted_items}
+
     stats = {
         'total_products': len(all_products),
         'total_catalogs': len(catalogs),

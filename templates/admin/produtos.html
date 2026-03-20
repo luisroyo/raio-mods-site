@@ -98,7 +98,7 @@
                     <h4 class="font-bold text-gray-300 mb-3">Produtos em {{ catalog.name }}:</h4>
                     {% set categories = subproducts_by_category.get(catalog.id, {}) %}
                     {% if categories %}
-                    {% for category, products in categories.items() | sort %}
+                    {% for category, products in categories.items() %}
                     <div class="mb-4">
                         <h5 class="text-sm font-bold text-cyan-400 mb-2 px-2 py-1 bg-gray-800 rounded inline-block">
                             📁 {{ category }}

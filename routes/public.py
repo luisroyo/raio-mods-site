@@ -131,6 +131,12 @@ def catalogo(parent_id):
         if category not in products_by_category:
             products_by_category[category] = []
         products_by_category[category].append(product)
+        
+    # Ordena categorias pelo menor sort_order de seus produtos
+    products_by_category = {k: v for k, v in sorted(
+        products_by_category.items(),
+        key=lambda item: min(dict(p).get('sort_order', 0) for p in item[1]) if item[1] else 0
+    )}
     
     
     conn.close()

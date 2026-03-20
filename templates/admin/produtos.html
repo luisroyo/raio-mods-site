@@ -109,9 +109,16 @@
                                 <div class="flex flex-col sm:flex-row justify-between items-start gap-2">
                                     <div class="w-full sm:w-auto">
                                         <div class="flex justify-between sm:block">
-                                            <span class="font-bold text-cyan-400 block">{{ sub.name }}</span>
-                                            <span class="text-green-400 text-sm ml-2 sm:ml-0">{{ sub.price }}</span>
+                                            <span class="font-bold text-cyan-400 block">{% if sub.is_catalog == 1 %}📁 {% endif %}{{ sub.name }}</span>
+                                            <span class="text-green-400 text-sm ml-2 sm:ml-0">
+                                                {% if sub.is_catalog == 1 %}
+                                                    <span class="text-xs text-gray-500">Subcategoria</span>
+                                                {% else %}
+                                                    {{ sub.price }}
+                                                {% endif %}
+                                            </span>
                                         </div>
+                                        {% if sub.is_catalog != 1 %}
                                         <div class="mt-1 text-xs">
                                             {% if sub.stock > 0 %}
                                             <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
@@ -119,25 +126,37 @@
                                             <span class="text-red-500">🔴 Sem estoque</span>
                                             {% endif %}
                                         </div>
+                                        {% endif %}
                                     </div>
                                     <div class="flex flex-wrap gap-1 w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                                        {% if sub.is_catalog == 1 %}
+                                        <button type="button"
+                                            onclick='openAddSubproductModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, false)'
+                                            class="text-xs bg-green-600 px-2 py-1 rounded text-black font-bold hover:bg-green-500">➕ Prod</button>
+                                        {% else %}
                                         <button type="button"
                                             onclick="openKeyModal({{ sub.id }}, {{ sub.name|tojson|forceescape }})"
                                             class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500">🔑</button>
+                                        {% endif %}
+                                        
                                         <button type="button"
                                             onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, {{ sub.is_catalog|default(0) }}, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }}, {{ (sub.cost_usd|default(0))|tojson|forceescape }}, {{ (sub.apply_iof|default(1))|tojson|forceescape }}, {{ (sub.is_active if sub.is_active is defined else 1)|tojson|forceescape }})'
                                             class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
-                                        {% if sub.payment_url %}
-                                        <button type="button"
-                                            onclick="copyPaymentLink({{ sub.id }}, {{ sub.payment_url|tojson|forceescape }})"
-                                            class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500"
-                                            title="Copiar link direto do Mercado Pago">🔗 MP</button>
-                                        {% else %}
-                                        <button type="button"
-                                            onclick="copyPaymentLink({{ sub.id }}, '')"
-                                            class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500"
-                                            title="Copiar link da página de pagamento da loja">🔗 Site</button>
+                                            
+                                        {% if sub.is_catalog != 1 %}
+                                            {% if sub.payment_url %}
+                                            <button type="button"
+                                                onclick="copyPaymentLink({{ sub.id }}, {{ sub.payment_url|tojson|forceescape }})"
+                                                class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500"
+                                                title="Copiar link direto do Mercado Pago">🔗 MP</button>
+                                            {% else %}
+                                            <button type="button"
+                                                onclick="copyPaymentLink({{ sub.id }}, '')"
+                                                class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500"
+                                                title="Copiar link da página de pagamento da loja">🔗 Site</button>
+                                            {% endif %}
                                         {% endif %}
+                                        
                                         {% if sub.is_active is defined and sub.is_active == 0 %}
                                         <span class="text-xs bg-gray-600 text-white px-2 py-1 rounded"
                                             title="Oculto">👁️‍🗨️</span>
@@ -146,6 +165,47 @@
                                             class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
                                     </div>
                                 </div>
+                                
+                                {% if sub.is_catalog == 1 %}
+                                <div class="mt-3 pt-3 border-t border-gray-700">
+                                    <h6 class="text-xs font-bold text-gray-400 mb-2">Itens em {{ sub.name }}:</h6>
+                                    {% set nested_products = subproducts_by_parent.get(sub.id, []) %}
+                                    {% if nested_products %}
+                                        <div class="grid grid-cols-1 gap-2 pl-2 border-l-2 border-cyan-700">
+                                        {% for np in nested_products %}
+                                            <div class="flex justify-between items-center bg-gray-900/50 p-2 rounded border border-gray-700">
+                                                <div class="flex flex-col">
+                                                    <span class="text-sm text-cyan-300 font-bold">{{ np.name }}</span>
+                                                    <div class="flex gap-2 text-xs">
+                                                        <span class="text-green-400">{{ np.price }}</span>
+                                                        {% if np.stock > 0 %}
+                                                        <span class="text-green-500">🟢 {{ np.stock }} cx</span>
+                                                        {% else %}
+                                                        <span class="text-red-500">🔴 S/est</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1 flex-wrap justify-end mt-1 sm:mt-0">
+                                                    <button type="button" onclick="openKeyModal({{ np.id }}, {{ np.name|tojson|forceescape }})" class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500">🔑</button>
+                                                    <button type="button" onclick='openEditModal({{ np.id }}, {{ np.name|tojson|forceescape }}, {{ np.description|tojson|forceescape }}, {{ np.price|tojson|forceescape }}, {{ np.category|tojson|forceescape }}, {{ np.image|tojson|forceescape }}, {{ (np.tagline|default(""))|tojson|forceescape }}, {{ np.sort_order|default(0) }}, {{ np.parent_id or "null" }}, {{ np.is_catalog|default(0) }}, {{ (np.payment_url|default(""))|tojson|forceescape }}, {{ (np.promo_price|default(""))|tojson|forceescape }}, {{ (np.promo_label|default(""))|tojson|forceescape }}, {{ (np.cost_usd|default(0))|tojson|forceescape }}, {{ (np.apply_iof|default(1))|tojson|forceescape }}, {{ (np.is_active if np.is_active is defined else 1)|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
+                                                    {% if np.payment_url %}
+                                                    <button type="button" onclick="copyPaymentLink({{ np.id }}, {{ np.payment_url|tojson|forceescape }})" class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500" title="Copiar link direto do Mercado Pago">🔗 MP</button>
+                                                    {% else %}
+                                                    <button type="button" onclick="copyPaymentLink({{ np.id }}, '')" class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500" title="Copiar link da página de pagamento da loja">🔗 Site</button>
+                                                    {% endif %}
+                                                    {% if np.is_active is defined and np.is_active == 0 %}
+                                                    <span class="text-xs bg-gray-600 text-white px-2 py-1 rounded" title="Oculto">👁️‍🗨️</span>
+                                                    {% endif %}
+                                                    <button type="button" onclick='deleteProduct({{ np.id }})' class="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500">🗑️</button>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-xs text-gray-500">Vazio</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>

@@ -165,13 +165,17 @@ async function loadManualSales() {
             const totalCusto = (sale.quantity * sale.cost_per_unit_brl).toFixed(2);
             const lucro = (sale.profit).toFixed(2);
             let dataStr = '';
-            const dt = new Date(sale.created_at);
+            let dateRaw = sale.created_at;
+            if (dateRaw && dateRaw.length === 19 && !dateRaw.includes('T') && !dateRaw.includes('Z')) {
+                dateRaw = dateRaw.replace(' ', 'T') + 'Z';
+            }
+            const dt = new Date(dateRaw);
             
             if (sale.type === 'online') {
                 dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             } else {
                 // Para manual, forçar interpretação como data local ou usar split se for YYYY-MM-DD
-                if (sale.created_at.length >= 10) {
+                if (sale.created_at && sale.created_at.length >= 10) {
                     const parts = sale.created_at.split(' ')[0].split('-');
                     dataStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
                 } else {
@@ -265,7 +269,13 @@ async function viewOrderProof(orderId) {
 
         const formatDate = (d) => {
             if (!d) return '—';
-            try { return new Date(d).toLocaleString('pt-BR'); } catch { return d; }
+            try { 
+                let dateStr = String(d);
+                if (dateStr.length === 19 && !dateStr.includes('T') && !dateStr.includes('Z')) {
+                    dateStr = dateStr.replace(' ', 'T') + 'Z';
+                }
+                return new Date(dateStr).toLocaleString('pt-BR'); 
+            } catch { return d; }
         };
 
         // Build modal content

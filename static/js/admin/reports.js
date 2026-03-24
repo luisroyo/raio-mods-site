@@ -1,8 +1,9 @@
 /* =========================
    REPORTS - Relatório de Vendas e Dashboard
 ========================= */
-
 let dashboardInterval = null;
+let financeChartInstance = null;
+let productsChartInstance = null;
 
 async function loadSalesReport() {
     // Carrega dados iniciais
@@ -131,8 +132,124 @@ async function updateSalesData() {
             }
         }
 
+        // Update Charts if canvas exists
+        if (document.getElementById('financeChart') && document.getElementById('productsChart')) {
+            updateCharts(report);
+        }
+
     } catch (err) {
         console.error('Erro ao atualizar relatório:', err);
+    }
+}
+
+function updateCharts(report) {
+    if (typeof Chart === 'undefined') return;
+
+    // Chart.js Default Texts Colors for Dark Theme
+    Chart.defaults.color = '#9ca3af';
+
+    // 1. Finance Chart (Bar)
+    const ctxFinance = document.getElementById('financeChart').getContext('2d');
+    const financeData = {
+        labels: ['Faturamento Total', 'Custos Totais', 'Lucro Líquido'],
+        datasets: [{
+            label: 'Valores (R$)',
+            data: [
+                report.summary.total_revenue,
+                report.summary.total_costs,
+                report.summary.total_profit
+            ],
+            backgroundColor: [
+                'rgba(34, 197, 94, 0.5)',   // Faturamento (Green)
+                'rgba(239, 68, 68, 0.5)',   // Custo (Red)
+                'rgba(16, 185, 129, 0.7)'   // Lucro (Emerald)
+            ],
+            borderColor: [
+                'rgb(34, 197, 94)',
+                'rgb(239, 68, 68)',
+                'rgb(16, 185, 129)'
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    if (financeChartInstance) {
+        financeChartInstance.data = financeData;
+        financeChartInstance.update();
+    } else {
+        financeChartInstance = new Chart(ctxFinance, {
+            type: 'bar',
+            data: financeData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(75, 85, 99, 0.2)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Products Chart (Doughnut) - Top 5
+    const ctxProducts = document.getElementById('productsChart').getContext('2d');
+    
+    // Sort and slice top 5 products by quantity
+    const sortedByQtd = [...(report.by_product || [])].sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+    const pLabels = sortedByQtd.map(p => p.name);
+    const pData = sortedByQtd.map(p => p.quantity);
+    
+    const productsData = {
+        labels: pLabels,
+        datasets: [{
+            data: pData,
+            backgroundColor: [
+                'rgba(56, 189, 248, 0.7)',  // sky
+                'rgba(167, 139, 250, 0.7)', // purple
+                'rgba(251, 146, 60, 0.7)',  // orange
+                'rgba(244, 114, 182, 0.7)', // pink
+                'rgba(250, 204, 21, 0.7)'   // yellow
+            ],
+            borderColor: [
+                'rgb(56, 189, 248)',
+                'rgb(167, 139, 250)',
+                'rgb(251, 146, 60)',
+                'rgb(244, 114, 182)',
+                'rgb(250, 204, 21)'
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    if (productsChartInstance) {
+        productsChartInstance.data = productsData;
+        productsChartInstance.update();
+    } else {
+        productsChartInstance = new Chart(ctxProducts, {
+            type: 'doughnut',
+            data: productsData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'right',
+                        labels: {
+                            color: '#9ca3af',
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
     }
 }
 

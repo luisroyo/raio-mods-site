@@ -41,6 +41,24 @@
     </div>
     </div>
 
+<!-- Gráficos de Análise -->
+<div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Faturamento vs Custos vs Lucro -->
+    <div class="border-2 border-indigo-500 rounded-lg p-4 bg-indigo-500/5">
+        <h3 class="text-lg font-bold text-indigo-400 mb-4 text-center">Desempenho Financeiro</h3>
+        <div class="relative h-64 w-full">
+            <canvas id="financeChart"></canvas>
+        </div>
+    </div>
+    <!-- Produtos Mais Vendidos -->
+    <div class="border-2 border-pink-500 rounded-lg p-4 bg-pink-500/5">
+        <h3 class="text-lg font-bold text-pink-400 mb-4 text-center">Top Hacks (Mais Vendidos)</h3>
+        <div class="relative h-64 w-full">
+            <canvas id="productsChart"></canvas>
+        </div>
+    </div>
+</div>
+
 <!-- Product Performance -->
 <div class="mb-8 border-2 border-indigo-500 rounded-lg p-6 bg-indigo-500/5">
     <h2 class="text-xl font-bold text-indigo-400 mb-4">🏆 Desempenho por Produto</h2>
@@ -338,7 +356,8 @@ function showSalesTab(tab) {
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=10" defer></script>
 <script src="{{ url_for('static', filename='js/admin/recharges.js') }}?v=10" defer></script>
-<script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=10" defer></script>
+<script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=11" defer></script>
 {% endblock %}

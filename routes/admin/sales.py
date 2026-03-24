@@ -321,7 +321,7 @@ def sales_report():
     # Custo de recargas de painel
     recharges = conn.execute(f'''
         SELECT SUM(total_cost_usd) as total_usd,
-               SUM(total_cost_usd * dolar_rate) as total_brl
+               SUM(total_cost_usd * {dolar_hoje}) as total_brl
         FROM panel_recharges WHERE 1=1 {date_clause_panel}
     ''', params_panel).fetchone()
     

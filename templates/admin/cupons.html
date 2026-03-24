@@ -1,0 +1,91 @@
+{% extends "admin/_base_admin.html" %}
+
+{% block title %}Cupons de Desconto{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <div>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+            🎟️ Gerenciar Cupons
+        </h2>
+        <p class="text-gray-400 mt-1">Crie descontos personalizados para alavancar suas vendas.</p>
+    </div>
+    
+    <button onclick="openAddCouponModal()" 
+            class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg shadow-amber-500/20 font-medium flex items-center gap-2">
+        <span>+</span> Novo Cupom
+    </button>
+</div>
+
+<!-- Coupons List Container -->
+<div class="bg-gray-800 rounded-xl border border-gray-700 shadow-xl overflow-hidden mb-8">
+    <div class="p-4 border-b border-gray-700 bg-gray-900/50 flex justify-between items-center">
+        <h3 class="font-bold text-gray-200">Seus Cupons</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-900/80 text-gray-400 text-sm uppercase tracking-wider">
+                    <th class="p-4 font-semibold">Código</th>
+                    <th class="p-4 font-semibold">Desconto</th>
+                    <th class="p-4 font-semibold">Usos</th>
+                    <th class="p-4 font-semibold">Validade</th>
+                    <th class="p-4 text-right font-semibold">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="couponsList" class="divide-y divide-gray-700/50">
+                <tr><td colspan="5" class="p-4 text-center text-gray-400">Carregando cupons...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Coupon Modal -->
+<div id="addCouponModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-amber-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+            <h3 class="text-xl font-bold text-amber-400">Novo Cupom</h3>
+            <button onclick="closeAddCouponModal()" class="text-gray-400 hover:text-white transition">✕</button>
+        </div>
+        
+        <form id="couponForm" class="space-y-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Código (Ex: VIP10, BLACK20)</label>
+                <input type="text" id="couponCode" required class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white uppercase" placeholder="CODIGO">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Tipo</label>
+                    <select id="discountType" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white">
+                        <option value="percent">Porcentagem (%)</option>
+                        <option value="fixed">Fixo (R$)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Valor</label>
+                    <input type="number" id="discountValue" step="0.01" required class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white" placeholder="Ex: 10">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Limite de Usos (0 = infinito)</label>
+                <input type="number" id="maxUses" value="0" min="0" required class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white">
+            </div>
+
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Data de Expiração (Opcional)</label>
+                <input type="date" id="validUntil" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white md:date-picker-dark placeholder-gray-500" style="color-scheme: dark;">
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-gray-800">
+                <button type="button" onclick="closeAddCouponModal()" class="px-5 py-2.5 rounded-lg text-gray-400 hover:text-white transition">Cancelar</button>
+                <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-lg transition-colors font-medium">Salvar Cupom</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/static/js/admin/coupons.js"></script>
+{% endblock %}

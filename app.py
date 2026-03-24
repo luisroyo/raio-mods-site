@@ -2,6 +2,7 @@ from flask import Flask
 from core.config import Config
 from routes.public import public_bp
 from routes.admin import admin_bp
+from routes.client import client_bp
 from database.connection import init_db
 from routes.payment import payment_bp
 
@@ -19,6 +20,7 @@ with app.app_context():
 app.register_blueprint(public_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(payment_bp)
+app.register_blueprint(client_bp)
 
 if __name__ == '__main__':
     # 4. Roda a aplicação

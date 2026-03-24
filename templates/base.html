@@ -90,6 +90,8 @@
                             class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.pagamento' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Pagamento</a>
                         <a href="{{ url_for('public.seguranca') }}"
                             class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Segurança</a>
+                        <a href="{{ url_for('client.login_page') }}"
+                            class="text-xs md:text-sm transition-colors font-bold {% if request.endpoint in ('client.login_page', 'client.dashboard_page') %}neon-cyan{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Portal do Cliente</a>
                     </div>
                     <a href="{{ url_for('admin.admin') }}"
                         class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1.5">Admin</a>
@@ -130,6 +132,8 @@
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.pagamento' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Pagamento</a>
             <a href="{{ url_for('public.seguranca') }}"
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.seguranca' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Segurança</a>
+            <a href="{{ url_for('client.login_page') }}"
+                class="nav-mobile-link py-4 px-4 rounded-lg text-base font-bold {% if request.endpoint in ('client.login_page', 'client.dashboard_page') %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Portal do Cliente</a>
         </div>
     </div>
 
@@ -204,6 +208,18 @@
                     class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
                 <input type="tel" id="customerPhone" placeholder="WhatsApp (com DDD)"
                     class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
+                
+                <div class="mt-2">
+                    <div class="flex gap-2">
+                        <input type="text" id="customerCoupon" placeholder="Cupom (Opcional)" 
+                            class="flex-1 bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors uppercase">
+                        <button type="button" onclick="applyCouponFront()" id="btnApplyCoupon"
+                            class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-4 rounded-lg font-medium transition-colors">
+                            Aplicar
+                        </button>
+                    </div>
+                    <p id="couponMessage" class="text-xs mt-1 hidden"></p>
+                </div>
 
                 <label class="flex items-start gap-2 cursor-pointer select-none">
                     <input type="checkbox" id="customerTerms"

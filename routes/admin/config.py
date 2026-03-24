@@ -16,22 +16,35 @@ def update_config():
     pix_copia_cola = request.form.get('pix_copia_cola') or ''
     contact_whatsapp = request.form.get('contact_whatsapp') or ''
     mercado_pago_token = (request.form.get('mercado_pago_token') or '').strip()
+    
+    smtp_server = request.form.get('smtp_server') or ''
+    smtp_port = request.form.get('smtp_port') or '587'
+    smtp_user = request.form.get('smtp_user') or ''
+    smtp_password = (request.form.get('smtp_password') or '').strip()
 
     conn = get_db_connection()
     config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
     try:
         if not config:
             conn.execute(
-                'INSERT INTO config (id, pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token) VALUES (1, ?, ?, ?, ?)',
-                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token or '')
+                '''INSERT INTO config 
+                   (id, pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, smtp_port, smtp_user, smtp_password) 
+                   VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password)
             )
         else:
-            # Não sobrescrever token se vazio
             if not mercado_pago_token and 'mercado_pago_token' in config.keys():
                 mercado_pago_token = config['mercado_pago_token'] or ''
+                
+            if not smtp_password and 'smtp_password' in config.keys():
+                smtp_password = config['smtp_password'] or ''
+
             conn.execute(
-                'UPDATE config SET pix_key = ?, pix_copia_cola = ?, contact_whatsapp = ?, mercado_pago_token = ? WHERE id = 1',
-                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token)
+                '''UPDATE config SET 
+                   pix_key = ?, pix_copia_cola = ?, contact_whatsapp = ?, mercado_pago_token = ?,
+                   smtp_server = ?, smtp_port = ?, smtp_user = ?, smtp_password = ?
+                   WHERE id = 1''',
+                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password)
             )
         conn.commit()
     except Exception as e:

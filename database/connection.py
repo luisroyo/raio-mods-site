@@ -109,6 +109,32 @@ def init_db():
         )
     ''')
     
+    # 3. Tabela de Cupons de Desconto
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS coupons (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            discount_type TEXT NOT NULL, -- 'percent' ou 'fixed'
+            discount_value REAL NOT NULL,
+            max_uses INTEGER DEFAULT 0, -- 0 = ilimitado
+            current_uses INTEGER DEFAULT 0,
+            valid_until TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 4. Tabela de Códigos OTP (Login do Cliente)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS otp_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            code TEXT NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            used INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     # --- MIGRAÇÕES E ATUALIZAÇÕES ---
 
     # Seed Config (Insere configuração padrão se vazio)
@@ -183,6 +209,7 @@ def init_db():
         ('delivered_at', 'TIMESTAMP'),
         ('user_agent_delivery', 'TEXT DEFAULT ""'),
         ('key_hash', 'TEXT DEFAULT ""'),
+        ('recovery_email_sent', 'INTEGER DEFAULT 0')
     ]
     for col_name, col_type in chargeback_columns:
         try:
@@ -191,6 +218,22 @@ def init_db():
             try:
                 print(f"--> Adicionando coluna {col_name} em orders...")
                 cursor.execute(f'ALTER TABLE orders ADD COLUMN {col_name} {col_type}')
+            except: pass
+
+    # --- MIGRAÇÃO: Colunas de SMTP (config) ---
+    smtp_columns = [
+        ('smtp_server', 'TEXT DEFAULT ""'),
+        ('smtp_port', 'INTEGER DEFAULT 587'),
+        ('smtp_user', 'TEXT DEFAULT ""'),
+        ('smtp_password', 'TEXT DEFAULT ""')
+    ]
+    for col_name, col_type in smtp_columns:
+        try:
+            cursor.execute(f'SELECT {col_name} FROM config LIMIT 1')
+        except sqlite3.OperationalError:
+            try:
+                print(f"--> Adicionando coluna {col_name} em config...")
+                cursor.execute(f'ALTER TABLE config ADD COLUMN {col_name} {col_type}')
             except: pass
 
     conn.commit()

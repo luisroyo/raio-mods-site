@@ -151,6 +151,71 @@ def process_approved_payment(order_ref: str, p_id: str):
         conn.commit()
 
 
+# --- Lógica de Cupons ---
+def get_coupon_discount(code, base_price, conn):
+    """Retorna (valor_descontado_em_reais, erro_msg, dict_cupom)"""
+    if not code:
+        return 0, None, None
+        
+    coupon = conn.execute('SELECT * FROM coupons WHERE code = ? COLLATE NOCASE', (code.strip(),)).fetchone()
+    if not coupon:
+        return 0, 'Cupom inválido.', None
+        
+    if coupon['max_uses'] > 0 and coupon['current_uses'] >= coupon['max_uses']:
+        return 0, 'Cupom esgotado.', None
+        
+    if coupon['valid_until']:
+        # Verifica expiração
+        try:
+            exp_date = datetime.strptime(coupon['valid_until'], '%Y-%m-%d %H:%M:%S')
+            if datetime.now() > exp_date:
+                return 0, 'Cupom expirado.', None
+        except Exception as e:
+            logger.error(f"Erro ao converter data do cupom {code}: {e}")
+            
+    discount = 0.0
+    if coupon['discount_type'] == 'percent':
+        discount = base_price * (coupon['discount_value'] / 100.0)
+    else:
+        discount = coupon['discount_value']
+        
+    discount = min(discount, base_price - 1.0) # Não pode zerar ou negativar o preço (Min R$1)
+    if discount < 0: discount = 0
+    return discount, None, coupon
+
+@payment_bp.route('/api/check_coupon', methods=['POST'])
+def check_coupon():
+    data = request.json or {}
+    code = data.get('code')
+    product_id = data.get('product_id')
+    
+    if not code or not product_id:
+        return jsonify({'error': 'Código ou produto ausente.'}), 400
+        
+    try:
+        with closing(get_db_connection()) as conn:
+            product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+            if not product:
+                return jsonify({'error': 'Produto não encontrado.'}), 404
+                
+            raw_price = product['promo_price'] or product['price']
+            base_price = parse_price(raw_price)
+            
+            discount_amount, error_msg, coupon = get_coupon_discount(code, base_price, conn)
+            
+            if error_msg:
+                return jsonify({'error': error_msg}), 400
+                
+            discount_label = f"{coupon['discount_value']}%" if coupon['discount_type'] == 'percent' else f"R$ {coupon['discount_value']:.2f}"
+            
+            return jsonify({
+                'discount_amount': round(discount_amount, 2),
+                'discount_label': discount_label
+            })
+    except Exception as e:
+        logger.error(f"Erro no check_coupon: {e}")
+        return jsonify({'error': 'Erro ao validar cupom.'}), 500
+
 # --- Rotas da API ---
 
 @payment_bp.route('/api/checkout', methods=['POST'])
@@ -195,6 +260,17 @@ def create_payment():
         # Regra de negócio de exibição de preço (promoção ou fixo)
         raw_price = product_dict.get('promo_price') or product_dict.get('price')
         base_price = parse_price(raw_price)
+        final_price = base_price
+        
+        coupon_code = data.get('coupon')
+        applied_coupon = None
+        if coupon_code:
+            discount_amt, err, c_data = get_coupon_discount(coupon_code, base_price, conn)
+            if not err and c_data:
+                final_price = base_price - discount_amt
+                applied_coupon = c_data['id']
+                # Opcional: já contabiliza "uso" aqui para impedir fraude de carrinho infinito
+                conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (applied_coupon,))
 
         order_ref = f"ORD-{uuid.uuid4().hex[:12]}"
         first_name, last_name = parse_customer_name(customer_name, email)
@@ -212,12 +288,11 @@ def create_payment():
         # Inicializa variáveis de pagamento localmente a serem preenchidas pelo PIX/Cartão
         response_data = {'success': True, 'type': payment_type, 'order_ref': order_ref}
         qr_code, qr_base64, checkout_url = None, None, None
-        final_price = base_price
 
         # --- PIX (PREÇO ORIGINAL) ---
         if payment_type == 'pix':
             payment_data = {
-                "transaction_amount": base_price,
+                "transaction_amount": final_price,
                 "description": f"{product_dict['name']} (Key)",
                 "payment_method_id": "pix",
                 "external_reference": order_ref,
@@ -243,7 +318,7 @@ def create_payment():
 
         # --- CARTÃO (ACRÉSCIMO DE 7%) ---
         else:
-            final_price = round(base_price * 1.07, 2)
+            final_price = round(final_price * 1.07, 2)
 
             # Preference exige formato 'surname'
             card_payer = {

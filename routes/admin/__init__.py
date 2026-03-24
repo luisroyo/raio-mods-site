@@ -254,6 +254,20 @@ def admin_links():
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
+@admin_bp.route('/admin/cupons')
+def admin_cupons():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    try:
+        data = _get_admin_data()
+        if data is None:
+            return redirect(url_for('admin.admin'))
+        return render_template('admin/cupons.html', **data)
+    except Exception as e:
+        print(f"Erro ao carregar cupons: {e}")
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
+
 @admin_bp.route('/admin/logout')
 def admin_logout():
     session.pop('admin_logged_in', None)
@@ -372,3 +386,18 @@ def edit_panel_recharge(recharge_id):
 @admin_bp.route('/admin/panel/recharge/delete/<int:recharge_id>', methods=['POST'])
 def delete_panel_recharge(recharge_id):
     return recharges_module.delete_panel_recharge(recharge_id)
+
+# --- ROTAS DE CUPONS ---
+from . import coupons as coupons_module
+
+@admin_bp.route('/admin/coupons/list', methods=['GET'])
+def list_coupons():
+    return coupons_module.list_coupons()
+
+@admin_bp.route('/admin/coupons/add', methods=['POST'])
+def add_coupon():
+    return coupons_module.add_coupon()
+
+@admin_bp.route('/admin/coupons/delete/<int:coupon_id>', methods=['POST'])
+def delete_coupon(coupon_id):
+    return coupons_module.delete_coupon(coupon_id)

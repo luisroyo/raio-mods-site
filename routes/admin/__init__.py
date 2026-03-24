@@ -351,6 +351,10 @@ def sales_report():
 def order_proof(order_id):
     return sales_module.get_order_proof(order_id)
 
+@admin_bp.route('/admin/sales/insights', methods=['GET'])
+def sales_insights():
+    return sales_module.sales_insights()
+
 
 # --- ROTAS DE RECARGAS ---
 @admin_bp.route('/admin/panel/recharge', methods=['POST'])

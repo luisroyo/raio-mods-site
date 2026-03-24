@@ -4,10 +4,15 @@
 let dashboardInterval = null;
 let financeChartInstance = null;
 let productsChartInstance = null;
+let growthChartInstance = null;
+let categoryChartInstance = null;
 
 async function loadSalesReport() {
     // Carrega dados iniciais
     await updateSalesData();
+    if (document.getElementById('growthChart')) {
+        await loadInsights(); // Load insights if element exists
+    }
 
     // Configura atualização automática se não estiver configurada (evita duplicação)
     if (!dashboardInterval) {
@@ -151,6 +156,164 @@ async function updateSalesData() {
 
     } catch (err) {
         console.error('Erro ao atualizar relatório:', err);
+    }
+}
+
+async function loadInsights() {
+    try {
+        let url = '/admin/sales/insights';
+        const start = document.getElementById('reportDateStart')?.value;
+        const end = document.getElementById('reportDateEnd')?.value;
+        
+        const params = new URLSearchParams();
+        if (start) params.append('date_start', start);
+        if (end) params.append('date_end', end);
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Falha na resposta dos Insights');
+        const data = await res.json();
+
+        const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+        // Update Ticket Médio
+        if (document.getElementById('averageTicket')) {
+            document.getElementById('averageTicket').textContent = fmt(data.average_ticket);
+            document.getElementById('totalOrders').textContent = data.total_orders + ' pedidos totais';
+        }
+
+        // Render Top Customers Table
+        const topTable = document.getElementById('topCustomersTable');
+        if (topTable) {
+            if (data.top_customers && data.top_customers.length > 0) {
+                topTable.innerHTML = data.top_customers.map((c, i) => `
+                    <tr class="border-b border-gray-700 hover:bg-gray-700/30">
+                        <td class="p-2">
+                            <p class="text-white font-bold">${c.name || 'Desconhecido'}</p>
+                            <p class="text-xs text-gray-500">${c.email}</p>
+                        </td>
+                        <td class="p-2 text-center text-gray-400">${c.orders_count}</td>
+                        <td class="p-2 text-right text-yellow-400 font-bold">${fmt(c.total_spent)}</td>
+                    </tr>
+                `).join('');
+            } else {
+                topTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Sem clientes no período</td></tr>';
+            }
+        }
+
+        // Render Stock Alerts Table
+        const stockTable = document.getElementById('stockAlertsTable');
+        if (stockTable) {
+            if (data.stock_alerts && data.stock_alerts.length > 0) {
+                stockTable.innerHTML = data.stock_alerts.map((s) => {
+                    const criticalLevel = typeof s.days_left === 'number' && s.days_left <= 3 ? 'text-red-500 animate-pulse font-bold' : 'text-orange-400';
+                    return `
+                    <tr class="border-b border-gray-700 hover:bg-gray-700/30">
+                        <td class="p-2 text-white">${s.name}</td>
+                        <td class="p-2 text-center text-gray-300 font-bold">${s.keys_available}</td>
+                        <td class="p-2 text-center text-gray-400">${s.daily_velocity}/dia</td>
+                        <td class="p-2 text-right ${criticalLevel}">${s.days_left} dias</td>
+                    </tr>
+                `}).join('');
+            } else {
+                stockTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-emerald-500">Estoque saudável ou itens sem volume.</td></tr>';
+            }
+        }
+
+        // --- Insights Charts (Chart.js) ---
+        if (typeof Chart === 'undefined') return;
+        Chart.defaults.color = '#9ca3af';
+
+        // 1. Growth Line Chart
+        const ctxGrowth = document.getElementById('growthChart')?.getContext('2d');
+        if (ctxGrowth && data.sales_over_time) {
+            const dateLabels = data.sales_over_time.map(s => {
+                const parts = s.date.split('-'); 
+                return `${parts[2]}/${parts[1]}`;
+            });
+            const growthData = {
+                labels: dateLabels,
+                datasets: [{
+                    label: 'Faturamento Total (R$)',
+                    data: data.sales_over_time.map(s => s.total),
+                    borderColor: 'rgb(192, 38, 211)', // fuchsia-600
+                    backgroundColor: 'rgba(192, 38, 211, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            };
+
+            if (growthChartInstance) {
+                growthChartInstance.data = growthData;
+                growthChartInstance.update();
+            } else {
+                growthChartInstance = new Chart(ctxGrowth, {
+                    type: 'line',
+                    data: growthData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(75, 85, 99, 0.2)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 2. Category Profits Chart
+        const ctxCategory = document.getElementById('categoryChart')?.getContext('2d');
+        if (ctxCategory && data.category_profits) {
+            const catLabels = data.category_profits.map(c => c.category);
+            const catRevenues = data.category_profits.map(c => c.revenue);
+            const catProfits = data.category_profits.map(c => c.profit);
+
+            const catData = {
+                labels: catLabels,
+                datasets: [
+                    {
+                        label: 'Receita (R$)',
+                        data: catRevenues,
+                        backgroundColor: 'rgba(56, 189, 248, 0.6)', // sky
+                        borderWidth: 0
+                    },
+                    {
+                        label: 'Lucro (R$)',
+                        data: catProfits,
+                        backgroundColor: 'rgba(52, 211, 153, 0.6)', // emerald
+                        borderWidth: 0
+                    }
+                ]
+            };
+
+            if (categoryChartInstance) {
+                categoryChartInstance.data = catData;
+                categoryChartInstance.update();
+            } else {
+                categoryChartInstance = new Chart(ctxCategory, {
+                    type: 'bar',
+                    data: catData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', labels: { color: '#9ca3af' } } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(75, 85, 99, 0.2)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        }
+
+    } catch (err) {
+        console.error('Erro ao buscar insights:', err);
     }
 }
 

@@ -458,3 +458,213 @@ def get_order_proof(order_id):
             'updated_at': d.get('updated_at', ''),
         }
     })
+
+
+def sales_insights():
+    """Retorna dados avançados para a aba de Insights"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    date_start = request.args.get('date_start', '')
+    date_end = request.args.get('date_end', '')
+    
+    dolar_hoje = get_dolar_hoje()
+    conn = get_db_connection()
+    
+    # Base date clauses
+    date_clause_orders = ""
+    date_clause_manual = ""
+    params_orders = []
+    params_manual = []
+    
+    if date_start:
+        date_clause_orders += " AND date(o.created_at) >= ?"
+        date_clause_manual += " AND date(ms.created_at) >= ?"
+        params_orders.append(date_start)
+        params_manual.append(date_start)
+    if date_end:
+        date_clause_orders += " AND date(o.created_at) <= ?"
+        date_clause_manual += " AND date(ms.created_at) <= ?"
+        params_orders.append(date_end)
+        params_manual.append(date_end)
+
+    # 1. Top Clientes (LTV)
+    top_customers_query = f'''
+        SELECT customer_email as email, customer_name as name, 
+               COUNT(*) as orders_count, 
+               SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total_spent
+        FROM orders o 
+        WHERE status = 'approved' {date_clause_orders}
+        GROUP BY customer_email
+        ORDER BY total_spent DESC 
+        LIMIT 10
+    '''
+    try:
+        top_customers = [dict(row) for row in conn.execute(top_customers_query, params_orders).fetchall()]
+    except Exception as e:
+        top_customers = []
+    
+    # 2. Vendas por Tempo
+    time_query_online = f'''
+        SELECT date(o.created_at) as data_venda, 
+               SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total_online
+        FROM orders o
+        WHERE o.status = 'approved' {date_clause_orders}
+        GROUP BY date(o.created_at)
+    '''
+    online_time = conn.execute(time_query_online, params_orders).fetchall()
+    
+    time_query_manual = f'''
+        SELECT date(ms.created_at) as data_venda, 
+               SUM(total_price) as total_manual
+        FROM manual_sales ms
+        WHERE 1=1 {date_clause_manual}
+        GROUP BY date(ms.created_at)
+    '''
+    manual_time = conn.execute(time_query_manual, params_manual).fetchall()
+
+    daily_sales = {}
+    for row in online_time:
+        day = row['data_venda']
+        if day not in daily_sales:
+            daily_sales[day] = {'online': 0.0, 'manual': 0.0, 'total': 0.0}
+        daily_sales[day]['online'] += float(row['total_online'] or 0)
+        daily_sales[day]['total'] += float(row['total_online'] or 0)
+        
+    for row in manual_time:
+        day = row['data_venda']
+        if day not in daily_sales:
+             daily_sales[day] = {'online': 0.0, 'manual': 0.0, 'total': 0.0}
+        daily_sales[day]['manual'] += float(row['total_manual'] or 0)
+        daily_sales[day]['total'] += float(row['total_manual'] or 0)
+        
+    sales_over_time = [{'date': k, **v} for k, v in sorted(daily_sales.items())]
+    
+    # 3. Categorias
+    cat_query_online = f'''
+        SELECT p.category, 
+               SUM(CAST(REPLACE(REPLACE(o.amount, 'R$', ''), ',', '.') AS REAL)) as revenue,
+               SUM(p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END)) as cost_brl
+        FROM orders o
+        JOIN products p ON o.product_id = p.id
+        WHERE o.status = 'approved' {date_clause_orders}
+        GROUP BY p.category
+    '''
+    cat_online = conn.execute(cat_query_online, params_orders).fetchall()
+    
+    cat_query_manual = f'''
+        SELECT p.category, 
+               SUM(ms.total_price) as revenue,
+               SUM(ms.quantity * ms.cost_per_unit_brl) as cost_brl
+        FROM manual_sales ms
+        JOIN products p ON ms.product_id = p.id
+        WHERE 1=1 {date_clause_manual}
+        GROUP BY p.category
+    '''
+    cat_manual = conn.execute(cat_query_manual, params_manual).fetchall()
+    
+    categories_data = {}
+    for row in cat_online:
+        cat = row['category'] or 'Sem Categoria'
+        if cat not in categories_data:
+            categories_data[cat] = {'revenue': 0.0, 'cost': 0.0, 'profit': 0.0}
+        categories_data[cat]['revenue'] += float(row['revenue'] or 0)
+        categories_data[cat]['cost'] += float(row['cost_brl'] or 0)
+        categories_data[cat]['profit'] = categories_data[cat]['revenue'] - categories_data[cat]['cost']
+
+    for row in cat_manual:
+        cat = row['category'] or 'Sem Categoria'
+        if cat not in categories_data:
+            categories_data[cat] = {'revenue': 0.0, 'cost': 0.0, 'profit': 0.0}
+        categories_data[cat]['revenue'] += float(row['revenue'] or 0)
+        categories_data[cat]['cost'] += float(row['cost_brl'] or 0)
+        categories_data[cat]['profit'] = categories_data[cat]['revenue'] - categories_data[cat]['cost']
+
+    category_profits = []
+    for k, v in categories_data.items():
+        margin = (v['profit'] / v['revenue'] * 100) if v['revenue'] > 0 else 0
+        category_profits.append({
+            'category': k, 
+            'revenue': round(v['revenue'], 2),
+            'profit': round(v['profit'], 2),
+            'margin': round(margin, 1)
+        })
+    category_profits.sort(key=lambda x: x['revenue'], reverse=True)
+
+    # 4. Estoque
+    stock_query = '''
+        SELECT p.id, p.name, p.is_catalog,
+               COUNT(k.id) as keys_available
+        FROM products p
+        LEFT JOIN product_keys k ON p.id = k.product_id AND k.is_used = 0
+        GROUP BY p.id
+    '''
+    try:
+        products_stock = conn.execute(stock_query).fetchall()
+    except Exception:
+        # p.is_catalog can sometimes be missing in legacy sqlite
+        products_stock = conn.execute('''
+            SELECT p.id, p.name, 0 as is_catalog,
+                COUNT(k.id) as keys_available
+            FROM products p
+            LEFT JOIN product_keys k ON p.id = k.product_id AND k.is_used = 0
+            GROUP BY p.id
+        ''').fetchall()
+    
+    recent_sales = conn.execute('''
+        SELECT product_id, COUNT(*) as sales_count
+        FROM orders 
+        WHERE status = 'approved' AND created_at >= date('now', '-15 days')
+        GROUP BY product_id
+    ''').fetchall()
+    
+    sales_velocity = {row['product_id']: (row['sales_count'] / 15.0) for row in recent_sales}
+    
+    stock_alerts = []
+    for row in products_stock:
+        # Apenas produtos simples
+        keys_dict = row.keys() if hasattr(row, 'keys') else []
+        is_catalog = row['is_catalog'] if 'is_catalog' in keys_dict else 0
+        if is_catalog == 1:
+            continue
+            
+        pid = row['id']
+        name = row['name']
+        keys_available = row['keys_available']
+        vel = sales_velocity.get(pid, 0.0)
+        
+        days_left = 999
+        if vel > 0:
+            days_left = keys_available / vel
+            
+        if days_left <= 10 or keys_available <= 5:
+            stock_alerts.append({
+                'product_id': pid,
+                'name': name,
+                'keys_available': keys_available,
+                'daily_velocity': round(vel, 2),
+                'days_left': round(days_left, 1) if days_left != 999 else '∞'
+            })
+    
+    stock_alerts.sort(key=lambda x: x['days_left'] if isinstance(x['days_left'], (int, float)) else 999)
+
+    # 5. Ticket Médio
+    all_rev = sum(d['total'] for d in sales_over_time)
+    
+    total_orders_online = conn.execute(f"SELECT COUNT(*) FROM orders o WHERE o.status = 'approved' {date_clause_orders}", params_orders).fetchone()[0]
+    total_orders_manual = conn.execute(f"SELECT COUNT(*) FROM manual_sales ms WHERE 1=1 {date_clause_manual}", params_manual).fetchone()[0]
+    total_orders = total_orders_online + total_orders_manual
+    
+    average_ticket = (all_rev / total_orders) if total_orders > 0 else 0.0
+
+    conn.close()
+
+    return jsonify({
+        'top_customers': top_customers,
+        'sales_over_time': sales_over_time,
+        'category_profits': category_profits,
+        'stock_alerts': stock_alerts,
+        'average_ticket': round(average_ticket, 2),
+        'total_revenue': round(all_rev, 2),
+        'total_orders': total_orders
+    })

@@ -110,11 +110,14 @@ def _get_admin_data():
         is_cat = p['is_catalog'] if 'is_catalog' in keys else 0
 
         if is_cat == 1 or p['id'] in legacy_catalog_ids:
+            p_dict['is_folder'] = True
             parent_products.append(p_dict)
             if p['id'] not in subproducts_by_parent:
                 subproducts_by_parent[p['id']] = []
             if p['id'] not in subproducts_by_category:
                 subproducts_by_category[p['id']] = {}
+        else:
+            p_dict['is_folder'] = False
 
         if pid is None:
             if is_cat == 1 or p['id'] in legacy_catalog_ids:

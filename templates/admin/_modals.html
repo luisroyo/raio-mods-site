@@ -19,10 +19,12 @@
                         {% for p in simple_products %}
                         <option value="{{ p.id }}">{{ p.name }} - {{ p.price }}</option>
                         {% endfor %}
-                        {% for c in catalogs %}
+                        {% for c in parent_products %}
                         <optgroup label="📁 {{ c.name }}">
                             {% for sub in subproducts_by_parent.get(c.id, []) %}
+                            {% if not sub.is_folder %}
                             <option value="{{ sub.id }}">&nbsp;&nbsp;{{ sub.name }} - {{ sub.price }}</option>
+                            {% endif %}
                             {% endfor %}
                         </optgroup>
                         {% endfor %}

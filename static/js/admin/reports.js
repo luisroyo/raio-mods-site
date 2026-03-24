@@ -29,7 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function updateSalesData() {
     try {
-        const res = await fetch('/admin/sales/report');
+        let url = '/admin/sales/report';
+        const start = document.getElementById('reportDateStart')?.value;
+        const end = document.getElementById('reportDateEnd')?.value;
+        
+        const params = new URLSearchParams();
+        if (start) params.append('date_start', start);
+        if (end) params.append('date_end', end);
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        const res = await fetch(url);
         if (!res.ok) throw new Error('Falha na resposta do servidor');
         
         const report = await res.json();

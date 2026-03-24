@@ -247,38 +247,63 @@ def sales_report():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
     
+    date_start = request.args.get('date_start', '')
+    date_end = request.args.get('date_end', '')
+    
+    date_clause_orders = ""
+    date_clause_manual = ""
+    date_clause_panel = ""
+    params_orders = []
+    params_manual = []
+    params_panel = []
+    
+    if date_start:
+        date_clause_orders += " AND date(o.created_at) >= ?"
+        date_clause_manual += " AND date(ms.created_at) >= ?"
+        date_clause_panel += " AND date(created_at) >= ?"
+        params_orders.append(date_start)
+        params_manual.append(date_start)
+        params_panel.append(date_start)
+    if date_end:
+        date_clause_orders += " AND date(o.created_at) <= ?"
+        date_clause_manual += " AND date(ms.created_at) <= ?"
+        date_clause_panel += " AND date(created_at) <= ?"
+        params_orders.append(date_end)
+        params_manual.append(date_end)
+        params_panel.append(date_end)
+    
     dolar_hoje = get_dolar_hoje()
     
     conn = get_db_connection()
     
     # Vendas Online
-    approved_orders = conn.execute('''
+    approved_orders = conn.execute(f'''
         SELECT SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total,
                COUNT(*) as count
-        FROM orders WHERE status = 'approved'
-    ''').fetchone()
+        FROM orders o WHERE o.status = 'approved' {date_clause_orders}
+    ''', params_orders).fetchone()
     
     online_revenue = float(approved_orders['total'] or 0) if approved_orders['total'] else 0
     online_count = approved_orders['count'] or 0
     
     # Vendas Manuais
-    manual_sales = conn.execute('''
+    manual_sales = conn.execute(f'''
         SELECT SUM(total_price) as total, COUNT(*) as count
-        FROM manual_sales
-    ''').fetchone()
+        FROM manual_sales ms WHERE 1=1 {date_clause_manual}
+    ''', params_manual).fetchone()
     
     manual_revenue = float(manual_sales['total'] or 0) if manual_sales['total'] else 0
     manual_count = manual_sales['count'] or 0
     
     # Custo de vendas online
-    online_costs = conn.execute('''
+    online_costs = conn.execute(f'''
         SELECT 
             SUM(CASE WHEN p.apply_iof = 1 THEN p.cost_usd ELSE 0 END) as total_usd_iof,
             SUM(CASE WHEN p.apply_iof = 0 THEN p.cost_usd ELSE 0 END) as total_usd_noiof
         FROM orders o
         JOIN products p ON o.product_id = p.id
-        WHERE o.status = 'approved'
-    ''').fetchone()
+        WHERE o.status = 'approved' {date_clause_orders}
+    ''', params_orders).fetchone()
 
     total_usd_iof = float(online_costs['total_usd_iof'] or 0) if online_costs['total_usd_iof'] else 0
     total_usd_noiof = float(online_costs['total_usd_noiof'] or 0) if online_costs['total_usd_noiof'] else 0
@@ -286,39 +311,35 @@ def sales_report():
     online_cost_brl = (total_usd_iof * dolar_hoje * IOF) + (total_usd_noiof * dolar_hoje)
     
     # Custo de vendas manuais
-    manual_costs = conn.execute('''
+    manual_costs = conn.execute(f'''
         SELECT SUM(cost_per_unit_brl * quantity) as total
-        FROM manual_sales
-    ''').fetchone()
+        FROM manual_sales ms WHERE 1=1 {date_clause_manual}
+    ''', params_manual).fetchone()
     
     manual_cost_brl = float(manual_costs['total'] or 0) if manual_costs['total'] else 0
     
     # Custo de recargas de painel
-    recharges = conn.execute('''
+    recharges = conn.execute(f'''
         SELECT SUM(total_cost_usd) as total_usd,
                SUM(total_cost_usd * dolar_rate) as total_brl
-        FROM panel_recharges
-    ''').fetchone()
+        FROM panel_recharges WHERE 1=1 {date_clause_panel}
+    ''', params_panel).fetchone()
     
     total_recharged_usd = float(recharges['total_usd'] or 0) if recharges['total_usd'] else 0
     total_recharged_brl = float(recharges['total_brl'] or 0) if recharges['total_brl'] else 0
     
-    conn.close()
-    
     # --- Agregação por Produto ---
     product_stats = {}
 
-    conn = get_db_connection()
-    
     # 1. Agrega Vendas Online
-    online_by_product = conn.execute('''
+    online_by_product = conn.execute(f'''
         SELECT p.name, COUNT(*) as qtd, 
                SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total
         FROM orders o
         JOIN products p ON o.product_id = p.id
-        WHERE o.status = 'approved'
+        WHERE o.status = 'approved' {date_clause_orders}
         GROUP BY p.name
-    ''').fetchall()
+    ''', params_orders).fetchall()
     
     for row in online_by_product:
         name = row['name']
@@ -328,12 +349,13 @@ def sales_report():
         product_stats[name]['total'] += row['total'] or 0
 
     # 2. Agrega Vendas Manuais
-    manual_by_product = conn.execute('''
+    manual_by_product = conn.execute(f'''
         SELECT p.name, SUM(ms.quantity) as qtd, SUM(ms.total_price) as total
         FROM manual_sales ms
         JOIN products p ON ms.product_id = p.id
+        WHERE 1=1 {date_clause_manual}
         GROUP BY p.name
-    ''').fetchall()
+    ''', params_manual).fetchall()
     
     for row in manual_by_product:
         name = row['name']

@@ -42,8 +42,13 @@ function setupManualSaleForm() {
         prodSelect.addEventListener('change', async (e) => {
             const pid = e.target.value;
             const costInput = document.querySelector('#manualSaleForm input[name="cost_per_unit_brl"]');
+            const costUsdInput = document.querySelector('#manualSaleForm input[name="cost_per_unit_usd"]');
             if (!pid) {
                 if (costInput) costInput.value = '';
+                if (costUsdInput) {
+                    costUsdInput.value = '';
+                    delete costUsdInput.dataset.applyIof;
+                }
                 return;
             }
 
@@ -53,6 +58,15 @@ function setupManualSaleForm() {
                 const info = await res.json();
                 if (info && typeof info.calculated_cost_brl !== 'undefined') {
                     if (costInput) costInput.value = info.calculated_cost_brl.toFixed(2);
+                    if (costUsdInput) {
+                        costUsdInput.value = info.cost_usd > 0 ? info.cost_usd.toFixed(2) : '';
+                        costUsdInput.dataset.applyIof = info.apply_iof;
+                    }
+                    if (typeof window.DOLAR_RATE !== 'undefined' && info.dolar_rate) {
+                        window.DOLAR_RATE = info.dolar_rate;
+                        const drSpan = document.getElementById('dolarRate');
+                        if (drSpan) drSpan.textContent = info.dolar_rate.toFixed(4);
+                    }
                 }
             } catch (err) {
                 console.error('Erro ao buscar info do produto:', err);

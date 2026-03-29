@@ -229,7 +229,7 @@
 
 <script>
 // Cotação do dólar disponível no template
-const DOLAR_RATE = {{ financeiro.dolar_hoje }};
+window.DOLAR_RATE = {{ financeiro.dolar_hoje }};
 
 function convertUsdToBrl() {
     const usdInput = document.getElementById('costUsd');
@@ -240,9 +240,11 @@ function convertUsdToBrl() {
     const usdValue = parseFloat(usdInput.value.replace(',', '.'));
     
     if (!isNaN(usdValue) && usdValue > 0) {
-        // Aplicar IOF (6.38%) na conversão
+        // Verificar se IOF se aplica ao produto (padrão é sim, se não definido)
+        const applyIof = usdInput.dataset.applyIof !== '0';
         const IOF = 1.0638;
-        const brlValue = (usdValue * DOLAR_RATE * IOF).toFixed(2);
+        const multiplier = applyIof ? (window.DOLAR_RATE * IOF) : window.DOLAR_RATE;
+        const brlValue = (usdValue * multiplier).toFixed(2);
         brlInput.value = brlValue;
     } else if (usdInput.value === '') {
         brlInput.value = '';

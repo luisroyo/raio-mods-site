@@ -80,7 +80,7 @@ def _get_admin_data():
     lucro_liquido = faturamento_total - custo_total
     
     financeiro = {
-        'dolar_hoje': round(dolar_hoje, 2),
+        'dolar_hoje': round(dolar_hoje, 4),
         'faturamento_total': round(faturamento_total, 2),
         'custo_total': round(custo_total, 2),
         'lucro_liquido': round(lucro_liquido, 2),

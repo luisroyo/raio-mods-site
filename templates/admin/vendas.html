@@ -242,7 +242,7 @@ function convertUsdToBrl() {
     if (!isNaN(usdValue) && usdValue > 0) {
         // Verificar se IOF se aplica ao produto (padrão é sim, se não definido)
         const applyIof = usdInput.dataset.applyIof !== '0';
-        const IOF = 1.0638;
+        const IOF = 1.0;
         const multiplier = applyIof ? (window.DOLAR_RATE * IOF) : window.DOLAR_RATE;
         const brlValue = (usdValue * multiplier).toFixed(2);
         brlInput.value = brlValue;
@@ -348,7 +348,7 @@ function convertUsdToBrl() {
                     class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <input type="number" name="dolar_rate" step="0.01" placeholder="Cotação USD-BRL"
+                <input type="number" name="dolar_rate" step="any" placeholder="Cotação USD-BRL"
                     value="{{ financeiro.dolar_hoje }}"
                     class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
                 <input type="date" name="created_at"

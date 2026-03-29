@@ -18,7 +18,7 @@ CACHE_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dolar_cache.js
 legacy_catalog_ids = [1, 2, 3]
 
 # Constantes financeiras
-IOF = 1.0638  # 6.38%
+IOF = 1.0  # 0%
 CUSTO_FIXO_PAINEL_USD = 50.0
 
 
@@ -68,7 +68,7 @@ def get_dolar_hoje():
         cached = _read_cache()
         if cached and 'rate' in cached and 'ts' in cached:
             age = time.time() - float(cached['ts'])
-            if age < 600:  # 10 minutes
+            if age < 30:  # 30 segundos
                 logger.info(f"Usando cotacao em cache (age={int(age)}s): R$ {float(cached['rate']):.4f}")
                 return float(cached['rate'])
     except Exception:

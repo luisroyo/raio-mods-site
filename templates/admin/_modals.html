@@ -93,7 +93,7 @@
         const usdValue = parseFloat(usdInput.value.replace(',', '.'));
 
         if (!isNaN(usdValue) && usdValue > 0 && !isNaN(rate)) {
-            const IOF = 1.0638;
+            const IOF = 1.0;
             const brlValue = (usdValue * rate * IOF).toFixed(2);
             brlInput.value = brlValue;
         } else if (usdInput.value === '') {

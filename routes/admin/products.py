@@ -12,7 +12,7 @@ def add_product():
         return jsonify({'error': '401'}), 401
     
     name = request.form.get('name')
-    desc = request.form.get('description')
+    desc = request.form.get('description') or ''
     price = request.form.get('price')
     cat = request.form.get('category')
     tagline = (request.form.get('tagline') or '').strip()
@@ -59,9 +59,9 @@ def add_product():
     if not parent_id or str(parent_id).strip() == '':
         parent_id = None
     
-    image = handle_image_upload(request)
+    image = handle_image_upload(request) or ''
     
-    if not all([name, desc, price, image, cat]):
+    if not all([name, price, cat]):
         return jsonify({'error': 'Faltam dados'}), 400
     
     conn = get_db_connection()
@@ -103,7 +103,11 @@ def edit_product(pid):
         
         existing = dict(row)
         name = request.form.get('name') or existing.get('name', '')
-        desc = request.form.get('description') or existing.get('description', '')
+        
+        desc = request.form.get('description')
+        if desc is None:
+            desc = existing.get('description', '')
+            
         price = request.form.get('price') or existing.get('price', '')
         cat = request.form.get('category') or existing.get('category', '')
         tagline = request.form.get('tagline', existing.get('tagline', '')).strip()
@@ -152,7 +156,7 @@ def edit_product(pid):
         if pid_val == str(pid) or not pid_val or str(pid_val).strip() == '':
             pid_val = None
         
-        img = handle_image_upload(request, existing.get('image', ''))
+        img = handle_image_upload(request, existing.get('image', '')) or ''
 
         conn.execute(
             'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, apply_iof=?, is_active=? WHERE id=?',

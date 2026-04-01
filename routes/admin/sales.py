@@ -381,11 +381,7 @@ def sales_report():
     total_revenue = online_revenue + manual_revenue
     
     # CORREÇÃO: Usar apenas o custo de recargas (Regime de Caixa) para evitar contagem dupla
-    # O usuário considera o 'Custo' como o investimento feito na compra dos painéis (Recargas)
-    # Se somarmos o custo por venda, estaremos duplicando o valor já contabilizado na recarga.
-    # total_costs = online_cost_brl + manual_cost_brl + total_recharged_brl
-    total_costs = total_recharged_brl
-    
+    total_costs = online_cost_brl + manual_cost_brl
     total_profit = total_revenue - total_costs
     
     return jsonify({

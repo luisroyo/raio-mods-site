@@ -146,11 +146,11 @@ def list_manual_sales():
             params.append(category)
             
         if date_start:
-            combined_query += ' AND date(created_at) >= ?'
+            combined_query += " AND date(created_at, '-3 hours') >= ?"
             params.append(date_start)
             
         if date_end:
-            combined_query += ' AND date(created_at) <= ?'
+            combined_query += " AND date(created_at, '-3 hours') <= ?"
             params.append(date_end)
             
         # Count total
@@ -258,16 +258,16 @@ def sales_report():
     params_panel = []
     
     if date_start:
-        date_clause_orders += " AND date(o.created_at) >= ?"
-        date_clause_manual += " AND date(ms.created_at) >= ?"
-        date_clause_panel += " AND date(created_at) >= ?"
+        date_clause_orders += " AND date(o.created_at, '-3 hours') >= ?"
+        date_clause_manual += " AND date(ms.created_at, '-3 hours') >= ?"
+        date_clause_panel += " AND date(created_at, '-3 hours') >= ?"
         params_orders.append(date_start)
         params_manual.append(date_start)
         params_panel.append(date_start)
     if date_end:
-        date_clause_orders += " AND date(o.created_at) <= ?"
-        date_clause_manual += " AND date(ms.created_at) <= ?"
-        date_clause_panel += " AND date(created_at) <= ?"
+        date_clause_orders += " AND date(o.created_at, '-3 hours') <= ?"
+        date_clause_manual += " AND date(ms.created_at, '-3 hours') <= ?"
+        date_clause_panel += " AND date(created_at, '-3 hours') <= ?"
         params_orders.append(date_end)
         params_manual.append(date_end)
         params_panel.append(date_end)
@@ -478,13 +478,13 @@ def sales_insights():
     params_manual = []
     
     if date_start:
-        date_clause_orders += " AND date(o.created_at) >= ?"
-        date_clause_manual += " AND date(ms.created_at) >= ?"
+        date_clause_orders += " AND date(o.created_at, '-3 hours') >= ?"
+        date_clause_manual += " AND date(ms.created_at, '-3 hours') >= ?"
         params_orders.append(date_start)
         params_manual.append(date_start)
     if date_end:
-        date_clause_orders += " AND date(o.created_at) <= ?"
-        date_clause_manual += " AND date(ms.created_at) <= ?"
+        date_clause_orders += " AND date(o.created_at, '-3 hours') <= ?"
+        date_clause_manual += " AND date(ms.created_at, '-3 hours') <= ?"
         params_orders.append(date_end)
         params_manual.append(date_end)
 
@@ -506,20 +506,20 @@ def sales_insights():
     
     # 2. Vendas por Tempo
     time_query_online = f'''
-        SELECT date(o.created_at) as data_venda, 
+        SELECT date(o.created_at, '-3 hours') as data_venda, 
                SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total_online
         FROM orders o
         WHERE o.status = 'approved' {date_clause_orders}
-        GROUP BY date(o.created_at)
+        GROUP BY date(o.created_at, '-3 hours')
     '''
     online_time = conn.execute(time_query_online, params_orders).fetchall()
     
     time_query_manual = f'''
-        SELECT date(ms.created_at) as data_venda, 
+        SELECT date(ms.created_at, '-3 hours') as data_venda, 
                SUM(total_price) as total_manual
         FROM manual_sales ms
         WHERE 1=1 {date_clause_manual}
-        GROUP BY date(ms.created_at)
+        GROUP BY date(ms.created_at, '-3 hours')
     '''
     manual_time = conn.execute(time_query_manual, params_manual).fetchall()
 
@@ -614,7 +614,7 @@ def sales_insights():
     recent_sales = conn.execute('''
         SELECT product_id, COUNT(*) as sales_count
         FROM orders 
-        WHERE status = 'approved' AND created_at >= date('now', '-15 days')
+        WHERE status = 'approved' AND date(created_at, '-3 hours') >= date('now', '-3 hours', '-15 days')
         GROUP BY product_id
     ''').fetchall()
     

@@ -3,6 +3,10 @@ import hmac
 import os
 import uuid
 import hashlib
+import smtplib
+import threading
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timezone
 from contextlib import closing
 
@@ -149,6 +153,59 @@ def process_approved_payment(order_ref: str, p_id: str):
             conn.execute('UPDATE orders SET status = "paid_no_key", updated_at = CURRENT_TIMESTAMP WHERE id = ?', (order['id'],))
             
         conn.commit()
+
+        # Envia e-mail de notificação para o Admin de forma assíncrona
+        product = conn.execute('SELECT name FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+        config = conn.execute('SELECT smtp_server, smtp_port, smtp_user, smtp_password FROM config WHERE id = 1').fetchone()
+
+        if config and config['smtp_server'] and config['smtp_user']:
+            prod_name = product['name'] if product else 'Produto Desconhecido'
+            order_dict = dict(order)
+            config_dict = dict(config)
+            
+            def send_email():
+                try:
+                    msg = MIMEMultipart("alternative")
+                    msg['Subject'] = f"Nova Venda! 🚀 - {prod_name}"
+                    msg['From'] = f"RAIO MODS Loja <{config_dict['smtp_user']}>"
+                    msg['To'] = config_dict['smtp_user'] # Envia para o próprio admin
+                    
+                    html = f"""
+                    <html>
+                      <body style="background-color: #050505; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
+                        <div style="background-color: #111; border: 1px solid #333; border-radius: 8px; max-width: 600px; margin: 0 auto; padding: 30px; text-align: left;">
+                            <h1 style="color: #06b6d4;">RAIO MODS - Nova Venda Aprovada!</h1>
+                            <p style="color: #ccc; font-size: 16px;">Você acabou de realizar uma nova venda.</p>
+                            
+                            <h2 style="color: #fff; margin-top:20px;">Detalhes do Pedido</h2>
+                            <ul style="color: #ccc; font-size: 14px; line-height: 1.6;">
+                                <li><strong>ID do Pedido:</strong> {order_dict.get('id')}</li>
+                                <li><strong>Referência:</strong> {order_dict.get('external_reference')}</li>
+                                <li><strong>Produto:</strong> {prod_name}</li>
+                                <li><strong>Valor:</strong> R$ {order_dict.get('amount')}</li>
+                                <li><strong>Cliente (Nome):</strong> {order_dict.get('customer_name')}</li>
+                                <li><strong>Cliente (CPF):</strong> {order_dict.get('customer_cpf')}</li>
+                                <li><strong>Email do Cliente:</strong> {order_dict.get('customer_email')}</li>
+                            </ul>
+                            
+                            <p style="color: #666; font-size: 12px; margin-top: 30px;">Notificação Automática - RAIO MODS Administrativo.</p>
+                        </div>
+                      </body>
+                    </html>
+                    """
+                    msg.attach(MIMEText(html, "html"))
+                    
+                    server = smtplib.SMTP(config_dict['smtp_server'], int(config_dict['smtp_port']))
+                    server.starttls()
+                    server.login(config_dict['smtp_user'], config_dict['smtp_password'])
+                    server.sendmail(config_dict['smtp_user'], config_dict['smtp_user'], msg.as_string())
+                    server.quit()
+                    logger.info("Email de notificação para admin enviado com sucesso.")
+                except Exception as e:
+                    logger.error(f"Erro ao enviar e-mail de notificação para admin: {e}")
+                    
+            threading.Thread(target=send_email).start()
+
 
 
 # --- Lógica de Cupons ---

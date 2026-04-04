@@ -25,6 +25,12 @@ def add_product():
         cost_usd = float(request.form.get('cost_usd', 0) or 0)
     except:
         cost_usd = 0.0
+        
+    # cost_brl
+    try:
+        cost_brl = float(request.form.get('cost_brl', 0) or 0)
+    except:
+        cost_brl = 0.0
     
     # apply_iof checkbox
     try:
@@ -67,8 +73,8 @@ def add_product():
     conn = get_db_connection()
     try:
         conn.execute(
-            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, is_active)
+            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active)
         )
         conn.commit()
     except sqlite3.OperationalError as e:
@@ -120,6 +126,12 @@ def edit_product(pid):
             cost_usd = float(request.form.get('cost_usd') or existing.get('cost_usd', 0) or 0)
         except:
             cost_usd = float(existing.get('cost_usd', 0) or 0)
+            
+        # cost_brl
+        try:
+            cost_brl = float(request.form.get('cost_brl') or existing.get('cost_brl', 0) or 0)
+        except:
+            cost_brl = float(existing.get('cost_brl', 0) or 0)
         
         # apply_iof
         try:
@@ -159,8 +171,8 @@ def edit_product(pid):
         img = handle_image_upload(request, existing.get('image', '')) or ''
 
         conn.execute(
-            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, apply_iof=?, is_active=? WHERE id=?',
-            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, apply_iof, is_active, pid)
+            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, is_active=? WHERE id=?',
+            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, pid)
         )
         conn.commit()
         conn.close()
@@ -181,7 +193,7 @@ def product_info(pid):
         return jsonify({'error': '401'}), 401
     try:
         conn = get_db_connection()
-        row = conn.execute('SELECT id, cost_usd, apply_iof, is_active FROM products WHERE id = ?', (pid,)).fetchone()
+        row = conn.execute('SELECT id, cost_usd, cost_brl, apply_iof, is_active FROM products WHERE id = ?', (pid,)).fetchone()
         conn.close()
         if not row:
             return jsonify({'error': '404'}), 404
@@ -189,10 +201,13 @@ def product_info(pid):
         dolar_rate = get_dolar_hoje()
 
         cost_usd = float(row['cost_usd'] or 0)
+        cost_brl = float(row['cost_brl'] or 0) if 'cost_brl' in row.keys() else 0.0
         apply_iof = int(row['apply_iof']) if 'apply_iof' in row.keys() and row['apply_iof'] is not None else 1
 
         calculated_cost_brl = 0.0
-        if cost_usd > 0:
+        if cost_brl > 0:
+            calculated_cost_brl = round(cost_brl, 2)
+        elif cost_usd > 0:
             if apply_iof == 1:
                 calculated_cost_brl = round(cost_usd * dolar_rate * IOF, 2)
             else:
@@ -201,6 +216,7 @@ def product_info(pid):
         return jsonify({
             'id': row['id'],
             'cost_usd': round(cost_usd, 2),
+            'cost_brl': round(cost_brl, 2),
             'apply_iof': apply_iof,
             'is_active': int(row['is_active']) if 'is_active' in row.keys() and row['is_active'] is not None else 1,
             'dolar_rate': round(dolar_rate, 4),

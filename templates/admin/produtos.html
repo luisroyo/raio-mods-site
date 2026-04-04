@@ -71,7 +71,7 @@
                     <div class="flex flex-col gap-2 mt-3">
                         <div class="flex gap-2 justify-center">
                             <button type="button"
-                                onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }}, {{ (catalog.is_active if catalog.is_active is defined else 1)|tojson|forceescape }})'
+                                onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.cost_brl|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }}, {{ (catalog.is_active if catalog.is_active is defined else 1)|tojson|forceescape }})'
                                 class="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-500">✏️</button>
                             {% if catalog.is_active is defined and catalog.is_active == 0 %}
                             <span class="px-2 py-1 bg-gray-600 text-white text-xs rounded"
@@ -140,7 +140,7 @@
                                         {% endif %}
                                         
                                         <button type="button"
-                                            onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, {{ sub.is_catalog|default(0) }}, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }}, {{ (sub.cost_usd|default(0))|tojson|forceescape }}, {{ (sub.apply_iof|default(1))|tojson|forceescape }}, {{ (sub.is_active if sub.is_active is defined else 1)|tojson|forceescape }})'
+                                            onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, {{ sub.is_catalog|default(0) }}, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }}, {{ (sub.cost_usd|default(0))|tojson|forceescape }}, {{ (sub.cost_brl|default(0))|tojson|forceescape }}, {{ (sub.apply_iof|default(1))|tojson|forceescape }}, {{ (sub.is_active if sub.is_active is defined else 1)|tojson|forceescape }})'
                                             class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
                                             
                                         {% if sub.is_catalog != 1 %}
@@ -187,7 +187,7 @@
                                                 </div>
                                                 <div class="flex gap-1 flex-wrap justify-end mt-1 sm:mt-0">
                                                     <button type="button" onclick="openKeyModal({{ np.id }}, {{ np.name|tojson|forceescape }})" class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500">🔑</button>
-                                                    <button type="button" onclick='openEditModal({{ np.id }}, {{ np.name|tojson|forceescape }}, {{ np.description|tojson|forceescape }}, {{ np.price|tojson|forceescape }}, {{ np.category|tojson|forceescape }}, {{ np.image|tojson|forceescape }}, {{ (np.tagline|default(""))|tojson|forceescape }}, {{ np.sort_order|default(0) }}, {{ np.parent_id or "null" }}, {{ np.is_catalog|default(0) }}, {{ (np.payment_url|default(""))|tojson|forceescape }}, {{ (np.promo_price|default(""))|tojson|forceescape }}, {{ (np.promo_label|default(""))|tojson|forceescape }}, {{ (np.cost_usd|default(0))|tojson|forceescape }}, {{ (np.apply_iof|default(1))|tojson|forceescape }}, {{ (np.is_active if np.is_active is defined else 1)|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
+                                                    <button type="button" onclick='openEditModal({{ np.id }}, {{ np.name|tojson|forceescape }}, {{ np.description|tojson|forceescape }}, {{ np.price|tojson|forceescape }}, {{ np.category|tojson|forceescape }}, {{ np.image|tojson|forceescape }}, {{ (np.tagline|default(""))|tojson|forceescape }}, {{ np.sort_order|default(0) }}, {{ np.parent_id or "null" }}, {{ np.is_catalog|default(0) }}, {{ (np.payment_url|default(""))|tojson|forceescape }}, {{ (np.promo_price|default(""))|tojson|forceescape }}, {{ (np.promo_label|default(""))|tojson|forceescape }}, {{ (np.cost_usd|default(0))|tojson|forceescape }}, {{ (np.cost_brl|default(0))|tojson|forceescape }}, {{ (np.apply_iof|default(1))|tojson|forceescape }}, {{ (np.is_active if np.is_active is defined else 1)|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
                                                     {% if np.payment_url %}
                                                     <button type="button" onclick="copyPaymentLink({{ np.id }}, {{ np.payment_url|tojson|forceescape }})" class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500" title="Copiar link direto do Mercado Pago">🔗 MP</button>
                                                     {% else %}
@@ -239,7 +239,7 @@
             </div>
             <textarea name="description" placeholder="Descrição"
                 class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white"></textarea>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <input type="number" name="sort_order" value="0" placeholder="Ordem"
                     class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white">
                 <input type="text" name="price" required placeholder="Preço"
@@ -254,6 +254,8 @@
                         <label for="add_apply_iof_product">IOF</label>
                     </div>
                 </div>
+                <input type="number" name="cost_brl" step="0.01" placeholder="Custo (R$)"
+                    class="w-full px-4 py-2 bg-gray-800 border border-green-500 rounded text-white" title="(Opcional) Sobrescreve custo em USD">
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" name="payment_url" placeholder="Link Mercado Pago (Opcional)"
@@ -307,7 +309,7 @@
                 <button type="button" onclick="openKeyModal({{ prod.id }}, {{ prod.name|tojson|forceescape }})"
                     class="flex-1 bg-yellow-600 text-white text-xs py-2 rounded hover:bg-yellow-500">🔑 Chaves</button>
                 <button type="button"
-                    onclick='openEditModal({{ prod.id }}, {{ prod.name|tojson|forceescape }}, {{ prod.description|tojson|forceescape }}, {{ prod.price|tojson|forceescape }}, {{ prod.category|tojson|forceescape }}, {{ prod.image|tojson|forceescape }}, {{ (prod.tagline|default(""))|tojson|forceescape }}, {{ prod.sort_order|default(0) }}, null, {{ prod.is_catalog|default(0) }}, {{ (prod.payment_url|default(""))|tojson|forceescape }}, {{ (prod.promo_price|default(""))|tojson|forceescape }}, {{ (prod.promo_label|default(""))|tojson|forceescape }}, {{ (prod.cost_usd|default(0))|tojson|forceescape }}, {{ (prod.apply_iof|default(1))|tojson|forceescape }}, {{ (prod.is_active if prod.is_active is defined else 1)|tojson|forceescape }})'
+                    onclick='openEditModal({{ prod.id }}, {{ prod.name|tojson|forceescape }}, {{ prod.description|tojson|forceescape }}, {{ prod.price|tojson|forceescape }}, {{ prod.category|tojson|forceescape }}, {{ prod.image|tojson|forceescape }}, {{ (prod.tagline|default(""))|tojson|forceescape }}, {{ prod.sort_order|default(0) }}, null, {{ prod.is_catalog|default(0) }}, {{ (prod.payment_url|default(""))|tojson|forceescape }}, {{ (prod.promo_price|default(""))|tojson|forceescape }}, {{ (prod.promo_label|default(""))|tojson|forceescape }}, {{ (prod.cost_usd|default(0))|tojson|forceescape }}, {{ (prod.cost_brl|default(0))|tojson|forceescape }}, {{ (prod.apply_iof|default(1))|tojson|forceescape }}, {{ (prod.is_active if prod.is_active is defined else 1)|tojson|forceescape }})'
                     class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-500">✏️ Editar</button>
                 {% if prod.payment_url %}
                 <button type="button"

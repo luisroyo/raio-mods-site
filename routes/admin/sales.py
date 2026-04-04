@@ -32,13 +32,16 @@ def add_manual_sale():
         if not cost_per_unit_brl or cost_per_unit_brl <= 0:
             try:
                 conn = get_db_connection()
-                prod = conn.execute('SELECT cost_usd, apply_iof FROM products WHERE id = ?', (product_id,)).fetchone()
+                prod = conn.execute('SELECT cost_usd, cost_brl, apply_iof FROM products WHERE id = ?', (product_id,)).fetchone()
                 conn.close()
                 dolar_rate = get_dolar_hoje()
                 if prod:
                     cost_usd = float(prod['cost_usd'] or 0)
-                    apply_iof = int(prod['apply_iof']) if 'apply_iof' in prod.keys() and prod['apply_iof'] is not None else 1
-                    if cost_usd > 0:
+                    cost_brl = float(prod['cost_brl'] or 0) if 'cost_brl' in dict(prod) else 0.0
+                    apply_iof = int(prod['apply_iof']) if 'apply_iof' in dict(prod) and prod['apply_iof'] is not None else 1
+                    if cost_brl > 0:
+                        cost_per_unit_brl = round(cost_brl, 2)
+                    elif cost_usd > 0:
                         if apply_iof == 1:
                             cost_per_unit_brl = round(cost_usd * dolar_rate * IOF, 2)
                         else:
@@ -111,6 +114,9 @@ def list_manual_sales():
         # Se quiser histórico exato, precisaríamos salvar o custo histórico no pedido.
         # Assumindo cálculo dinâmico conforme regra do relatório.
         
+        # Usar cost_brl se existir, senão calcular do cost_usd
+        cost_expr = f"(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END)"
+        
         query_online = f'''
             SELECT 
                 'online' as type,
@@ -120,9 +126,9 @@ def list_manual_sales():
                 p.category,
                 1 as quantity,
                 o.amount as unit_price,
-                (p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END)) as cost_per_unit_brl,
+                {cost_expr} as cost_per_unit_brl,
                 o.amount as total_price,
-                (o.amount - (p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END))) as profit,
+                (o.amount - {cost_expr}) as profit,
                 o.customer_email as client_info,
                 o.created_at
             FROM orders o
@@ -296,10 +302,13 @@ def sales_report():
     manual_count = manual_sales['count'] or 0
     
     # Custo de vendas online
+    # Pegamos diretamente em BRL se houver, se nao, em USD e converte aqui ou no SQL
+    cost_expr = f"(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END)"
     online_costs = conn.execute(f'''
         SELECT 
-            SUM(CASE WHEN p.apply_iof = 1 THEN p.cost_usd ELSE 0 END) as total_usd_iof,
-            SUM(CASE WHEN p.apply_iof = 0 THEN p.cost_usd ELSE 0 END) as total_usd_noiof
+            SUM(CASE WHEN p.cost_brl = 0 AND p.apply_iof = 1 THEN p.cost_usd ELSE 0 END) as total_usd_iof,
+            SUM(CASE WHEN p.cost_brl = 0 AND p.apply_iof = 0 THEN p.cost_usd ELSE 0 END) as total_usd_noiof,
+            SUM({cost_expr}) as total_cost_brl
         FROM orders o
         JOIN products p ON o.product_id = p.id
         WHERE o.status = 'approved' {date_clause_orders}
@@ -308,7 +317,7 @@ def sales_report():
     total_usd_iof = float(online_costs['total_usd_iof'] or 0) if online_costs['total_usd_iof'] else 0
     total_usd_noiof = float(online_costs['total_usd_noiof'] or 0) if online_costs['total_usd_noiof'] else 0
 
-    online_cost_brl = (total_usd_iof * dolar_hoje * IOF) + (total_usd_noiof * dolar_hoje)
+    online_cost_brl = float(online_costs['total_cost_brl'] or 0) if online_costs['total_cost_brl'] else 0
     
     # Custo de vendas manuais
     manual_costs = conn.execute(f'''
@@ -540,7 +549,7 @@ def sales_insights():
     cat_query_online = f'''
         SELECT p.category, 
                SUM(CAST(REPLACE(REPLACE(o.amount, 'R$', ''), ',', '.') AS REAL)) as revenue,
-               SUM(p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END)) as cost_brl
+               SUM(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END) as cost_brl
         FROM orders o
         JOIN products p ON o.product_id = p.id
         WHERE o.status = 'approved' {date_clause_orders}

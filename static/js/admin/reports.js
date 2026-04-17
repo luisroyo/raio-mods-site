@@ -34,22 +34,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function updateSalesData() {
     try {
-        let url = '/admin/sales/report';
-        const start = document.getElementById('reportDateStart')?.value;
-        const end = document.getElementById('reportDateEnd')?.value;
-        
-        const params = new URLSearchParams();
-        if (start) params.append('date_start', start);
-        if (end) params.append('date_end', end);
-        
-        if (params.toString()) {
-            url += '?' + params.toString();
-        }
+        const fetchReport = async (startId, endId) => {
+            let url = '/admin/sales/report';
+            const start = document.getElementById(startId)?.value;
+            const end = document.getElementById(endId)?.value;
+            const params = new URLSearchParams();
+            if (start) params.append('date_start', start);
+            if (end) params.append('date_end', end);
+            if (params.toString()) url += '?' + params.toString();
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Falha na resposta do servidor');
+            return await res.json();
+        };
 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Falha na resposta do servidor');
+        const report = await fetchReport('reportDateStart', 'reportDateEnd');
         
-        const report = await res.json();
+        let compareReport = null;
+        if (document.getElementById('enableCompare')?.checked) {
+            const cmpStart = document.getElementById('reportCompareStart')?.value;
+            const cmpEnd = document.getElementById('reportCompareEnd')?.value;
+            if (cmpStart || cmpEnd) {
+                compareReport = await fetchReport('reportCompareStart', 'reportCompareEnd');
+            }
+        }
 
         const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         // const fmtUSD = (n) => '$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
@@ -149,9 +156,48 @@ async function updateSalesData() {
             }
         }
 
-        // Update Charts if canvas exists
         if (document.getElementById('financeChart') && document.getElementById('productsChart')) {
             updateCharts(report);
+        }
+
+        // --- Deltas (Compare) ---
+        const updateDelta = (elementId, current, previous, invertColors = false) => {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (!previous || previous === 0) {
+                el.innerHTML = '';
+                return;
+            }
+            const pct = ((current - previous) / previous) * 100;
+            const isPositive = pct > 0;
+            const isNegative = pct < 0;
+            const absVal = Math.abs(pct).toFixed(1) + '%';
+            
+            let colorCls = 'text-gray-500';
+            let icon = '';
+            
+            if (isPositive) {
+                colorCls = invertColors ? 'text-red-500' : 'text-emerald-400';
+                icon = '↑';
+            } else if (isNegative) {
+                colorCls = invertColors ? 'text-emerald-400' : 'text-red-500';
+                icon = '↓';
+            }
+
+            el.className = `text-sm font-normal ml-2 ${colorCls}`;
+            el.innerHTML = `${icon} ${absVal}`;
+        };
+
+        if (compareReport) {
+            updateDelta('onlineRevenueDelta', report.online.revenue, compareReport.online.revenue);
+            updateDelta('manualRevenueDelta', report.manual.revenue, compareReport.manual.revenue);
+            updateDelta('totalRevenueDelta', report.summary.total_revenue, compareReport.summary.total_revenue);
+            updateDelta('totalCostsDelta', report.summary.total_costs, compareReport.summary.total_costs, true);
+            updateDelta('totalProfitDelta', report.summary.total_profit, compareReport.summary.total_profit);
+        } else {
+            ['onlineRevenueDelta', 'manualRevenueDelta', 'totalRevenueDelta', 'totalCostsDelta', 'totalProfitDelta'].forEach(id => {
+                if (document.getElementById(id)) document.getElementById(id).innerHTML = '';
+            });
         }
 
     } catch (err) {
@@ -161,21 +207,29 @@ async function updateSalesData() {
 
 async function loadInsights() {
     try {
-        let url = '/admin/sales/insights';
-        const start = document.getElementById('reportDateStart')?.value;
-        const end = document.getElementById('reportDateEnd')?.value;
-        
-        const params = new URLSearchParams();
-        if (start) params.append('date_start', start);
-        if (end) params.append('date_end', end);
-        
-        if (params.toString()) {
-            url += '?' + params.toString();
-        }
+        const fetchInsights = async (startId, endId) => {
+            let url = '/admin/sales/insights';
+            const start = document.getElementById(startId)?.value;
+            const end = document.getElementById(endId)?.value;
+            const params = new URLSearchParams();
+            if (start) params.append('date_start', start);
+            if (end) params.append('date_end', end);
+            if (params.toString()) url += '?' + params.toString();
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Falha na resposta dos Insights');
+            return await res.json();
+        };
 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Falha na resposta dos Insights');
-        const data = await res.json();
+        const data = await fetchInsights('reportDateStart', 'reportDateEnd');
+        
+        let compareData = null;
+        if (document.getElementById('enableCompare')?.checked) {
+            const cmpStart = document.getElementById('reportCompareStart')?.value;
+            const cmpEnd = document.getElementById('reportCompareEnd')?.value;
+            if (cmpStart || cmpEnd) {
+                compareData = await fetchInsights('reportCompareStart', 'reportCompareEnd');
+            }
+        }
 
         const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
@@ -183,6 +237,30 @@ async function loadInsights() {
         if (document.getElementById('averageTicket')) {
             document.getElementById('averageTicket').textContent = fmt(data.average_ticket);
             document.getElementById('totalOrders').textContent = data.total_orders + ' pedidos totais';
+            
+            if (compareData && document.getElementById('averageTicketDelta')) {
+                const el = document.getElementById('averageTicketDelta');
+                const current = data.average_ticket;
+                const previous = compareData.average_ticket;
+                if (!previous || previous === 0) {
+                    el.innerHTML = '';
+                } else {
+                    const pct = ((current - previous) / previous) * 100;
+                    const isPositive = pct > 0;
+                    const isNegative = pct < 0;
+                    const absVal = Math.abs(pct).toFixed(1) + '%';
+                    
+                    let colorCls = 'text-gray-500';
+                    let icon = '';
+                    if (isPositive) { colorCls = 'text-emerald-400'; icon = '↑'; }
+                    else if (isNegative) { colorCls = 'text-red-500'; icon = '↓'; }
+                    
+                    el.className = `text-sm font-normal ml-2 ${colorCls}`;
+                    el.innerHTML = `${icon} ${absVal}`;
+                }
+            } else if (document.getElementById('averageTicketDelta')) {
+                document.getElementById('averageTicketDelta').innerHTML = '';
+            }
         }
 
         // Render Top Customers Table

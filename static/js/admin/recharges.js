@@ -80,8 +80,12 @@ async function loadPanelRecharges(page = 1) {
             const totalBRL = (r.total_cost_usd * r.dolar_rate).toFixed(2);
             let dataStr = '';
             if (r.created_at) {
-                const parts = r.created_at.split(' ')[0].split('-');
-                dataStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                let dateRaw = r.created_at;
+                if (dateRaw.length === 19 && !dateRaw.includes('T') && !dateRaw.includes('Z')) {
+                    dateRaw = dateRaw.replace(' ', 'T') + 'Z';
+                }
+                const dt = new Date(dateRaw);
+                dataStr = dt.toLocaleDateString('pt-BR');
             }
 
             return `<tr class="border-b border-orange-500/30 hover:bg-orange-900/20">

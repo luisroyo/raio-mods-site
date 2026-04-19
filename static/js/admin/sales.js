@@ -185,17 +185,9 @@ async function loadManualSales() {
             }
             const dt = new Date(dateRaw);
             
-            if (sale.type === 'online') {
-                dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            } else {
-                // Para manual, forçar interpretação como data local ou usar split se for YYYY-MM-DD
-                if (sale.created_at && sale.created_at.length >= 10) {
-                    const parts = sale.created_at.split(' ')[0].split('-');
-                    dataStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                } else {
-                    dataStr = dt.toLocaleDateString('pt-BR');
-                }
-            }
+            // Fuso horário corrigido para usar a interpretação de hora do navegador (local)
+            // Trata as datas como UTC convertendo-as diretamente para Pt-Br
+            dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             
             let typeBadge = '';
             let clientInfo = '';

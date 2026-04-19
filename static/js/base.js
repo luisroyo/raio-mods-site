@@ -144,8 +144,9 @@ async function startPayment(type) {
     const btnPix = document.getElementById('btnPayPix');
     const btnCard = document.getElementById('btnPayCard');
     
-    if (!name) {
-        alert('Por favor, digite seu nome completo.');
+    const nameParts = name.trim().split(/\s+/);
+    if (!name || nameParts.length < 2 || nameParts[0].length < 2 || nameParts[1].length < 2) {
+        alert('Por favor, digite seu NOME e SOBRENOME corretamente. Apelidos ou apenas o primeiro nome não são aceitos.');
         return;
     }
     if (!cpf || cpf.replace(/\D/g, '').length < 11) {

@@ -27,6 +27,15 @@ async function loadSalesReport() {
 
 // Auto-initialize on load if elements exist
 document.addEventListener('DOMContentLoaded', () => {
+    // ⏰ Definir data padrão como Hoje para corrigir relatórios vazios exibindo todos os tempos
+    const tzOffset = new Date().getTimezoneOffset() * 60000; 
+    const todayISO = new Date(Date.now() - tzOffset).toISOString().slice(0, 10);
+    
+    ['reportDateStart', 'reportDateEnd', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = todayISO;
+    });
+
     if (document.getElementById('totalRevenue') || document.getElementById('salesSummary')) {
         loadSalesReport();
     }

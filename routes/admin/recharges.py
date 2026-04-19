@@ -58,6 +58,11 @@ def list_panel_recharges():
         # Total count
         total_items = conn.execute('SELECT COUNT(*) FROM panel_recharges').fetchone()[0]
 
+        # Total costs
+        totals_row = conn.execute('SELECT SUM(total_cost_usd * dolar_rate) as t_brl, SUM(total_cost_usd) as t_usd FROM panel_recharges').fetchone()
+        total_brl = float(totals_row['t_brl'] or 0)
+        total_usd = float(totals_row['t_usd'] or 0)
+
         # Paginated data
         recharges = conn.execute(f'''
             SELECT * FROM panel_recharges 
@@ -70,6 +75,8 @@ def list_panel_recharges():
         return jsonify({
             'data': [dict(r) for r in recharges],
             'total': total_items,
+            'total_brl': total_brl,
+            'total_usd': total_usd,
             'page': page,
             'limit': limit,
             'pages': (total_items + limit - 1) // limit

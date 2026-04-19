@@ -9,43 +9,90 @@
 <div class="mb-8 border-2 border-cyan-500 rounded-lg p-6 bg-cyan-500/5">
     <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
         <h2 class="text-xl font-bold text-cyan-400">📊 Resumo de Vendas</h2>
-        <div class="flex flex-wrap items-center gap-2">
-            <input type="date" id="reportDateStart" class="bg-gray-800 text-sm text-gray-300 rounded border border-cyan-500 px-2 py-1" onchange="updateSalesData()">
-            <span class="text-gray-400 text-sm">até</span>
-            <input type="date" id="reportDateEnd" class="bg-gray-800 text-sm text-gray-300 rounded border border-cyan-500 px-2 py-1" onchange="updateSalesData()">
-            <button type="button" onclick="loadSalesReport(); loadInsights();"
-                class="px-4 py-1.5 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-500">🔄 Atualizar Tudo</button>
+        <div class="flex flex-col items-end gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-gray-400 text-sm font-bold">Período:</span>
+                <input type="date" id="reportDateStart" class="bg-gray-800 text-sm text-gray-300 rounded border border-cyan-500 px-2 py-1" onchange="updateSalesData()">
+                <span class="text-gray-400 text-sm">até</span>
+                <input type="date" id="reportDateEnd" class="bg-gray-800 text-sm text-gray-300 rounded border border-cyan-500 px-2 py-1" onchange="updateSalesData()">
+                <button type="button" onclick="loadSalesReport(); loadInsights();"
+                    class="px-4 py-1.5 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-500">🔄 Atualizar</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full justify-end">
+                <label class="flex items-center gap-1 text-sm text-gray-400 cursor-pointer">
+                    <input type="checkbox" id="enableCompare" onchange="toggleCompareUI()" class="rounded border-gray-600 bg-gray-700 text-cyan-500"> 
+                    Comparar com:
+                </label>
+                <div id="compareDatesUI" class="hidden flex items-center gap-2">
+                    <input type="date" id="reportCompareStart" class="bg-gray-800 text-sm text-gray-300 rounded border border-gray-500 px-2 py-1" onchange="updateSalesData()">
+                    <span class="text-gray-400 text-sm">até</span>
+                    <input type="date" id="reportCompareEnd" class="bg-gray-800 text-sm text-gray-300 rounded border border-gray-500 px-2 py-1" onchange="updateSalesData()">
+                </div>
+            </div>
         </div>
+        <script>
+            function toggleCompareUI() {
+                const ui = document.getElementById('compareDatesUI');
+                if (document.getElementById('enableCompare').checked) {
+                    ui.classList.remove('hidden');
+                } else {
+                    ui.classList.add('hidden');
+                    // clean up the inputs and refresh
+                    document.getElementById('reportCompareStart').value = '';
+                    document.getElementById('reportCompareEnd').value = '';
+                }
+                updateSalesData();
+                if(typeof loadInsights === 'function') loadInsights();
+            }
+        </script>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-6 gap-2 md:gap-4" id="salesSummary">
         <div class="border border-blue-500 rounded-lg p-4 bg-gray-800/50">
             <p class="text-xs text-gray-400 mb-2">🌐 Vendas Online</p>
-            <p class="text-2xl font-bold text-blue-500" id="onlineRevenue">R$ 0,00</p>
+            <p class="text-2xl font-bold text-blue-500 flex items-center flex-wrap">
+                <span id="onlineRevenue">R$ 0,00</span>
+                <span id="onlineRevenueDelta" class="text-sm ml-2 font-normal"></span>
+            </p>
             <p class="text-xs text-gray-500" id="onlineCount">0 vendas</p>
         </div>
         <div class="border border-purple-500 rounded-lg p-4 bg-gray-800/50">
             <p class="text-xs text-gray-400 mb-2">🛒 Vendas Manuais</p>
-            <p class="text-2xl font-bold text-purple-500" id="manualRevenue">R$ 0,00</p>
+            <p class="text-2xl font-bold text-purple-500 flex items-center flex-wrap">
+                <span id="manualRevenue">R$ 0,00</span>
+                <span id="manualRevenueDelta" class="text-sm ml-2 font-normal"></span>
+            </p>
             <p class="text-xs text-gray-500" id="manualCount">0 vendas</p>
         </div>
         <div class="border border-green-500 rounded-lg p-4 bg-gray-800/50">
             <p class="text-xs text-gray-400 mb-2">💰 Faturamento Total</p>
-            <p class="text-2xl font-bold text-green-500" id="totalRevenue">R$ 0,00</p>
+            <p class="text-2xl font-bold text-green-500 flex items-center flex-wrap">
+                <span id="totalRevenue">R$ 0,00</span>
+                <span id="totalRevenueDelta" class="text-sm ml-2 font-normal"></span>
+            </p>
             <p class="text-xs text-gray-500" id="totalCount">0 vendas</p>
         </div>
         <div class="border border-red-500 rounded-lg p-4 bg-gray-800/50">
             <p class="text-xs text-gray-400 mb-2">📉 Custos Totais</p>
-            <p class="text-2xl font-bold text-red-500" id="totalCosts">R$ 0,00</p>
+            <p class="text-2xl font-bold text-red-500 flex items-center flex-wrap">
+                <span id="totalCosts">R$ 0,00</span>
+                <span id="totalCostsDelta" class="text-sm ml-2 font-normal"></span>
+            </p>
             <p class="text-xs text-gray-500">Produtos + Recargas</p>
         </div>
         <div class="border border-emerald-500 rounded-lg p-4 bg-gray-800/50">
             <p class="text-xs text-gray-400 mb-2">🎯 Lucro Total</p>
-            <p class="text-2xl font-bold text-emerald-500" id="totalProfit">R$ 0,00</p>
+            <p class="text-2xl font-bold text-emerald-500 flex items-center flex-wrap">
+                <span id="totalProfit">R$ 0,00</span>
+                <span id="totalProfitDelta" class="text-sm ml-2 font-normal"></span>
+            </p>
             <p class="text-xs text-gray-500" id="marginProfit">0%</p>
         </div>
         <div class="border border-yellow-500 rounded-lg p-4 bg-gray-800/50">
             <p class="text-xs text-gray-400 mb-2">💸 Ticket Médio (AOV)</p>
-            <p class="text-2xl font-bold text-yellow-500" id="averageTicket">R$ 0,00</p>
+            <p class="text-2xl font-bold text-yellow-500 flex items-center flex-wrap">
+                <span id="averageTicket">R$ 0,00</span>
+                <span id="averageTicketDelta" class="text-sm ml-2 font-normal"></span>
+            </p>
             <p class="text-xs text-gray-500" id="totalOrders">0 pedidos</p>
         </div>
     </div>
@@ -367,6 +414,18 @@ function convertUsdToBrl() {
     <div class="border-2 border-orange-500 rounded-lg p-6 bg-orange-500/5">
         <h3 class="text-xl font-bold text-orange-400 mb-4">📋 Histórico de Recargas</h3>
         
+        <!-- Resumo de Gastos com Recargas -->
+        <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-gray-800/50 border border-orange-500/30 rounded-lg">
+                <p class="text-xs text-gray-400 mb-1">Total Gasto (BRL)</p>
+                <p class="text-2xl font-bold text-orange-400" id="rechargesTotalSpentBrl">R$ 0,00</p>
+            </div>
+            <div class="p-4 bg-gray-800/50 border border-orange-500/30 rounded-lg">
+                <p class="text-xs text-gray-400 mb-1">Total Gasto (USD)</p>
+                <p class="text-2xl font-bold text-orange-400" id="rechargesTotalSpentUsd">$ 0.00</p>
+            </div>
+        </div>
+
         <!-- Pagination Controls Top -->
         <div class="flex justify-between items-center mb-4">
             <select id="rechargesLimit" onchange="changeRechargesLimit()" 

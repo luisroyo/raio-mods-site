@@ -109,6 +109,16 @@ async function loadPanelRecharges(page = 1) {
         document.getElementById('btnPrevRecharges').disabled = currentRechargePage <= 1;
         document.getElementById('btnNextRecharges').disabled = currentRechargePage >= totalRechargePages;
 
+        const totalBrlEl = document.getElementById('rechargesTotalSpentBrl');
+        if (totalBrlEl && result.total_brl !== undefined) {
+            totalBrlEl.textContent = `R$ ${result.total_brl.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+        
+        const totalUsdEl = document.getElementById('rechargesTotalSpentUsd');
+        if (totalUsdEl && result.total_usd !== undefined) {
+            totalUsdEl.textContent = `$ ${result.total_usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
     } catch (err) {
         console.error('Erro ao carregar recargas:', err);
     }

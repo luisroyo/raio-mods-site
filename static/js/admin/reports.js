@@ -219,17 +219,17 @@ async function updateSalesData() {
 
             el.className = "w-full mt-3 pt-3 border-t border-gray-700/50 flex flex-col gap-1.5";
             el.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider" title="${compareLabel}">Período Comparado</span>
-                    <span class="text-xs text-gray-300 font-bold">${prevStr}</span>
+                <div class="flex justify-between items-center gap-2">
+                    <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate" title="${compareLabel}">Anterior</span>
+                    <span class="text-xs text-gray-300 font-bold whitespace-nowrap">${prevStr}</span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-400">Diferença em Valor:</span>
-                    <span class="text-xs font-bold ${colorCls}">${diffStr}</span>
+                <div class="flex justify-between items-center gap-2">
+                    <span class="text-[10px] text-gray-400 truncate">Diferença:</span>
+                    <span class="text-xs font-bold whitespace-nowrap ${colorCls}">${diffStr}</span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-400">Percentual:</span>
-                    <span class="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-900/80 border border-current shadow-sm ${colorCls}">${icon} ${absPct}</span>
+                <div class="flex justify-between items-center gap-2">
+                    <span class="text-[10px] text-gray-400 truncate">Percentual:</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-900/80 border border-current shadow-sm whitespace-nowrap ${colorCls}">${icon} ${absPct}</span>
                 </div>
             `;
         };
@@ -288,7 +288,7 @@ async function loadInsights() {
                 const el = document.getElementById('averageTicketDelta');
                 const current = data.average_ticket;
                 const previous = compareData.average_ticket;
-                if (!previous || previous === 0) {
+                if (!previous && previous !== 0) {
                     el.innerHTML = '';
                 } else {
                     const diff = current - previous;
@@ -326,17 +326,17 @@ async function loadInsights() {
 
                     el.className = "w-full mt-3 pt-3 border-t border-gray-700/50 flex flex-col gap-1.5";
                     el.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider" title="${compareLabel}">Período Comparado</span>
-                            <span class="text-xs text-gray-300 font-bold">${prevStr}</span>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate" title="${compareLabel}">Anterior</span>
+                            <span class="text-xs text-gray-300 font-bold whitespace-nowrap">${prevStr}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-gray-400">Diferença em Valor:</span>
-                            <span class="text-xs font-bold ${colorCls}">${diffStr}</span>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-[10px] text-gray-400 truncate">Diferença:</span>
+                            <span class="text-xs font-bold whitespace-nowrap ${colorCls}">${diffStr}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-gray-400">Percentual:</span>
-                            <span class="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-900/80 border border-current shadow-sm ${colorCls}">${icon} ${absPct}</span>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-[10px] text-gray-400 truncate">Percentual:</span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-900/80 border border-current shadow-sm whitespace-nowrap ${colorCls}">${icon} ${absPct}</span>
                         </div>
                     `;
                 }

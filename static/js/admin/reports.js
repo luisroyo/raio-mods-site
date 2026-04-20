@@ -193,8 +193,19 @@ async function updateSalesData() {
                 icon = '↓';
             }
 
-            el.className = `text-sm font-normal ml-2 ${colorCls}`;
-            el.innerHTML = `${icon} ${absVal}`;
+            const cmpStart = document.getElementById('reportCompareStart')?.value;
+            const cmpEnd = document.getElementById('reportCompareEnd')?.value;
+            let compareLabel = 'período anterior';
+            if (cmpStart && cmpEnd) {
+                const formatD = (d) => {
+                    const p = d.split('-');
+                    return p.length === 3 ? `${p[2]}/${p[1]}` : d;
+                };
+                compareLabel = `${formatD(cmpStart)} até ${formatD(cmpEnd)}`;
+            }
+
+            el.className = `text-sm font-normal ml-2 flex items-center gap-1.5 flex-wrap ${colorCls}`;
+            el.innerHTML = `<span class="px-1.5 py-0.5 rounded bg-gray-900/80 font-bold border border-current shadow-sm" title="Diferença percentual em relação ao período comparativo">${icon} ${absVal}</span> <span class="text-[11px] text-gray-400 whitespace-nowrap">vs ${compareLabel}</span>`;
         };
 
         if (compareReport) {
@@ -264,8 +275,19 @@ async function loadInsights() {
                     if (isPositive) { colorCls = 'text-emerald-400'; icon = '↑'; }
                     else if (isNegative) { colorCls = 'text-red-500'; icon = '↓'; }
                     
-                    el.className = `text-sm font-normal ml-2 ${colorCls}`;
-                    el.innerHTML = `${icon} ${absVal}`;
+                    const cmpStart = document.getElementById('reportCompareStart')?.value;
+                    const cmpEnd = document.getElementById('reportCompareEnd')?.value;
+                    let compareLabel = 'período anterior';
+                    if (cmpStart && cmpEnd) {
+                        const formatD = (d) => {
+                            const p = d.split('-');
+                            return p.length === 3 ? `${p[2]}/${p[1]}` : d;
+                        };
+                        compareLabel = `${formatD(cmpStart)} até ${formatD(cmpEnd)}`;
+                    }
+
+                    el.className = `text-sm font-normal ml-2 flex items-center gap-1.5 flex-wrap ${colorCls}`;
+                    el.innerHTML = `<span class="px-1.5 py-0.5 rounded bg-gray-900/80 font-bold border border-current shadow-sm" title="Diferença percentual em relação ao período comparativo">${icon} ${absVal}</span> <span class="text-[11px] text-gray-400 whitespace-nowrap">vs ${compareLabel}</span>`;
                 }
             } else if (document.getElementById('averageTicketDelta')) {
                 document.getElementById('averageTicketDelta').innerHTML = '';

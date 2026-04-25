@@ -310,25 +310,27 @@ def create_payment():
             
             product_dict = dict(product)
 
+            # Regra de negócio de exibição de preço (promoção ou fixo)
+            raw_price = product_dict.get('promo_price') or product_dict.get('price')
+            base_price = parse_price(raw_price)
+            final_price = base_price
+            
+            coupon_code = data.get('coupon')
+            applied_coupon = None
+            if coupon_code:
+                discount_amt, err, c_data = get_coupon_discount(coupon_code, base_price, conn)
+                if not err and c_data:
+                    final_price = base_price - discount_amt
+                    applied_coupon = c_data['id']
+                    # Opcional: já contabiliza "uso" aqui para impedir fraude de carrinho infinito
+                    conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (applied_coupon,))
+                    conn.commit()
+
         sdk = get_mp_sdk()
         if not sdk:
             return jsonify({'error': 'Configuração de pagamento (Mercado Pago) ausente ou inválida.'}), 500
 
-        # Regra de negócio de exibição de preço (promoção ou fixo)
-        raw_price = product_dict.get('promo_price') or product_dict.get('price')
-        base_price = parse_price(raw_price)
-        final_price = base_price
-        
-        coupon_code = data.get('coupon')
-        applied_coupon = None
-        if coupon_code:
-            discount_amt, err, c_data = get_coupon_discount(coupon_code, base_price, conn)
-            if not err and c_data:
-                final_price = base_price - discount_amt
-                applied_coupon = c_data['id']
-                # Opcional: já contabiliza "uso" aqui para impedir fraude de carrinho infinito
-                conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (applied_coupon,))
-
+        final_price = round(final_price, 2)
         order_ref = f"ORD-{uuid.uuid4().hex[:12]}"
         first_name, last_name = parse_customer_name(customer_name, email)
 

@@ -233,7 +233,22 @@ def pagamento():
 def pedido_status(order_ref):
     """Página de status do pedido - destino do redirect após pagamento no Mercado Pago."""
     mp_status = request.args.get('collection_status') or request.args.get('status', '')
-    return render_template('pedido.html', order_ref=order_ref, mp_status=mp_status)
+    
+    conn = get_db_connection()
+    whatsapp_contact = _get_whatsapp_from_config(conn)
+    
+    order = conn.execute('''
+        SELECT p.name as product_name
+        FROM orders o
+        JOIN products p ON o.product_id = p.id
+        WHERE o.external_reference = ?
+    ''', (order_ref,)).fetchone()
+    
+    product_name = order['product_name'] if order else "Produto"
+    conn.close()
+    
+    return render_template('pedido.html', order_ref=order_ref, mp_status=mp_status, 
+                           whatsapp_contact=whatsapp_contact, product_name=product_name)
 
 @public_bp.route('/seguranca')
 def seguranca():

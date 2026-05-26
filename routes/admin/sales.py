@@ -501,12 +501,7 @@ def sales_insights():
         params_manual.append(date_end)
 
     # 1. Top Clientes (LTV)
-    top_customers_query = f'''
-        SELECT 
-            MAX(display_name) as name,
-            MAX(email) as email,
-            SUM(orders_count) as orders_count,
-            SUM(total_spent) as total_spent
+    top_customers_base = f'''
         FROM (
             SELECT 
                 COALESCE(NULLIF(customer_name, ''), customer_email) as display_name,
@@ -529,15 +524,42 @@ def sales_insights():
             GROUP BY client_name
         )
         GROUP BY LOWER(TRIM(display_name))
+    '''
+
+    top_customers_value_query = f'''
+        SELECT 
+            MAX(display_name) as name,
+            MAX(email) as email,
+            SUM(orders_count) as orders_count,
+            SUM(total_spent) as total_spent
+        {top_customers_base}
         ORDER BY total_spent DESC
         LIMIT 10
     '''
+
+    top_customers_count_query = f'''
+        SELECT 
+            MAX(display_name) as name,
+            MAX(email) as email,
+            SUM(orders_count) as orders_count,
+            SUM(total_spent) as total_spent
+        {top_customers_base}
+        ORDER BY orders_count DESC, total_spent DESC
+        LIMIT 10
+    '''
+
     params_combined = params_orders + params_manual
     try:
-        top_customers = [dict(row) for row in conn.execute(top_customers_query, params_combined).fetchall()]
+        top_customers_value = [dict(row) for row in conn.execute(top_customers_value_query, params_combined).fetchall()]
     except Exception as e:
-        print(f"Erro ao buscar ranking de clientes: {e}")
-        top_customers = []
+        print(f"Erro ao buscar ranking de clientes por valor: {e}")
+        top_customers_value = []
+
+    try:
+        top_customers_count = [dict(row) for row in conn.execute(top_customers_count_query, params_combined).fetchall()]
+    except Exception as e:
+        print(f"Erro ao buscar ranking de clientes por pedidos: {e}")
+        top_customers_count = []
     
     # 2. Vendas por Tempo
     time_query_online = f'''
@@ -695,7 +717,9 @@ def sales_insights():
     conn.close()
 
     return jsonify({
-        'top_customers': top_customers,
+        'top_customers': top_customers_value,
+        'top_customers_value': top_customers_value,
+        'top_customers_count': top_customers_count,
         'sales_over_time': sales_over_time,
         'category_profits': category_profits,
         'stock_alerts': stock_alerts,

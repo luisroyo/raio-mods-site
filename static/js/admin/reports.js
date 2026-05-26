@@ -345,22 +345,34 @@ async function loadInsights() {
             }
         }
 
-        // Render Top Customers Table
-        const topTable = document.getElementById('topCustomersTable');
-        if (topTable) {
-            if (data.top_customers && data.top_customers.length > 0) {
-                topTable.innerHTML = data.top_customers.map((c, i) => `
-                    <tr class="border-b border-gray-700 hover:bg-gray-700/30">
-                        <td class="p-2">
-                            <p class="text-white font-bold">${c.name || 'Desconhecido'}</p>
-                            <p class="text-xs text-gray-500">${c.email}</p>
-                        </td>
-                        <td class="p-2 text-center text-gray-400">${c.orders_count}</td>
-                        <td class="p-2 text-right text-yellow-400 font-bold">${fmt(c.total_spent)}</td>
-                    </tr>
-                `).join('');
+        const fmtCustomerRow = (c) => `
+            <tr class="border-b border-gray-700 hover:bg-gray-700/30">
+                <td class="p-2">
+                    <p class="text-white font-bold">${c.name || 'Desconhecido'}</p>
+                    <p class="text-xs text-gray-500">${c.email}</p>
+                </td>
+                <td class="p-2 text-center text-gray-400">${c.orders_count}</td>
+                <td class="p-2 text-right text-yellow-400 font-bold">${fmt(c.total_spent)}</td>
+            </tr>
+        `;
+
+        // Render Top Customers by Value Table
+        const topValueTable = document.getElementById('topCustomersValueTable');
+        if (topValueTable) {
+            if (data.top_customers_value && data.top_customers_value.length > 0) {
+                topValueTable.innerHTML = data.top_customers_value.map(fmtCustomerRow).join('');
             } else {
-                topTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Sem clientes no período</td></tr>';
+                topValueTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Sem clientes no período</td></tr>';
+            }
+        }
+
+        // Render Top Customers by Order Count Table
+        const topCountTable = document.getElementById('topCustomersCountTable');
+        if (topCountTable) {
+            if (data.top_customers_count && data.top_customers_count.length > 0) {
+                topCountTable.innerHTML = data.top_customers_count.map(fmtCustomerRow).join('');
+            } else {
+                topCountTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Sem clientes no período</td></tr>';
             }
         }
 

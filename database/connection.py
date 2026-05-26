@@ -57,7 +57,7 @@ def init_db():
             unit_price REAL,
             cost_per_unit_brl REAL,
             total_price REAL,
-            notes TEXT,
+            client_name TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (product_id) REFERENCES products (id)
         )
@@ -236,6 +236,17 @@ def init_db():
                 print(f"--> Adicionando coluna {col_name} em config...")
                 cursor.execute(f'ALTER TABLE config ADD COLUMN {col_name} {col_type}')
             except: pass
+
+    # --- MIGRAÇÃO: Renomear notes para client_name na tabela manual_sales ---
+    try:
+        cursor.execute('SELECT client_name FROM manual_sales LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            cursor.execute('SELECT notes FROM manual_sales LIMIT 1')
+            print("--> Renomeando coluna notes para client_name na tabela manual_sales...")
+            cursor.execute('ALTER TABLE manual_sales RENAME COLUMN notes TO client_name')
+        except sqlite3.OperationalError:
+            pass
 
     conn.commit()
     conn.close()

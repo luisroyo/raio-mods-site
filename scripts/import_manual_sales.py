@@ -8,11 +8,11 @@ Colunas do CSV (primeira linha = cabeçalho, obrigatório):
   - quantity: quantidade vendida (ex: 1, 2)
   - unit_price: preço de venda unitário em R$ (ex: 39.90)
   - cost_per_unit_brl: custo unitário em R$ (ex: 25.00) — opcional
-  - notes: observações (ex: "Venda antiga do cliente") — opcional
+  - client_name (ou notes): nome do cliente (ex: "João Silva") — opcional
   - created_at: data/hora no formato YYYY-MM-DD HH:MM:SS (ex: 2026-01-15 14:30:00) — opcional
 
 Exemplo de CSV:
-product_name,quantity,unit_price,cost_per_unit_brl,notes,created_at
+product_name,quantity,unit_price,cost_per_unit_brl,client_name,created_at
 HACK KOS PREMIUM 7 DIAS,2,39.90,25.00,"Cliente João",2026-02-03 14:30:00
 FREE FIRE,1,17.90,10.50,"Venda loja",2026-01-15 10:00:00
 
@@ -124,14 +124,14 @@ def main(csv_path):
                     print(f"Linha {i}: custo inválido ({raw_cost}). Usando 0.0. {e}")
                     cost_per_unit_brl = 0.0
             
-            notes = (row.get('notes') or '').strip()
+            client_name = (row.get('client_name') or row.get('notes') or '').strip()
             created_at = (row.get('created_at') or '').strip() or None
             total_price = round(quantity * unit_price, 2)
 
             try:
                 cur.execute(
-                    'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at) VALUES (?,?,?,?,?,?,?)',
-                    (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at)
+                    'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at) VALUES (?,?,?,?,?,?,?)',
+                    (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at)
                 )
                 inserted += 1
                 print(f"Linha {i}: OK - {quantity}x {row.get('product_name', f'ID:{product_id}')} = R$ {total_price:.2f}")

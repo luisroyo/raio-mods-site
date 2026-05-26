@@ -24,7 +24,7 @@ cursor.execute('''
         quantity,
         unit_price,
         total_price,
-        notes,
+        client_name,
         created_at
     FROM manual_sales
     ORDER BY id DESC
@@ -32,10 +32,10 @@ cursor.execute('''
 ''')
 
 for row in cursor.fetchall():
-    sale_id, product_id, qty, unit_price, total, notes, created_at = row
+    sale_id, product_id, qty, unit_price, total, client_name, created_at = row
     print(f"ID {sale_id}: Produto {product_id} | Qtd: {qty} | R$ {unit_price:.2f} | Total: R$ {total:.2f}")
-    if notes:
-        print(f"         Notas: {notes}")
+    if client_name:
+        print(f"         Cliente: {client_name}")
     if created_at:
         print(f"         Data: {created_at}")
 

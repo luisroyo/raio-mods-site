@@ -20,7 +20,8 @@ def add_manual_sale():
             cost_per_unit_brl = 0.0
         else:
             cost_per_unit_brl = float(str(raw_cost).replace('R$', '').replace(',', '.'))
-        notes = request.form.get('notes', '').strip()
+        client_name = request.form.get('client_name') or request.form.get('notes') or ''
+        client_name = client_name.strip()
         created_at = request.form.get('created_at')
         
         if not product_id or quantity <= 0 or unit_price <= 0:
@@ -57,13 +58,13 @@ def add_manual_sale():
             if len(created_at) == 10:
                 created_at += " 12:00:00"
             conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at) VALUES (?,?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at)
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at) VALUES (?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at)
             )
         else:
             conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes) VALUES (?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes)
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name) VALUES (?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name)
             )
         conn.commit()
         conn.close()
@@ -104,7 +105,7 @@ def list_manual_sales():
                 ms.cost_per_unit_brl, 
                 ms.total_price, 
                 (ms.total_price - (ms.quantity * ms.cost_per_unit_brl)) as profit,
-                ms.notes as client_info,
+                ms.client_name as client_info,
                 ms.created_at
             FROM manual_sales ms
             JOIN products p ON ms.product_id = p.id
@@ -204,7 +205,8 @@ def edit_manual_sale(sale_id):
         quantity = int(request.form.get('quantity', 1))
         unit_price = float(str(request.form.get('unit_price', 0)).replace('R$', '').replace(',', '.'))
         cost_per_unit_brl = float(str(request.form.get('cost_per_unit_brl', 0)).replace('R$', '').replace(',', '.'))
-        notes = request.form.get('notes', '').strip()
+        client_name = request.form.get('client_name') or request.form.get('notes') or ''
+        client_name = client_name.strip()
         created_at = request.form.get('created_at')
         
         if not product_id or quantity <= 0 or unit_price <= 0:
@@ -219,15 +221,15 @@ def edit_manual_sale(sale_id):
                 created_at += " 12:00:00"
             conn.execute('''
                 UPDATE manual_sales 
-                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, notes=?, created_at=?
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, created_at=?
                 WHERE id=?
-            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, created_at, sale_id))
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at, sale_id))
         else:
             conn.execute('''
                 UPDATE manual_sales 
-                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, notes=?
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?
                 WHERE id=?
-            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, notes, sale_id))
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, sale_id))
         
         conn.commit()
         conn.close()

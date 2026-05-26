@@ -232,7 +232,8 @@ function openEditManualSale(id, pid, qty, price, cost, notes, createdAt) {
     document.getElementById('edit_sale_quantity').value = qty;
     document.getElementById('edit_sale_unit_price').value = price;
     document.getElementById('edit_sale_cost').value = cost;
-    document.getElementById('edit_sale_notes').value = notes || '';
+    const clientNameInput = document.getElementById('edit_sale_client_name') || document.getElementById('edit_sale_notes');
+    if (clientNameInput) clientNameInput.value = notes || '';
     
     // Formatar data para o input date (YYYY-MM-DD)
     if (createdAt) {

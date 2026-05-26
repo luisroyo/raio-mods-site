@@ -172,7 +172,7 @@ Foram criadas 2 novas tabelas:
 ### `manual_sales`
 ```sql
 id, product_id, quantity, unit_price, cost_per_unit_brl, 
-total_price, notes, created_at
+total_price, client_name, created_at
 ```
 
 ### `panel_recharges`

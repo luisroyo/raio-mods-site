@@ -11,6 +11,7 @@ let salesTotalPages = 1;
 let salesCategory = '';
 let salesDateStart = '';
 let salesDateEnd = '';
+let salesSearch = '';
 
 function setupManualSaleForm() {
     document.getElementById('manualSaleForm')?.addEventListener('submit', async (e) => {
@@ -130,6 +131,7 @@ function applySalesFilters() {
     salesCategory = document.getElementById('filterCategory').value;
     salesDateStart = document.getElementById('filterDateStart').value;
     salesDateEnd = document.getElementById('filterDateEnd').value;
+    salesSearch = document.getElementById('filterSearch')?.value || '';
     salesPage = 1; // Reset to page 1
     loadManualSales();
 }
@@ -138,10 +140,13 @@ function clearSalesFilters() {
     salesCategory = '';
     salesDateStart = '';
     salesDateEnd = '';
+    salesSearch = '';
     
     document.getElementById('filterCategory').value = '';
     document.getElementById('filterDateStart').value = '';
     document.getElementById('filterDateEnd').value = '';
+    const searchEl = document.getElementById('filterSearch');
+    if (searchEl) searchEl.value = '';
     
     salesPage = 1;
     loadManualSales();
@@ -153,6 +158,7 @@ async function loadManualSales() {
         if (salesCategory) url += `&category=${encodeURIComponent(salesCategory)}`;
         if (salesDateStart) url += `&date_start=${salesDateStart}`;
         if (salesDateEnd) url += `&date_end=${salesDateEnd}`;
+        if (salesSearch) url += `&search=${encodeURIComponent(salesSearch)}`;
 
         const res = await fetch(url);
         const data = await res.json();

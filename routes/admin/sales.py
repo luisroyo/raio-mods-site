@@ -87,6 +87,7 @@ def list_manual_sales():
         category = request.args.get('category', '')
         date_start = request.args.get('date_start', '')
         date_end = request.args.get('date_end', '')
+        search = request.args.get('search', '').strip()
         
         dolar_hoje = get_dolar_hoje()
         
@@ -130,7 +131,7 @@ def list_manual_sales():
                 {cost_expr} as cost_per_unit_brl,
                 o.amount as total_price,
                 (o.amount - {cost_expr}) as profit,
-                o.customer_email as client_info,
+                (CASE WHEN o.customer_name IS NOT NULL AND o.customer_name != '' THEN o.customer_name || ' (' || o.customer_email || ')' ELSE o.customer_email END) as client_info,
                 o.created_at
             FROM orders o
             JOIN products p ON o.product_id = p.id
@@ -159,6 +160,10 @@ def list_manual_sales():
         if date_end:
             combined_query += " AND date(created_at, '-3 hours') <= ?"
             params.append(date_end)
+            
+        if search:
+            combined_query += ' AND client_info LIKE ?'
+            params.append(f'%{search}%')
             
         # Count total
         count_query = f'SELECT COUNT(*) FROM ({combined_query}) as counted' # nested to be safe
@@ -497,18 +502,41 @@ def sales_insights():
 
     # 1. Top Clientes (LTV)
     top_customers_query = f'''
-        SELECT customer_email as email, customer_name as name, 
-               COUNT(*) as orders_count, 
-               SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total_spent
-        FROM orders o 
-        WHERE status = 'approved' {date_clause_orders}
-        GROUP BY customer_email
-        ORDER BY total_spent DESC 
+        SELECT 
+            MAX(display_name) as name,
+            MAX(email) as email,
+            SUM(orders_count) as orders_count,
+            SUM(total_spent) as total_spent
+        FROM (
+            SELECT 
+                COALESCE(NULLIF(customer_name, ''), customer_email) as display_name,
+                customer_email as email,
+                COUNT(*) as orders_count,
+                SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total_spent
+            FROM orders o
+            WHERE status = 'approved' {date_clause_orders}
+            GROUP BY customer_email, customer_name
+
+            UNION ALL
+
+            SELECT 
+                client_name as display_name,
+                'Venda Manual' as email,
+                COUNT(*) as orders_count,
+                SUM(total_price) as total_spent
+            FROM manual_sales ms
+            WHERE 1=1 {date_clause_manual} AND client_name IS NOT NULL AND client_name != ''
+            GROUP BY client_name
+        )
+        GROUP BY LOWER(TRIM(display_name))
+        ORDER BY total_spent DESC
         LIMIT 10
     '''
+    params_combined = params_orders + params_manual
     try:
-        top_customers = [dict(row) for row in conn.execute(top_customers_query, params_orders).fetchall()]
+        top_customers = [dict(row) for row in conn.execute(top_customers_query, params_combined).fetchall()]
     except Exception as e:
+        print(f"Erro ao buscar ranking de clientes: {e}")
         top_customers = []
     
     # 2. Vendas por Tempo

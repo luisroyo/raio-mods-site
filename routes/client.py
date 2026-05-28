@@ -145,3 +145,119 @@ def dashboard_page():
 def logout():
     session.pop('client_email', None)
     return redirect(url_for('client.login_page'))
+
+@client_bp.route('/api/client/loyalty/info')
+def loyalty_info():
+    email = session.get('client_email')
+    if not email:
+        return jsonify({'error': 'Não autorizado'}), 401
+    
+    conn = get_db_connection()
+    try:
+        # Saldo de pontos
+        pts_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (email,)).fetchone()
+        points = pts_row['points'] if pts_row else 0
+        
+        # Histórico de pontos
+        history = conn.execute('''
+            SELECT points_changed, action_type, description, created_at 
+            FROM points_history 
+            WHERE email = ? 
+            ORDER BY created_at DESC LIMIT 15
+        ''', (email,)).fetchall()
+        
+        # Cupons ativos de fidelidade
+        coupons = conn.execute('''
+            SELECT coupon_code, discount_value, created_at 
+            FROM loyalty_coupons 
+            WHERE email = ? AND is_used = 0
+            ORDER BY created_at DESC
+        ''', (email,)).fetchall()
+        
+        return jsonify({
+            'points': points,
+            'history': [dict(h) for h in history],
+            'coupons': [dict(c) for c in coupons]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@client_bp.route('/api/client/loyalty/redeem', methods=['POST'])
+def loyalty_redeem():
+    email = session.get('client_email')
+    if not email:
+        return jsonify({'error': 'Não autorizado'}), 401
+        
+    data = request.json or {}
+    points_required = data.get('points')
+    
+    # Validações de pontos exigidos
+    reward_map = {
+        100: 5.0,
+        200: 12.0,
+        500: 35.0
+    }
+    
+    if points_required not in reward_map:
+        return jsonify({'error': 'Opção de resgate inválida.'}), 400
+        
+    discount_value = reward_map[points_required]
+    
+    conn = get_db_connection()
+    try:
+        # Check current points
+        pts_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (email,)).fetchone()
+        current_points = pts_row['points'] if pts_row else 0
+        
+        if current_points < points_required:
+            return jsonify({'error': 'Pontos insuficientes.'}), 400
+            
+        # Deduct points
+        new_points = current_points - points_required
+        conn.execute('UPDATE client_points SET points = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_points, email))
+        
+        # Log history
+        conn.execute('''
+            INSERT INTO points_history (email, points_changed, action_type, description)
+            VALUES (?, ?, 'redeem', ?)
+        ''', (email, -points_required, f"Resgate de cupom de R$ {discount_value:.2f}"))
+        
+        # Generate random unique coupon code
+        import string
+        coupon_code = ""
+        while True:
+            code_rand = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            coupon_code = f"FID-{code_rand}"
+            # Check uniqueness in coupons
+            dup = conn.execute('SELECT 1 FROM coupons WHERE code = ?', (coupon_code,)).fetchone()
+            if not dup:
+                break
+                
+        # Insert into coupons (usable in checkout)
+        valid_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
+        conn.execute('''
+            INSERT INTO coupons (code, discount_type, discount_value, max_uses, current_uses, valid_until)
+            VALUES (?, 'fixed', ?, 1, 0, ?)
+        ''', (coupon_code, discount_value, valid_until))
+        
+        # Insert into loyalty_coupons (tracked for client)
+        conn.execute('''
+            INSERT INTO loyalty_coupons (email, coupon_code, discount_value, is_used)
+            VALUES (?, ?, ?, 0)
+        ''', (email, coupon_code, discount_value))
+        
+        conn.commit()
+        
+        return jsonify({
+            'success': True,
+            'coupon_code': coupon_code,
+            'discount_value': discount_value,
+            'new_points': new_points
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()

@@ -22,6 +22,7 @@ def add_manual_sale():
             cost_per_unit_brl = float(str(raw_cost).replace('R$', '').replace(',', '.'))
         client_name = request.form.get('client_name') or request.form.get('notes') or ''
         client_name = client_name.strip()
+        client_email = (request.form.get('client_email') or '').strip().lower()
         created_at = request.form.get('created_at')
         
         if not product_id or quantity <= 0 or unit_price <= 0:
@@ -57,15 +58,36 @@ def add_manual_sale():
             # Se for apenas data (YYYY-MM-DD), adicionar meio-dia para evitar problemas de fuso no JS
             if len(created_at) == 10:
                 created_at += " 12:00:00"
-            conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at) VALUES (?,?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at)
+            cursor = conn.execute(
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at) VALUES (?,?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at)
             )
+            sale_id = cursor.lastrowid
         else:
-            conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name) VALUES (?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name)
+            cursor = conn.execute(
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email) VALUES (?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email)
             )
+            sale_id = cursor.lastrowid
+
+        # Atribuir Pontos de Fidelidade se e-mail estiver definido
+        if client_email:
+            points_to_add = int(total_price)
+            if points_to_add > 0:
+                prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (product_id,)).fetchone()
+                prod_name = prod_row['name'] if prod_row else 'Produto'
+                
+                client_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (client_email,)).fetchone()
+                if client_row:
+                    conn.execute('UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (points_to_add, client_email))
+                else:
+                    conn.execute('INSERT INTO client_points (email, points) VALUES (?, ?)', (client_email, points_to_add))
+                
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (client_email, points_to_add, 'earn_manual', f"Venda manual #{sale_id} - {prod_name}")
+                )
+
         conn.commit()
         conn.close()
         
@@ -106,7 +128,7 @@ def list_manual_sales():
                 ms.cost_per_unit_brl, 
                 ms.total_price, 
                 (ms.total_price - (ms.quantity * ms.cost_per_unit_brl)) as profit,
-                ms.client_name as client_info,
+                (CASE WHEN ms.client_email IS NOT NULL AND ms.client_email != '' THEN ms.client_name || ' (' || ms.client_email || ')' ELSE ms.client_name END) as client_info,
                 ms.created_at
             FROM manual_sales ms
             JOIN products p ON ms.product_id = p.id
@@ -212,6 +234,7 @@ def edit_manual_sale(sale_id):
         cost_per_unit_brl = float(str(request.form.get('cost_per_unit_brl', 0)).replace('R$', '').replace(',', '.'))
         client_name = request.form.get('client_name') or request.form.get('notes') or ''
         client_name = client_name.strip()
+        client_email = (request.form.get('client_email') or '').strip().lower()
         created_at = request.form.get('created_at')
         
         if not product_id or quantity <= 0 or unit_price <= 0:
@@ -220,26 +243,59 @@ def edit_manual_sale(sale_id):
         
         total_price = quantity * unit_price
         
+        # Estornar pontos antigos se houvesse e-mail antigo
+        old_email = existing['client_email']
+        old_total = existing['total_price']
+        if old_email:
+            old_points = int(old_total)
+            if old_points > 0:
+                pts_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (old_email,)).fetchone()
+                if pts_row:
+                    new_pts = max(0, pts_row['points'] - old_points)
+                    conn.execute('UPDATE client_points SET points = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_pts, old_email))
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (old_email, -old_points, 'admin_rollback', f"Estorno (Edição) da Venda manual #{sale_id}")
+                )
+
         if created_at:
             created_at = created_at.replace('T', ' ')
             if len(created_at) == 10:
                 created_at += " 12:00:00"
             conn.execute('''
                 UPDATE manual_sales 
-                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, created_at=?
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, client_email=?, created_at=?
                 WHERE id=?
-            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, created_at, sale_id))
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, sale_id))
         else:
             conn.execute('''
                 UPDATE manual_sales 
-                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, client_email=?
                 WHERE id=?
-            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, sale_id))
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, sale_id))
+
+        # Adicionar novos pontos se houver novo e-mail
+        if client_email:
+            new_points = int(total_price)
+            if new_points > 0:
+                prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (product_id,)).fetchone()
+                prod_name = prod_row['name'] if prod_row else 'Produto'
+                
+                client_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (client_email,)).fetchone()
+                if client_row:
+                    conn.execute('UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_points, client_email))
+                else:
+                    conn.execute('INSERT INTO client_points (email, points) VALUES (?, ?)', (client_email, new_points))
+                
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (client_email, new_points, 'earn_manual', f"Correção (Edição) da Venda manual #{sale_id} - {prod_name}")
+                )
         
         conn.commit()
         conn.close()
         
-        return jsonify({'success': True, 'message': 'Venda atualizada com sucesso!'})
+        return jsonify({'success': True, 'message': 'Venda updated com sucesso!'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -248,12 +304,36 @@ def delete_manual_sale(sale_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
     
-    conn = get_db_connection()
-    conn.execute('DELETE FROM manual_sales WHERE id = ?', (sale_id,))
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True})
+    try:
+        conn = get_db_connection()
+        existing = conn.execute('SELECT * FROM manual_sales WHERE id = ?', (sale_id,)).fetchone()
+        if not existing:
+            conn.close()
+            return jsonify({'error': 'Venda não encontrada'}), 404
+            
+        old_email = existing['client_email']
+        old_total = existing['total_price']
+        
+        # Estornar pontos se houvesse e-mail
+        if old_email:
+            old_points = int(old_total)
+            if old_points > 0:
+                pts_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (old_email,)).fetchone()
+                if pts_row:
+                    new_pts = max(0, pts_row['points'] - old_points)
+                    conn.execute('UPDATE client_points SET points = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_pts, old_email))
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (old_email, -old_points, 'admin_rollback', f"Remoção da Venda manual #{sale_id}")
+                )
+                
+        conn.execute('DELETE FROM manual_sales WHERE id = ?', (sale_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 def sales_report():

@@ -238,8 +238,20 @@ function openEditManualSale(id, pid, qty, price, cost, notes, createdAt) {
     document.getElementById('edit_sale_quantity').value = qty;
     document.getElementById('edit_sale_unit_price').value = price;
     document.getElementById('edit_sale_cost').value = cost;
+    
+    let name = notes || '';
+    let email = '';
+    if (name.includes('(') && name.includes(')')) {
+        const parts = name.split('(');
+        name = parts[0].trim();
+        email = parts[1].replace(')', '').trim();
+    }
+    
     const clientNameInput = document.getElementById('edit_sale_client_name') || document.getElementById('edit_sale_notes');
-    if (clientNameInput) clientNameInput.value = notes || '';
+    if (clientNameInput) clientNameInput.value = name;
+    
+    const clientEmailInput = document.getElementById('edit_sale_client_email');
+    if (clientEmailInput) clientEmailInput.value = email;
     
     // Formatar data para o input date (YYYY-MM-DD)
     if (createdAt) {

@@ -134,6 +134,40 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # 5. Tabela de Pontos de Fidelidade
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS client_points (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            points INTEGER DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 6. Tabela de Histórico de Pontos
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS points_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            points_changed INTEGER NOT NULL,
+            action_type TEXT NOT NULL, -- 'earn_online', 'earn_manual', 'redeem', 'admin_adjust', 'admin_rollback'
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 7. Tabela de Cupons de Fidelidade
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS loyalty_coupons (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            coupon_code TEXT UNIQUE NOT NULL,
+            discount_value REAL NOT NULL,
+            is_used INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     
     # --- MIGRAÇÕES E ATUALIZAÇÕES ---
 
@@ -247,6 +281,16 @@ def init_db():
             cursor.execute('ALTER TABLE manual_sales RENAME COLUMN notes TO client_name')
         except sqlite3.OperationalError:
             pass
+
+    # --- MIGRAÇÃO: Adicionar coluna client_email na tabela manual_sales ---
+    try:
+        cursor.execute('SELECT client_email FROM manual_sales LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            print("--> Adicionando coluna client_email em manual_sales...")
+            cursor.execute('ALTER TABLE manual_sales ADD COLUMN client_email TEXT DEFAULT ""')
+        except Exception as e:
+            print(f"Erro ao adicionar coluna client_email: {e}")
 
     conn.commit()
     conn.close()

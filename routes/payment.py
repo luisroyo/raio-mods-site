@@ -152,6 +152,29 @@ def process_approved_payment(order_ref: str, p_id: str):
             # Marca como 'paid_no_key' para auditoria futura
             conn.execute('UPDATE orders SET status = "paid_no_key", updated_at = CURRENT_TIMESTAMP WHERE id = ?', (order['id'],))
             
+        # Atribuir Pontos de Fidelidade
+        customer_email = order['customer_email'].strip().lower()
+        amount_val = order['amount']
+        points_to_add = int(amount_val)
+        if points_to_add > 0:
+            try:
+                prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+                prod_name = prod_row['name'] if prod_row else 'Produto'
+                
+                client_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (customer_email,)).fetchone()
+                if client_row:
+                    conn.execute('UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (points_to_add, customer_email))
+                else:
+                    conn.execute('INSERT INTO client_points (email, points) VALUES (?, ?)', (customer_email, points_to_add))
+                
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (customer_email, points_to_add, 'earn_online', f"Compra online #{order['id']} - {prod_name}")
+                )
+                logger.info(f"Creditado {points_to_add} pontos para {customer_email} pela compra #{order['id']}")
+            except Exception as e:
+                logger.error(f"Erro ao creditar pontos de fidelidade para {customer_email}: {e}")
+
         conn.commit()
 
         # Envia e-mail de notificação para o Admin de forma assíncrona
@@ -324,6 +347,8 @@ def create_payment():
                     applied_coupon = c_data['id']
                     # Opcional: já contabiliza "uso" aqui para impedir fraude de carrinho infinito
                     conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (applied_coupon,))
+                    if c_data['code'].upper().startswith('FID-'):
+                        conn.execute('UPDATE loyalty_coupons SET is_used = 1 WHERE coupon_code = ?', (c_data['code'],))
                     conn.commit()
 
         sdk = get_mp_sdk()

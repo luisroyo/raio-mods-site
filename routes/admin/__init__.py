@@ -404,3 +404,96 @@ def add_coupon():
 @admin_bp.route('/admin/coupons/delete/<int:coupon_id>', methods=['POST'])
 def delete_coupon(coupon_id):
     return coupons_module.delete_coupon(coupon_id)
+
+
+# --- ROTAS DE FIDELIDADE (LOYALTY) ---
+
+@admin_bp.route('/admin/loyalty')
+def admin_loyalty():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    try:
+        data = _get_admin_data()
+        if data is None:
+            return redirect(url_for('admin.admin'))
+        return render_template('admin/loyalty.html', **data)
+    except Exception as e:
+        print(f"Erro ao carregar fidelidade: {e}")
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
+@admin_bp.route('/admin/api/loyalty/list', methods=['GET'])
+def admin_loyalty_list():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        search = request.args.get('search', '').strip().lower()
+        
+        conn = get_db_connection()
+        
+        # Lista de clientes com pontos
+        query_clients = 'SELECT * FROM client_points'
+        params = []
+        if search:
+            query_clients += ' WHERE email LIKE ?'
+            params.append(f'%{search}%')
+        query_clients += ' ORDER BY points DESC, updated_at DESC'
+        
+        clients = conn.execute(query_clients, params).fetchall()
+        
+        # Histórico recente de pontos geral (limite 50)
+        history_query = '''
+            SELECT email, points_changed, action_type, description, created_at
+            FROM points_history
+            ORDER BY created_at DESC LIMIT 50
+        '''
+        history = conn.execute(history_query).fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            'clients': [dict(c) for c in clients],
+            'history': [dict(h) for h in history]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/admin/api/loyalty/adjust', methods=['POST'])
+def admin_loyalty_adjust():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+        
+    try:
+        data = request.json or {}
+        email = data.get('email', '').strip().lower()
+        points = int(data.get('points', 0))
+        reason = data.get('reason', '').strip()
+        
+        if not email or points == 0 or not reason:
+            return jsonify({'error': 'Dados incompletos'}), 400
+            
+        conn = get_db_connection()
+        
+        # Buscar ou criar cliente
+        row = conn.execute('SELECT points FROM client_points WHERE email = ?', (email,)).fetchone()
+        if row:
+            new_pts = max(0, row['points'] + points)
+            conn.execute('UPDATE client_points SET points = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_pts, email))
+        else:
+            if points < 0:
+                conn.close()
+                return jsonify({'error': 'Cliente não possui pontos para debitar.'}), 400
+            conn.execute('INSERT INTO client_points (email, points) VALUES (?, ?)', (email, points))
+            
+        # Gravar histórico
+        conn.execute('''
+            INSERT INTO points_history (email, points_changed, action_type, description)
+            VALUES (?, ?, 'admin_adjust', ?)
+        ''', (email, points, reason))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Pontos ajustados com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

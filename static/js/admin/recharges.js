@@ -15,7 +15,7 @@ function setupPanelRechargeForm() {
                 msg.className = 'mt-4 p-2 bg-green-900/30 border border-green-500 text-green-400 rounded';
                 e.target.reset();
                 loadPanelRecharges();
-                loadSalesReport();
+                if (typeof loadSalesReport === 'function') loadSalesReport();
             } else {
                 msg.textContent = '❌ ' + data.error;
                 msg.className = 'mt-4 p-2 bg-red-900/30 border border-red-500 text-red-400 rounded';
@@ -40,7 +40,7 @@ function setupPanelRechargeForm() {
                 msg.textContent = '✅ ' + data.message;
                 msg.className = 'mt-4 text-center font-bold text-green-400';
                 loadPanelRecharges();
-                loadSalesReport();
+                if (typeof loadSalesReport === 'function') loadSalesReport();
                 setTimeout(() => closeModal('editPanelRechargeModal'), 1500);
             } else {
                 msg.textContent = '❌ ' + data.error;
@@ -147,7 +147,7 @@ async function deletePanelRecharge(id) {
         const res = await fetch(`/admin/panel/recharge/delete/${id}`, { method: 'POST' });
         if (res.ok) {
             loadPanelRecharges(currentRechargePage);
-            loadSalesReport();
+            if (typeof loadSalesReport === 'function') loadSalesReport();
         }
     } catch {
         alert('Erro ao excluir');

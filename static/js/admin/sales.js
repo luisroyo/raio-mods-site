@@ -26,7 +26,7 @@ function setupManualSaleForm() {
                 msg.className = 'mt-4 p-2 bg-green-900/30 border border-green-500 text-green-400 rounded';
                 e.target.reset();
                 loadManualSales();
-                loadSalesReport();
+                if (typeof loadSalesReport === 'function') loadSalesReport();
             } else {
                 msg.textContent = '❌ ' + data.error;
                 msg.className = 'mt-4 p-2 bg-red-900/30 border border-red-500 text-red-400 rounded';
@@ -92,7 +92,7 @@ function setupManualSaleForm() {
                 setTimeout(() => {
                     closeModal('editManualSaleModal');
                     loadManualSales();
-                    loadSalesReport();
+                    if (typeof loadSalesReport === 'function') loadSalesReport();
                     msg.textContent = '';
                     msg.classList.add('hidden');
                 }, 1000);
@@ -274,7 +274,7 @@ async function deleteManualSale(id) {
         const res = await fetch(`/admin/sales/manual/delete/${id}`, { method: 'POST' });
         if (res.ok) {
             loadManualSales();
-            loadSalesReport();
+            if (typeof loadSalesReport === 'function') loadSalesReport();
         }
     } catch {
         alert('Erro ao excluir');

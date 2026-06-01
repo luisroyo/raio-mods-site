@@ -53,6 +53,86 @@ def send_otp_email(config, to_email, code):
     except Exception as e:
         return False, str(e)
 
+@client_bp.route('/cliente/cadastro')
+def cadastro_page():
+    if session.get('client_email'):
+        return redirect(url_for('client.dashboard_page'))
+    return render_template('client/cadastro.html')
+
+@client_bp.route('/api/client/register', methods=['POST'])
+def register_client():
+    from werkzeug.security import generate_password_hash
+    data = request.json or {}
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip().lower()
+    phone = data.get('phone', '').strip()
+    password = data.get('password', '')
+
+    if not all([name, email, phone, password]):
+        return jsonify({'error': 'Todos os campos são obrigatórios.'}), 400
+
+    conn = get_db_connection()
+    try:
+        # Verifica se e-mail já existe
+        existing = conn.execute('SELECT 1 FROM clients WHERE email = ?', (email,)).fetchone()
+        if existing:
+            return jsonify({'error': 'Este e-mail já está cadastrado.'}), 400
+
+        # Cria usuário
+        pwd_hash = generate_password_hash(password)
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO clients (name, email, phone, password_hash) VALUES (?, ?, ?, ?)',
+            (name, email, phone, pwd_hash)
+        )
+        insert_id = cursor.lastrowid
+        
+        # Gera o ID Único
+        client_id = f"CL{insert_id:06d}"
+        cursor.execute('UPDATE clients SET client_id = ? WHERE id = ?', (client_id, insert_id))
+        
+        # Cria registro de pontos se não existir
+        pts_row = conn.execute('SELECT 1 FROM client_points WHERE email = ?', (email,)).fetchone()
+        if not pts_row:
+            conn.execute('INSERT INTO client_points (email, points) VALUES (?, 0)', (email,))
+
+        conn.commit()
+
+        # Inicia a sessão
+        session['client_email'] = email
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': f'Erro ao registrar: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+@client_bp.route('/api/client/login-password', methods=['POST'])
+def login_password():
+    from werkzeug.security import check_password_hash
+    data = request.json or {}
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+
+    if not email or not password:
+        return jsonify({'error': 'E-mail e senha são obrigatórios.'}), 400
+
+    conn = get_db_connection()
+    try:
+        client = conn.execute('SELECT * FROM clients WHERE email = ?', (email,)).fetchone()
+        if not client:
+            return jsonify({'error': 'E-mail ou senha incorretos.'}), 400
+
+        if not check_password_hash(client['password_hash'], password):
+            return jsonify({'error': 'E-mail ou senha incorretos.'}), 400
+
+        session['client_email'] = email
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': f'Erro de login: {str(e)}'}), 500
+    finally:
+        conn.close()
+
 @client_bp.route('/cliente/login')
 def login_page():
     if session.get('client_email'):
@@ -127,6 +207,10 @@ def dashboard_page():
         return redirect(url_for('client.login_page'))
 
     conn = get_db_connection()
+    
+    # Carrega dados cadastrais do cliente
+    client = conn.execute('SELECT * FROM clients WHERE email = ?', (email,)).fetchone()
+    
     orders = conn.execute('''
         SELECT o.id, o.external_reference, o.amount, o.status, o.created_at, o.qr_code, o.qr_code_base64,
                p.name as product_name, p.image as product_image,
@@ -139,7 +223,96 @@ def dashboard_page():
     ''', (email,)).fetchall()
     conn.close()
 
-    return render_template('client/dashboard.html', orders=orders, email=email)
+    client_info = {
+        'name': client['name'] if client else 'Cliente',
+        'client_id': client['client_id'] if client else 'Sem ID (Cadastre-se)',
+        'phone': client['phone'] if client else '—'
+    }
+
+    return render_template('client/dashboard.html', orders=orders, email=email, client_info=client_info)
+
+@client_bp.route('/api/client/loyalty/redeem-points-coupon', methods=['POST'])
+def redeem_points_coupon():
+    email = session.get('client_email')
+    if not email:
+        return jsonify({'error': 'Não autorizado'}), 401
+
+    data = request.json or {}
+    coupon_code = data.get('code', '').strip().upper()
+
+    if not coupon_code:
+        return jsonify({'error': 'Código do cupom é obrigatório.'}), 400
+
+    conn = get_db_connection()
+    try:
+        # Buscar cupom de pontos
+        coupon = conn.execute('SELECT * FROM points_coupons WHERE code = ?', (coupon_code,)).fetchone()
+        if not coupon:
+            return jsonify({'error': 'Cupom inválido ou inexistente.'}), 404
+
+        # Validar data
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        if coupon['valid_until'] and coupon['valid_until'] < now:
+            return jsonify({'error': 'Este cupom já expirou.'}), 400
+
+        # Validar limite global de usos
+        if coupon['max_uses_global'] > 0 and coupon['current_uses'] >= coupon['max_uses_global']:
+            return jsonify({'error': 'Este cupom atingiu o limite máximo de usos.'}), 400
+
+        # Validar limite de usos por cliente
+        redemptions_count = conn.execute(
+            'SELECT COUNT(*) FROM points_coupon_redemptions WHERE coupon_id = ? AND client_email = ?',
+            (coupon['id'], email)
+        ).fetchone()[0]
+
+        if coupon['max_uses_per_client'] > 0 and redemptions_count >= coupon['max_uses_per_client']:
+            return jsonify({'error': 'Você já resgatou este cupom.'}), 400
+
+        # Registrar o resgate
+        conn.execute(
+            'INSERT INTO points_coupon_redemptions (coupon_id, client_email) VALUES (?, ?)',
+            (coupon['id'], email)
+        )
+
+        # Atualizar usos do cupom
+        conn.execute(
+            'UPDATE points_coupons SET current_uses = current_uses + 1 WHERE id = ?',
+            (coupon['id'],)
+        )
+
+        # Atualizar saldo de pontos
+        pts_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (email,)).fetchone()
+        if pts_row:
+            conn.execute(
+                'UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?',
+                (coupon['points_value'], email)
+            )
+            new_points = pts_row['points'] + coupon['points_value']
+        else:
+            conn.execute(
+                'INSERT INTO client_points (email, points) VALUES (?, ?)',
+                (email, coupon['points_value'])
+            )
+            new_points = coupon['points_value']
+
+        # Registrar histórico de pontos
+        conn.execute(
+            '''INSERT INTO points_history (email, points_changed, action_type, description)
+               VALUES (?, ?, 'admin_adjust', ?)''',
+            (email, coupon['points_value'], f"Resgate de Cupom de Pontos: {coupon_code}")
+        )
+
+        conn.commit()
+        return jsonify({
+            'success': True,
+            'message': f'Sucesso! Você ganhou {coupon["points_value"]} pontos.',
+            'new_points': new_points
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': f'Erro ao resgatar cupom: {str(e)}'}), 500
+    finally:
+        conn.close()
 
 @client_bp.route('/cliente/logout')
 def logout():

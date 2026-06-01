@@ -431,13 +431,19 @@ def admin_loyalty_list():
         
         conn = get_db_connection()
         
-        # Lista de clientes com pontos
-        query_clients = 'SELECT * FROM client_points'
+        # Lista de clientes com pontos + dados de cadastro
+        query_clients = '''
+            SELECT cp.*, c.name, c.client_id, c.phone
+            FROM client_points cp
+            LEFT JOIN clients c ON cp.email = c.email
+        '''
         params = []
         if search:
-            query_clients += ' WHERE email LIKE ?'
+            query_clients += ' WHERE cp.email LIKE ? OR c.name LIKE ? OR c.client_id LIKE ?'
             params.append(f'%{search}%')
-        query_clients += ' ORDER BY points DESC, updated_at DESC'
+            params.append(f'%{search}%')
+            params.append(f'%{search}%')
+        query_clients += ' ORDER BY cp.points DESC, cp.updated_at DESC'
         
         clients = conn.execute(query_clients, params).fetchall()
         
@@ -497,3 +503,92 @@ def admin_loyalty_adjust():
         return jsonify({'success': True, 'message': 'Pontos ajustados com sucesso!'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/admin/api/loyalty/coupons/list', methods=['GET'])
+def admin_points_coupons_list():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    try:
+        coupons = conn.execute('SELECT * FROM points_coupons ORDER BY created_at DESC').fetchall()
+        return jsonify({'coupons': [dict(c) for c in coupons]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@admin_bp.route('/admin/api/loyalty/coupons/add', methods=['POST'])
+def admin_points_coupons_add():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        data = request.json or {}
+        code = data.get('code', '').strip().upper()
+        points = int(data.get('points_value', 0))
+        max_uses_global = int(data.get('max_uses_global', 1))
+        max_uses_per_client = int(data.get('max_uses_per_client', 1))
+        valid_until = data.get('valid_until', '').strip() or None
+
+        if not code or points <= 0:
+            return jsonify({'error': 'Código do cupom e valor de pontos são obrigatórios.'}), 400
+
+        conn = get_db_connection()
+        
+        # Verificar duplicados
+        dup = conn.execute('SELECT 1 FROM points_coupons WHERE code = ?', (code,)).fetchone()
+        if dup:
+            conn.close()
+            return jsonify({'error': 'Já existe um cupom cadastrado com este código.'}), 400
+
+        conn.execute(
+            '''INSERT INTO points_coupons (code, points_value, max_uses_global, max_uses_per_client, valid_until)
+               VALUES (?, ?, ?, ?, ?)''',
+            (code, points, max_uses_global, max_uses_per_client, valid_until)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Cupom de pontos criado com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/admin/api/loyalty/coupons/delete/<int:cid>', methods=['POST'])
+def admin_points_coupons_delete(cid):
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM points_coupons WHERE id = ?', (cid,))
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Cupom excluído com sucesso!'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@admin_bp.route('/admin/api/clients/search', methods=['GET'])
+def admin_clients_search():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+        
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'clients': []})
+        
+    conn = get_db_connection()
+    try:
+        clients = conn.execute(
+            '''SELECT id, client_id, name, email, phone 
+               FROM clients 
+               WHERE client_id LIKE ? OR name LIKE ? OR email LIKE ?
+               LIMIT 10''',
+            (f'%{query}%', f'%{query}%', f'%{query}%')
+        ).fetchall()
+        return jsonify({'clients': [dict(c) for c in clients]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Área do Cliente - Cadastro | RAIO MODS{% endblock %}
+
+{% block content %}
+<main class="flex-grow pt-24 pb-12 flex items-center justify-center">
+    <div class="w-full max-w-md bg-[#0a0a0a] border border-cyan-500/30 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.1)] p-6 md:p-8 relative overflow-hidden">
+        
+        <!-- Decoration -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[50px] -mr-16 -mt-16 pointer-events-none"></div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-white mb-2 tracking-tight uppercase">Criar <span class="text-cyan-400">Conta</span></h1>
+            <p class="text-gray-400 text-sm">Cadastre-se para acompanhar pontos e resgatar recompensas.</p>
+        </div>
+
+        <form id="registerForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Seu Nome Completo</label>
+                <input type="text" id="reg_name" required
+                    class="w-full bg-[#111] border-2 border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="João Silva">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Seu E-mail</label>
+                <input type="email" id="reg_email" required
+                    class="w-full bg-[#111] border-2 border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="email@exemplo.com">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Telefone / WhatsApp</label>
+                <input type="text" id="reg_phone" required
+                    class="w-full bg-[#111] border-2 border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="(19) 99999-9999">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Senha</label>
+                <input type="password" id="reg_password" required minlength="6"
+                    class="w-full bg-[#111] border-2 border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="Mínimo 6 caracteres">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Confirmar Senha</label>
+                <input type="password" id="reg_password_confirm" required minlength="6"
+                    class="w-full bg-[#111] border-2 border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="Digite a senha novamente">
+            </div>
+
+            <button type="submit" id="btnRegister"
+                class="w-full py-3 px-4 bg-cyan-600 hover:bg-cyan-500 text-black font-black uppercase rounded-lg transition-colors flex items-center justify-center gap-2 mt-6">
+                Criar Minha Conta ⚡
+            </button>
+        </form>
+
+        <div id="regMessage" class="mt-4 text-center text-sm hidden font-bold"></div>
+
+        <div class="mt-8 pt-6 border-t border-gray-800 text-center text-xs text-gray-500">
+            Já possui uma conta? <a href="/cliente/login" class="text-cyan-400 font-bold hover:underline">Faça login aqui</a>
+        </div>
+    </div>
+</main>
+
+<script>
+    const registerForm = document.getElementById('registerForm');
+    const regMessage = document.getElementById('regMessage');
+    const btnRegister = document.getElementById('btnRegister');
+
+    registerForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('reg_name').value.strip ? document.getElementById('reg_name').value.strip() : document.getElementById('reg_name').value.trim();
+        const email = document.getElementById('reg_email').value.trim();
+        const phone = document.getElementById('reg_phone').value.trim();
+        const password = document.getElementById('reg_password').value;
+        const passwordConfirm = document.getElementById('reg_password_confirm').value;
+
+        if (password !== passwordConfirm) {
+            regMessage.innerText = 'As senhas não coincidem!';
+            regMessage.className = 'mt-4 text-center text-sm font-bold text-red-500';
+            regMessage.classList.remove('hidden');
+            return;
+        }
+
+        btnRegister.disabled = true;
+        btnRegister.innerHTML = 'Criando conta... <span class="animate-spin ml-2">⏳</span>';
+        regMessage.classList.add('hidden');
+
+        fetch('/api/client/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                phone: phone,
+                password: password
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                regMessage.innerText = 'Conta criada com sucesso! Redirecionando...';
+                regMessage.className = 'mt-4 text-center text-sm font-bold text-green-500';
+                regMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = '/cliente/painel';
+                }, 1500);
+            } else {
+                regMessage.innerText = data.error;
+                regMessage.className = 'mt-4 text-center text-sm font-bold text-red-500';
+                regMessage.classList.remove('hidden');
+                btnRegister.disabled = false;
+                btnRegister.innerHTML = 'Criar Minha Conta ⚡';
+            }
+        })
+        .catch(() => {
+            regMessage.innerText = 'Erro de conexão.';
+            regMessage.className = 'mt-4 text-center text-sm font-bold text-red-500';
+            regMessage.classList.remove('hidden');
+            btnRegister.disabled = false;
+            btnRegister.innerHTML = 'Criar Minha Conta ⚡';
+        });
+    });
+</script>
+{% endblock %}

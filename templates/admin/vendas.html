@@ -285,16 +285,29 @@
                     <p class="text-xs text-gray-500 mt-1">Cotação: R$ <span id="dolarRate">{{ financeiro.dolar_hoje }}</span></p>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Nome do Cliente (opcional)</label>
-                    <input type="text" name="client_name" placeholder="Ex: João Silva"
-                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+            <!-- Buscar Cliente Cadastrado -->
+            <div class="border border-purple-500/20 rounded-lg p-4 bg-purple-500/5 mt-4 relative">
+                <label class="block text-xs font-bold text-cyan-400 mb-1 uppercase tracking-wider">🔎 Buscar Cliente Cadastrado</label>
+                <div class="relative">
+                    <input type="text" id="clientSearchInput" placeholder="Digite ID (ex: CL000123), Nome ou E-mail para buscar..."
+                        class="w-full px-4 py-2 bg-gray-900 border border-cyan-500/40 focus:border-cyan-500 rounded text-white text-sm"
+                        oninput="searchClientsForManualSale(this.value)" autocomplete="off">
+                    
+                    <!-- Lista flutuante do autocomplete -->
+                    <div id="clientSearchResults" class="absolute left-0 right-0 mt-1 bg-gray-900 border border-cyan-500/30 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto hidden"></div>
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">E-mail do Cliente (opcional para fidelidade)</label>
-                    <input type="email" name="client_email" placeholder="Ex: cliente@email.com"
-                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Nome do Cliente (opcional)</label>
+                        <input type="text" name="client_name" id="manual_client_name" placeholder="Ex: João Silva"
+                            class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">E-mail do Cliente (opcional para fidelidade)</label>
+                        <input type="email" name="client_email" id="manual_client_email" placeholder="Ex: cliente@email.com"
+                            class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
+                    </div>
                 </div>
             </div>
             <button type="submit"
@@ -534,4 +547,59 @@ function showSalesTab(tab) {
 <script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=10" defer></script>
 <script src="{{ url_for('static', filename='js/admin/recharges.js') }}?v=10" defer></script>
 <script src="{{ url_for('static', filename='js/admin/reports.js') }}?v=11" defer></script>
+<script>
+    let clientSearchTimeout = null;
+    function searchClientsForManualSale(query) {
+        clearTimeout(clientSearchTimeout);
+        const resultsDiv = document.getElementById('clientSearchResults');
+        if (!query || query.trim().length < 2) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+        
+        clientSearchTimeout = setTimeout(async () => {
+            try {
+                const res = await fetch(`/admin/api/clients/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                
+                if (data.clients && data.clients.length > 0) {
+                    resultsDiv.innerHTML = data.clients.map(c => {
+                        return `
+                            <div onclick="selectClientForManualSale('${c.name}', '${c.email}', '${c.client_id}')" 
+                                 class="p-3 hover:bg-cyan-950/40 border-b border-gray-800/80 cursor-pointer text-sm text-gray-300 hover:text-white transition flex justify-between items-center">
+                                <div>
+                                    <strong class="text-white">${c.name}</strong>
+                                    <div class="text-xs text-gray-500 font-mono">${c.email}</div>
+                                </div>
+                                <span class="px-1.5 py-0.5 bg-cyan-950 text-cyan-400 border border-cyan-500/20 rounded font-mono text-[10px] font-bold">${c.client_id}</span>
+                            </div>
+                        `;
+                    }).join("");
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    resultsDiv.innerHTML = `<div class="p-3 text-xs text-gray-500 text-center">Nenhum cliente cadastrado encontrado.</div>`;
+                    resultsDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Erro na busca de clientes:", err);
+            }
+        }, 300);
+    }
+
+    function selectClientForManualSale(name, email, clientId) {
+        document.getElementById('manual_client_name').value = name;
+        document.getElementById('manual_client_email').value = email;
+        document.getElementById('clientSearchInput').value = `${name} (${clientId})`;
+        document.getElementById('clientSearchResults').classList.add('hidden');
+    }
+
+    // Fechar lista ao clicar fora
+    document.addEventListener('click', function(e) {
+        const searchDiv = document.getElementById('clientSearchInput');
+        const resultsDiv = document.getElementById('clientSearchResults');
+        if (searchDiv && resultsDiv && !searchDiv.contains(e.target) && !resultsDiv.contains(e.target)) {
+            resultsDiv.classList.add('hidden');
+        }
+    });
+</script>
 {% endblock %}

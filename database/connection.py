@@ -168,6 +168,44 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # 8. Tabela de Clientes Cadastrados
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS clients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id TEXT UNIQUE,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            phone TEXT,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 9. Tabela de Cupons de Pontos (Fidelidade Promocional)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS points_coupons (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            points_value INTEGER NOT NULL,
+            max_uses_global INTEGER DEFAULT 1,
+            max_uses_per_client INTEGER DEFAULT 1,
+            current_uses INTEGER DEFAULT 0,
+            valid_until TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 10. Tabela de Auditoria de Resgates de Cupons de Pontos
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS points_coupon_redemptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            coupon_id INTEGER NOT NULL,
+            client_email TEXT NOT NULL,
+            redeemed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (coupon_id) REFERENCES points_coupons (id)
+        )
+    ''')
     
     # --- MIGRAÇÕES E ATUALIZAÇÕES ---
 

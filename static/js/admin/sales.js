@@ -9,6 +9,7 @@ let salesTotalPages = 1;
 
 // Filter State
 let salesCategory = '';
+let salesSupplier = '';
 let salesDateStart = '';
 let salesDateEnd = '';
 let salesSearch = '';
@@ -129,6 +130,7 @@ function nextSalesPage() {
 
 function applySalesFilters() {
     salesCategory = document.getElementById('filterCategory').value;
+    salesSupplier = document.getElementById('filterSupplier')?.value || '';
     salesDateStart = document.getElementById('filterDateStart').value;
     salesDateEnd = document.getElementById('filterDateEnd').value;
     salesSearch = document.getElementById('filterSearch')?.value || '';
@@ -138,11 +140,14 @@ function applySalesFilters() {
 
 function clearSalesFilters() {
     salesCategory = '';
+    salesSupplier = '';
     salesDateStart = '';
     salesDateEnd = '';
     salesSearch = '';
     
     document.getElementById('filterCategory').value = '';
+    const supplierEl = document.getElementById('filterSupplier');
+    if (supplierEl) supplierEl.value = '';
     document.getElementById('filterDateStart').value = '';
     document.getElementById('filterDateEnd').value = '';
     const searchEl = document.getElementById('filterSearch');
@@ -156,6 +161,7 @@ async function loadManualSales() {
     try {
         let url = `/admin/sales/manual/list?page=${salesPage}&limit=${salesLimit}`;
         if (salesCategory) url += `&category=${encodeURIComponent(salesCategory)}`;
+        if (salesSupplier) url += `&supplier=${encodeURIComponent(salesSupplier)}`;
         if (salesDateStart) url += `&date_start=${salesDateStart}`;
         if (salesDateEnd) url += `&date_end=${salesDateEnd}`;
         if (salesSearch) url += `&search=${encodeURIComponent(salesSearch)}`;
@@ -164,6 +170,13 @@ async function loadManualSales() {
         const data = await res.json();
         const sales = data.data;
         allManualSales = sales; // Store globally
+        
+        // Render dynamic totals for the filtered query
+        const formatBrl = (val) => 'R$ ' + (val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const revEl = document.getElementById('salesTotalRevenue');
+        if (revEl) revEl.textContent = formatBrl(data.total_revenue);
+        const profEl = document.getElementById('salesTotalProfit');
+        if (profEl) profEl.textContent = formatBrl(data.total_profit);
         
         salesTotalPages = data.pages;
         document.getElementById('salesPageDisplay').textContent = salesPage;

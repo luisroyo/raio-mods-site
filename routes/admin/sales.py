@@ -107,6 +107,7 @@ def list_manual_sales():
         
         # Filters
         category = request.args.get('category', '')
+        supplier = request.args.get('supplier', '').strip()
         date_start = request.args.get('date_start', '')
         date_end = request.args.get('date_end', '')
         search = request.args.get('search', '').strip()
@@ -123,6 +124,7 @@ def list_manual_sales():
                 ms.product_id,
                 p.name as product_name, 
                 p.category,
+                p.supplier as supplier,
                 ms.quantity, 
                 ms.unit_price, 
                 ms.cost_per_unit_brl, 
@@ -141,6 +143,9 @@ def list_manual_sales():
         # Usar cost_brl se existir, senão calcular do cost_usd
         cost_expr = f"(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END)"
         
+        # Safe cleaning of online amount to prevent NaN and float coercion issues in SQL/JS
+        online_amount_clean = "CAST(REPLACE(REPLACE(o.amount, 'R$', ''), ',', '.') AS REAL)"
+        
         query_online = f'''
             SELECT 
                 'online' as type,
@@ -148,11 +153,12 @@ def list_manual_sales():
                 o.product_id,
                 p.name as product_name,
                 p.category,
+                p.supplier as supplier,
                 1 as quantity,
-                o.amount as unit_price,
+                {online_amount_clean} as unit_price,
                 {cost_expr} as cost_per_unit_brl,
-                o.amount as total_price,
-                (o.amount - {cost_expr}) as profit,
+                {online_amount_clean} as total_price,
+                ({online_amount_clean} - {cost_expr}) as profit,
                 (CASE WHEN o.customer_name IS NOT NULL AND o.customer_name != '' THEN o.customer_name || ' (' || o.customer_email || ')' ELSE o.customer_email END) as client_info,
                 o.created_at
             FROM orders o
@@ -174,6 +180,10 @@ def list_manual_sales():
         if category:
             combined_query += ' AND category = ?'
             params.append(category)
+
+        if supplier:
+            combined_query += ' AND supplier = ?'
+            params.append(supplier)
             
         if date_start:
             combined_query += " AND date(created_at, '-3 hours') >= ?"
@@ -187,15 +197,20 @@ def list_manual_sales():
             combined_query += ' AND client_info LIKE ?'
             params.append(f'%{search}%')
             
-        # Count total
-        count_query = f'SELECT COUNT(*) FROM ({combined_query}) as counted' # nested to be safe
-        # SQLite doesn't like same param list twice usually if passed directly, 
-        # but here we build the string.
-        # Actually proper way:
-        # We need to execute the count with params, then the data select with params.
+        # Count total and sums
+        count_query = f'''
+            SELECT 
+                COUNT(*), 
+                COALESCE(SUM(total_price), 0) as total_revenue, 
+                COALESCE(SUM(profit), 0) as total_profit 
+            FROM ({combined_query}) as counted
+        '''
         
         conn = get_db_connection()
-        total_items = conn.execute(count_query, params).fetchone()[0]
+        totals_row = conn.execute(count_query, params).fetchone()
+        total_items = totals_row[0]
+        total_revenue = totals_row['total_revenue']
+        total_profit = totals_row['total_profit']
         
         # Paginate
         combined_query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
@@ -207,6 +222,8 @@ def list_manual_sales():
         return jsonify({
             'data': [dict(s) for s in sales],
             'total': total_items,
+            'total_revenue': round(total_revenue, 2),
+            'total_profit': round(total_profit, 2),
             'page': page,
             'limit': limit,
             'pages': (total_items + limit - 1) // limit if limit > 0 else 0
@@ -342,6 +359,7 @@ def sales_report():
     
     date_start = request.args.get('date_start', '')
     date_end = request.args.get('date_end', '')
+    supplier = request.args.get('supplier', '').strip()
     
     date_clause_orders = ""
     date_clause_manual = ""
@@ -364,6 +382,12 @@ def sales_report():
         params_orders.append(date_end)
         params_manual.append(date_end)
         params_panel.append(date_end)
+
+    if supplier:
+        date_clause_orders += " AND p.supplier = ?"
+        date_clause_manual += " AND p.supplier = ?"
+        params_orders.append(supplier)
+        params_manual.append(supplier)
     
     dolar_hoje = get_dolar_hoje()
     
@@ -371,9 +395,11 @@ def sales_report():
     
     # Vendas Online
     approved_orders = conn.execute(f'''
-        SELECT SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total,
-               COUNT(*) as count
-        FROM orders o WHERE o.status = 'approved' {date_clause_orders}
+        SELECT SUM(CAST(REPLACE(REPLACE(o.amount, 'R$', ''), ',', '.') AS REAL)) as total,
+               COUNT(o.id) as count
+        FROM orders o 
+        JOIN products p ON o.product_id = p.id
+        WHERE o.status = 'approved' {date_clause_orders}
     ''', params_orders).fetchone()
     
     online_revenue = float(approved_orders['total'] or 0) if approved_orders['total'] else 0
@@ -381,8 +407,10 @@ def sales_report():
     
     # Vendas Manuais
     manual_sales = conn.execute(f'''
-        SELECT SUM(total_price) as total, COUNT(*) as count
-        FROM manual_sales ms WHERE 1=1 {date_clause_manual}
+        SELECT SUM(ms.total_price) as total, COUNT(ms.id) as count
+        FROM manual_sales ms 
+        JOIN products p ON ms.product_id = p.id
+        WHERE 1=1 {date_clause_manual}
     ''', params_manual).fetchone()
     
     manual_revenue = float(manual_sales['total'] or 0) if manual_sales['total'] else 0
@@ -408,21 +436,27 @@ def sales_report():
     
     # Custo de vendas manuais
     manual_costs = conn.execute(f'''
-        SELECT SUM(cost_per_unit_brl * quantity) as total
-        FROM manual_sales ms WHERE 1=1 {date_clause_manual}
+        SELECT SUM(ms.cost_per_unit_brl * ms.quantity) as total
+        FROM manual_sales ms 
+        JOIN products p ON ms.product_id = p.id
+        WHERE 1=1 {date_clause_manual}
     ''', params_manual).fetchone()
     
     manual_cost_brl = float(manual_costs['total'] or 0) if manual_costs['total'] else 0
     
     # Custo de recargas de painel
-    recharges = conn.execute(f'''
-        SELECT SUM(total_cost_usd) as total_usd,
-               SUM(total_cost_usd * {dolar_hoje}) as total_brl
-        FROM panel_recharges WHERE 1=1 {date_clause_panel}
-    ''', params_panel).fetchone()
-    
-    total_recharged_usd = float(recharges['total_usd'] or 0) if recharges['total_usd'] else 0
-    total_recharged_brl = float(recharges['total_brl'] or 0) if recharges['total_brl'] else 0
+    if supplier:
+        total_recharged_usd = 0.0
+        total_recharged_brl = 0.0
+    else:
+        recharges = conn.execute(f'''
+            SELECT SUM(total_cost_usd) as total_usd,
+                   SUM(total_cost_usd * {dolar_hoje}) as total_brl
+            FROM panel_recharges WHERE 1=1 {date_clause_panel}
+        ''', params_panel).fetchone()
+        
+        total_recharged_usd = float(recharges['total_usd'] or 0) if recharges['total_usd'] else 0
+        total_recharged_brl = float(recharges['total_brl'] or 0) if recharges['total_brl'] else 0
     
     # --- Agregação por Produto ---
     product_stats = {}

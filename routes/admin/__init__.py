@@ -162,6 +162,9 @@ def _get_admin_data():
     # Extract unique categories
     categories = sorted(list(set(p['category'] for p in all_products if p['category'] and p['category'].strip() != '')))
 
+    # Extract unique suppliers
+    suppliers = sorted(list(set(p['supplier'] for p in all_products if 'supplier' in p.keys() and p['supplier'] and p['supplier'].strip() != '')))
+
     # Security Audit
     security_warnings = []
     if current_app.config.get('SECRET_KEY') == 'dev-secret-key-change-me':
@@ -179,6 +182,7 @@ def _get_admin_data():
         'subproducts_by_category': subproducts_by_category,
         'parent_products': parent_products,
         'categories': categories,
+        'suppliers': suppliers,
         'links': all_links,
         'config': config,
         'stats': stats,

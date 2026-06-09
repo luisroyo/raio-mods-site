@@ -226,7 +226,8 @@ def init_db():
         ('cost_usd', 'REAL DEFAULT 0'),
         ('cost_brl', 'REAL DEFAULT 0'),
         ('apply_iof', 'INTEGER DEFAULT 1'),
-        ('is_active', 'INTEGER DEFAULT 1')
+        ('is_active', 'INTEGER DEFAULT 1'),
+        ('supplier', 'TEXT DEFAULT ""')
     ]
 
     for col_name, col_type in new_columns_products:

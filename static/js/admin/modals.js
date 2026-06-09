@@ -35,7 +35,7 @@ function openAddSubproductModal(pid, name, isCategory) {
 function openEditModal(
     id, name, desc, price, cat, img,
     tagline, sort, pid, isCat,
-    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive
+    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier
 ) {
     setVal('edit_id', id);
     setVal('edit_name', name);
@@ -54,6 +54,7 @@ function openEditModal(
 
     // isActive (default 1)
     setVal('edit_is_active', isActive !== undefined ? isActive : 1);
+    setVal('edit_supplier', supplier || '');
     setVal('edit_image_url', '');
 
     const preview = document.getElementById('edit_preview');

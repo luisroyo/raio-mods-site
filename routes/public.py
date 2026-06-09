@@ -44,13 +44,49 @@ def index():
     page = _safe_page_param()
     per_page = 20
     offset = (page - 1) * per_page
+    supplier = request.args.get('supplier', '').strip()
 
     conn = get_db_connection()
-    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id IS NULL AND is_active = 1').fetchone()[0]
-    products = conn.execute(
-        'SELECT * FROM products WHERE parent_id IS NULL AND is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
-        (per_page, offset)
-    ).fetchall()
+    
+    # Busca lista de fornecedores ativos gerais
+    suppliers_query = conn.execute('''
+        SELECT DISTINCT p.supplier 
+        FROM products p 
+        WHERE p.is_active = 1 AND p.supplier IS NOT NULL AND p.supplier != ""
+    ''').fetchall()
+    suppliers = sorted(list(set(row['supplier'] for row in suppliers_query)))
+
+    if supplier:
+        query_total = '''
+            SELECT COUNT(DISTINCT p.id) 
+            FROM products p
+            LEFT JOIN products child ON child.parent_id = p.id
+            WHERE p.parent_id IS NULL AND p.is_active = 1
+              AND (
+                p.supplier = ? 
+                OR (p.is_catalog = 1 AND child.supplier = ? AND child.is_active = 1)
+              )
+        '''
+        total = conn.execute(query_total, (supplier, supplier)).fetchone()[0]
+        
+        query_products = '''
+            SELECT DISTINCT p.* 
+            FROM products p
+            LEFT JOIN products child ON child.parent_id = p.id
+            WHERE p.parent_id IS NULL AND p.is_active = 1
+              AND (
+                p.supplier = ? 
+                OR (p.is_catalog = 1 AND child.supplier = ? AND child.is_active = 1)
+              )
+            ORDER BY p.sort_order ASC, p.id ASC LIMIT ? OFFSET ?
+        '''
+        products = conn.execute(query_products, (supplier, supplier, per_page, offset)).fetchall()
+    else:
+        total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id IS NULL AND is_active = 1').fetchone()[0]
+        products = conn.execute(
+            'SELECT * FROM products WHERE parent_id IS NULL AND is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
+            (per_page, offset)
+        ).fetchall()
 
     catalog_ids = set()
     for p in products:
@@ -69,7 +105,8 @@ def index():
     conn.close()
     return render_template('index.html', products=products, catalog_ids=catalog_ids,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
-                          page=page, total_pages=total_pages, total=total)
+                          page=page, total_pages=total_pages, total=total,
+                          suppliers=suppliers, supplier=supplier)
 
 
 @public_bp.route('/busca')
@@ -102,17 +139,35 @@ def catalogo(parent_id):
     page = _safe_page_param()
     per_page = 20
     offset = (page - 1) * per_page
+    supplier = request.args.get('supplier', '').strip()
 
     conn = get_db_connection()
     parent = conn.execute('SELECT * FROM products WHERE id = ?', (parent_id,)).fetchone()
     if not parent:
         conn.close()
         return redirect(url_for('public.index'))
-    total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id = ? AND is_active = 1', (parent_id,)).fetchone()[0]
-    children = conn.execute(
-        'SELECT * FROM products WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
-        (parent_id, per_page, offset)
-    ).fetchall()
+
+    # Busca fornecedores ativos deste catálogo específico
+    suppliers_query = conn.execute('''
+        SELECT DISTINCT supplier 
+        FROM products 
+        WHERE parent_id = ? AND is_active = 1 AND supplier IS NOT NULL AND supplier != ""
+    ''', (parent_id,)).fetchall()
+    suppliers = sorted(list(set(row['supplier'] for row in suppliers_query)))
+
+    if supplier:
+        total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id = ? AND is_active = 1 AND supplier = ?', (parent_id, supplier)).fetchone()[0]
+        children = conn.execute(
+            'SELECT * FROM products WHERE parent_id = ? AND is_active = 1 AND supplier = ? ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
+            (parent_id, supplier, per_page, offset)
+        ).fetchall()
+    else:
+        total = conn.execute('SELECT COUNT(*) FROM products WHERE parent_id = ? AND is_active = 1', (parent_id,)).fetchone()[0]
+        children = conn.execute(
+            'SELECT * FROM products WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?',
+            (parent_id, per_page, offset)
+        ).fetchall()
+
     catalog_ids = set()
     for p in children:
         is_cat = p['is_catalog'] if 'is_catalog' in p.keys() else 0
@@ -138,7 +193,6 @@ def catalogo(parent_id):
         key=lambda item: min(dict(p).get('sort_order', 0) for p in item[1]) if item[1] else 0
     )}
     
-    
     conn.close()
     
     # SEO Variables
@@ -150,7 +204,8 @@ def catalogo(parent_id):
                           products_by_category=products_by_category,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
                           page=page, total_pages=total_pages, total=total,
-                          seo_title=seo_title, seo_description=seo_description, seo_image=seo_image, catalog_ids=catalog_ids)
+                          seo_title=seo_title, seo_description=seo_description, seo_image=seo_image, catalog_ids=catalog_ids,
+                          suppliers=suppliers, supplier=supplier)
 
 @public_bp.route('/links')
 def links():

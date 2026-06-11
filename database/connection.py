@@ -206,6 +206,21 @@ def init_db():
             FOREIGN KEY (coupon_id) REFERENCES points_coupons (id)
         )
     ''')
+
+    # 11. Tabela de Feedbacks/Avaliações
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS feedbacks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_name TEXT NOT NULL,
+            client_email TEXT,
+            rating INTEGER NOT NULL,
+            comment TEXT NOT NULL,
+            product_id INTEGER,
+            status TEXT DEFAULT 'pending', -- pending, approved, rejected
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (product_id) REFERENCES products (id)
+        )
+    ''')
     
     # --- MIGRAÇÕES E ATUALIZAÇÕES ---
 

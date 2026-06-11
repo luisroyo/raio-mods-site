@@ -422,7 +422,6 @@ def loyalty_redeem():
         ''', (email, coupon_code, discount_value))
         
         conn.commit()
-        
         return jsonify({
             'success': True,
             'coupon_code': coupon_code,
@@ -434,3 +433,43 @@ def loyalty_redeem():
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+@client_bp.route('/api/client/feedback/submit', methods=['POST'])
+def submit_feedback():
+    email = session.get('client_email')
+    if not email:
+        return jsonify({'error': 'Não autorizado.'}), 401
+        
+    data = request.json or {}
+    rating = data.get('rating')
+    comment = data.get('comment', '').strip()
+    product_id = data.get('product_id')
+
+    if rating is None or not comment:
+        return jsonify({'error': 'Nota e comentário são obrigatórios.'}), 400
+
+    try:
+        rating = int(rating)
+        if rating < 1 or rating > 5:
+            return jsonify({'error': 'A nota deve ser entre 1 e 5.'}), 400
+    except ValueError:
+        return jsonify({'error': 'Nota inválida.'}), 400
+
+    conn = get_db_connection()
+    try:
+        # Obter nome do cliente cadastrado
+        client = conn.execute('SELECT name FROM clients WHERE email = ?', (email,)).fetchone()
+        client_name = client['name'] if client else 'Cliente'
+
+        conn.execute('''
+            INSERT INTO feedbacks (client_name, client_email, rating, comment, product_id, status)
+            VALUES (?, ?, ?, ?, ?, 'pending')
+        ''', (client_name, email, rating, comment, product_id))
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Feedback enviado com sucesso! Aguarde a aprovação do administrador.'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': f'Erro ao salvar feedback: {str(e)}'}), 500
+    finally:
+        conn.close()
+

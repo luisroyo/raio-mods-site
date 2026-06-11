@@ -101,12 +101,24 @@ def index():
     stock_map = _get_stock_map(conn, standalone_ids)
     whatsapp_contact = _get_whatsapp_from_config(conn)
 
+    # Buscar feedbacks aprovados para exibir na home
+    try:
+        feedbacks = conn.execute('''
+            SELECT f.*, p.name as product_name 
+            FROM feedbacks f 
+            LEFT JOIN products p ON f.product_id = p.id 
+            WHERE f.status = 'approved' 
+            ORDER BY f.created_at DESC LIMIT 10
+        ''').fetchall()
+    except Exception:
+        feedbacks = []
+
     total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
     conn.close()
     return render_template('index.html', products=products, catalog_ids=catalog_ids,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
                           page=page, total_pages=total_pages, total=total,
-                          suppliers=suppliers, supplier=supplier)
+                          suppliers=suppliers, supplier=supplier, feedbacks=feedbacks)
 
 
 @public_bp.route('/busca')

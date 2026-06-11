@@ -274,7 +274,142 @@
             alert("Erro na requisição: " + err);
         }
     }
+
+    // Controle do formulário de feedback
+    let selectedRating = 0;
+
+    window.setRating = function(rating) {
+        selectedRating = rating;
+        document.getElementById('feedbackRating').value = rating;
+        
+        const stars = document.querySelectorAll('#starContainer .star');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('text-gray-600');
+                star.classList.add('text-yellow-500', 'drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]');
+            } else {
+                star.classList.remove('text-yellow-500', 'drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]');
+                star.classList.add('text-gray-600');
+            }
+        });
+    }
+
+    // Submit Feedback form
+    document.addEventListener("DOMContentLoaded", function() {
+        // Remover duplicados no select de produtos
+        const select = document.getElementById('feedbackProduct');
+        if (select) {
+            const seen = new Set();
+            const options = Array.from(select.options);
+            options.forEach(opt => {
+                if (opt.value && seen.has(opt.value)) {
+                    opt.remove();
+                } else if (opt.value) {
+                    seen.add(opt.value);
+                }
+            });
+        }
+
+        const feedbackForm = document.getElementById("feedbackForm");
+        if (feedbackForm) {
+            feedbackForm.addEventListener("submit", async function(e) {
+                e.preventDefault();
+                const rating = document.getElementById("feedbackRating").value;
+                const comment = document.getElementById("feedbackComment").value.trim();
+                const productId = document.getElementById("feedbackProduct").value;
+                const msgEl = document.getElementById("feedbackMessage");
+                const btn = document.getElementById("btnSubmitFeedback");
+
+                if (!rating || rating === "0") {
+                    msgEl.innerText = "Por favor, selecione uma nota de 1 a 5 estrelas.";
+                    msgEl.className = "mt-2 text-xs text-red-400 font-bold block";
+                    msgEl.classList.remove("hidden");
+                    return;
+                }
+
+                btn.disabled = true;
+                msgEl.classList.add("hidden");
+
+                try {
+                    const res = await fetch("/api/client/feedback/submit", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            rating: parseInt(rating), 
+                            comment, 
+                            product_id: productId ? parseInt(productId) : null 
+                        })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        msgEl.innerText = data.message;
+                        msgEl.className = "mt-2 text-xs text-green-400 font-bold block";
+                        msgEl.classList.remove("hidden");
+                        feedbackForm.reset();
+                        window.setRating(0);
+                    } else {
+                        msgEl.innerText = data.error || "Erro ao enviar feedback.";
+                        msgEl.className = "mt-2 text-xs text-red-400 font-bold block";
+                        msgEl.classList.remove("hidden");
+                    }
+                } catch (err) {
+                    msgEl.innerText = "Erro ao enviar requisição.";
+                    msgEl.className = "mt-2 text-xs text-red-400 font-bold block";
+                    msgEl.classList.remove("hidden");
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        }
+    });
     </script>
+
+    <!-- 💬 ENVIAR FEEDBACK -->
+    <div class="mb-8 p-6 bg-[#0a0a0a] border-2 border-rose-500/30 hover:border-rose-500/60 rounded-lg transition duration-300">
+        <h3 class="text-xl font-black text-white uppercase mb-2">Deixe sua <span class="text-rose-500">Avaliação</span></h3>
+        <p class="text-xs text-gray-400 mb-4">Sua opinião é fundamental para nós. Avalie sua experiência com a RAIO MODS!</p>
+        
+        <form id="feedbackForm" class="space-y-4">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <!-- Estrelas Interativas -->
+                <div class="flex-grow">
+                    <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Nota</label>
+                    <div class="flex gap-1 text-2xl text-gray-600" id="starContainer">
+                        <button type="button" onclick="window.setRating(1)" class="star hover:scale-110 transition-transform">★</button>
+                        <button type="button" onclick="window.setRating(2)" class="star hover:scale-110 transition-transform">★</button>
+                        <button type="button" onclick="window.setRating(3)" class="star hover:scale-110 transition-transform">★</button>
+                        <button type="button" onclick="window.setRating(4)" class="star hover:scale-110 transition-transform">★</button>
+                        <button type="button" onclick="window.setRating(5)" class="star hover:scale-110 transition-transform">★</button>
+                    </div>
+                    <input type="hidden" id="feedbackRating" required min="1" max="5" value="0">
+                </div>
+                
+                <!-- Selecionar Produto -->
+                <div class="w-full sm:w-64">
+                    <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Produto Avaliado</label>
+                    <select id="feedbackProduct" class="w-full bg-black/60 border border-gray-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition-colors">
+                        <option value="">Feedback Geral</option>
+                        {% for o in orders %}
+                            {% if o.status == 'approved' %}
+                                <option value="{{ o.product_id }}">{{ o.product_name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Comentário</label>
+                <textarea id="feedbackComment" required rows="3" placeholder="Escreva aqui sua opinião sobre o produto ou nosso atendimento..." class="w-full bg-black/60 border border-gray-800 rounded px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-rose-500 transition-colors"></textarea>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div id="feedbackMessage" class="text-xs font-bold hidden"></div>
+                <button type="submit" id="btnSubmitFeedback" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black uppercase text-xs rounded transition-colors shadow-lg shadow-rose-500/20 sm:ml-auto">Enviar Avaliação</button>
+            </div>
+        </form>
+    </div>
 
     {% if not orders %}
     <div class="bg-[#0a0a0a] border border-gray-800 rounded-lg p-12 text-center">

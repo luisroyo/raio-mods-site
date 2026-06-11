@@ -57,6 +57,17 @@
                   {% if request.endpoint == 'admin.admin_links' %}bg-blue-500/20 text-blue-400 border border-blue-500{% else %}text-gray-300 hover:bg-gray-800{% endif %}">
             🔗 Links
         </a>
+        
+        <a href="{{ url_for('admin.admin_feedbacks') }}" 
+           class="flex items-center gap-3 px-3 py-3 rounded-lg transition text-sm
+                  {% if request.endpoint == 'admin.admin_feedbacks' %}bg-rose-500/20 text-rose-400 border border-rose-500{% else %}text-gray-300 hover:bg-gray-800{% endif %}">
+            💬 Feedbacks
+            {% if pending_feedbacks_count and pending_feedbacks_count > 0 %}
+            <span class="ml-auto bg-rose-500 text-black font-black text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">
+                {{ pending_feedbacks_count }}
+            </span>
+            {% endif %}
+        </a>
     </nav>
 
     <!-- Ações Rápidas -->

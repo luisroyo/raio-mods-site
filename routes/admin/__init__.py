@@ -21,6 +21,7 @@ from . import links as links_module
 from . import sales as sales_module
 from . import recharges as recharges_module
 from . import config as config_module
+from . import feedbacks as feedbacks_module
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -151,12 +152,19 @@ def _get_admin_data():
         )
         subproducts_by_category[pid] = {k: v for k, v in sorted_items}
 
+    # Conta feedbacks pendentes
+    try:
+        pending_feedbacks_count = conn.execute("SELECT COUNT(*) FROM feedbacks WHERE status = 'pending'").fetchone()[0]
+    except sqlite3.OperationalError:
+        pending_feedbacks_count = 0
+
     stats = {
         'total_products': len(all_products),
         'total_catalogs': len(catalogs),
         'total_links': len(all_links),
         'total_simple': len(simple_products),
-        'pillow_available': PILLOW_AVAILABLE
+        'pillow_available': PILLOW_AVAILABLE,
+        'pending_feedbacks': pending_feedbacks_count
     }
 
     # Extract unique categories
@@ -187,7 +195,8 @@ def _get_admin_data():
         'config': config,
         'stats': stats,
         'financeiro': financeiro,
-        'security_warnings': security_warnings
+        'security_warnings': security_warnings,
+        'pending_feedbacks_count': pending_feedbacks_count
     }
 
 
@@ -408,6 +417,37 @@ def add_coupon():
 @admin_bp.route('/admin/coupons/delete/<int:coupon_id>', methods=['POST'])
 def delete_coupon(coupon_id):
     return coupons_module.delete_coupon(coupon_id)
+
+
+# --- ROTAS DE FEEDBACKS ---
+@admin_bp.route('/admin/feedbacks')
+def admin_feedbacks():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    try:
+        data = _get_admin_data()
+        if data is None:
+            return redirect(url_for('admin.admin'))
+        return render_template('admin/feedbacks.html', **data)
+    except Exception as e:
+        print(f"Erro ao carregar feedbacks: {e}")
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
+@admin_bp.route('/admin/feedbacks/list', methods=['GET'])
+def list_feedbacks():
+    return feedbacks_module.list_feedbacks()
+
+@admin_bp.route('/admin/feedbacks/approve/<int:fid>', methods=['POST'])
+def approve_feedback(fid):
+    return feedbacks_module.approve_feedback(fid)
+
+@admin_bp.route('/admin/feedbacks/reject/<int:fid>', methods=['POST'])
+def reject_feedback(fid):
+    return feedbacks_module.reject_feedback(fid)
+
+@admin_bp.route('/admin/feedbacks/delete/<int:fid>', methods=['POST'])
+def delete_feedback(fid):
+    return feedbacks_module.delete_feedback(fid)
 
 
 # --- ROTAS DE FIDELIDADE (LOYALTY) ---

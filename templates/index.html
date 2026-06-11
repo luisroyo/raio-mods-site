@@ -184,6 +184,75 @@
         </div>
     </section>
 
+    {% if feedbacks %}
+    <section class="mb-12 md:mb-20" data-aos="fade-up">
+        <h2 class="section-title text-2xl md:text-4xl font-bold neon-cyan text-center mb-6 md:mb-10 px-2 uppercase">
+            Depoimentos de Clientes 💬
+        </h2>
+        
+        <div class="relative max-w-5xl mx-auto px-4">
+            <!-- Botão de Navegação Esquerda -->
+            <button onclick="scrollFeedbacks(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 z-10 w-10 h-10 rounded-full border border-neon-cyan/50 bg-black/60 text-neon-cyan flex items-center justify-center hover:bg-neon-cyan hover:text-black hover:shadow-[0_0_15px_rgba(0,242,255,0.4)] transition duration-300">
+                &larr;
+            </button>
+            
+            <!-- Container de Feedbacks -->
+            <div id="feedbacksScroll" class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 scrollbar-none" style="scrollbar-width: none; -ms-overflow-style: none;">
+                <!-- Ocultar barra de rolagem no Webkit -->
+                <style>
+                    #feedbacksScroll::-webkit-scrollbar {
+                        display: none;
+                    }
+                </style>
+                {% for f in feedbacks %}
+                <div class="flex-shrink-0 w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-start bg-gray-900/50 border border-neon-cyan/30 rounded-xl p-5 backdrop-blur-md hover:border-neon-cyan/70 hover:shadow-[0_0_15px_rgba(0,242,255,0.1)] transition duration-300 flex flex-col justify-between min-h-[180px]">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-yellow-400 font-bold tracking-tight">
+                                {% for i in range(f.rating) %}★{% endfor %}{% for i in range(5 - f.rating) %}☆{% endfor %}
+                            </span>
+                            <span class="text-gray-500 text-[10px]">{{ f.created_at[:10] }}</span>
+                        </div>
+                        <p class="text-gray-300 text-xs italic mb-4">"{{ f.comment }}"</p>
+                    </div>
+                    
+                    <div class="border-t border-neon-cyan/10 pt-3 mt-auto flex items-center justify-between">
+                        <div>
+                            <span class="text-white font-bold text-xs block">{{ f.client_name }}</span>
+                            <span class="text-[9px] text-gray-500 font-semibold uppercase tracking-wider">Membro Verificado ✔</span>
+                        </div>
+                        {% if f.product_name %}
+                        <span class="text-[9px] font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-800/30 px-2 py-0.5 rounded">
+                            {{ f.product_name }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Botão de Navegação Direita -->
+            <button onclick="scrollFeedbacks(1)" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 z-10 w-10 h-10 rounded-full border border-neon-cyan/50 bg-black/60 text-neon-cyan flex items-center justify-center hover:bg-neon-cyan hover:text-black hover:shadow-[0_0_15px_rgba(0,242,255,0.4)] transition duration-300">
+                &rarr;
+            </button>
+        </div>
+    </section>
+    
+    <script>
+    function scrollFeedbacks(direction) {
+        const container = document.getElementById('feedbacksScroll');
+        if (!container) return;
+        
+        // Calcula a largura de um card + gap
+        const cardWidth = container.firstElementChild ? container.firstElementChild.offsetWidth + 24 : 300;
+        container.scrollBy({
+            left: direction * cardWidth,
+            behavior: 'smooth'
+        });
+    }
+    </script>
+    {% endif %}
+
     <section class="mb-12 md:mb-20" data-aos="fade-up">
         <h2 class="section-title text-2xl md:text-4xl font-bold neon-cyan text-center mb-6 md:mb-12 px-2">POR QUE NOS
             ESCOLHER?</h2>

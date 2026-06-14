@@ -36,6 +36,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lucky_spin.css') }}">
 
     {% block analytics %}{% endblock %}
     {% block extra_css %}{% endblock %}
@@ -321,7 +322,79 @@
         </div>
     </div>
 
+    <!-- Botão Flutuante (FAB) do Giro da Sorte -->
+    <div id="luckySpinFAB" class="lucky-spin-fab group" title="Giro da Sorte - Ganhe até 15% de Desconto">
+        <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a2 2 0 10-2 2h2zm0 0h4m-4 0H8m12 3v7a2 2 0 01-2 2H6a2 2 0 01-2-2v-7m16 0V9a2 2 0 00-2-2h-3m-6 0H5a2 2 0 00-2 2v1m16 4H3" />
+        </svg>
+        <span class="absolute left-16 bg-[#0a0a0a] border border-neon-cyan/50 text-neon-cyan text-xs font-bold py-1 px-2.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-[0_0_10px_rgba(6,182,212,0.3)]">🎰 Giro da Sorte!</span>
+    </div>
+
+    <!-- Modal do Giro da Sorte -->
+    <div id="luckySpinModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[150] hidden items-center justify-center p-4">
+        <div class="wheel-modal-content w-full max-w-md overflow-hidden relative shadow-2xl p-6">
+            
+            <button id="closeLuckySpin" class="absolute top-4 right-4 text-gray-400 hover:text-white z-10 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Passo 1: Formulário de E-mail -->
+            <div id="lucky-spin-form-step" class="text-center py-4">
+                <h3 class="text-2xl font-extrabold text-gradient mb-2" style="font-family: 'Sora', sans-serif;">🎰 Giro da Sorte</h3>
+                <p class="text-gray-300 text-sm mb-6 px-4">
+                    Digite seu e-mail abaixo para girar a roleta e concorrer a até <strong class="text-neon-cyan text-base">15% de desconto</strong> em suas compras!
+                </p>
+
+                <form id="luckySpinForm" class="space-y-4 max-w-sm mx-auto">
+                    <input type="email" id="luckySpinEmail" required placeholder="Digite seu melhor e-mail *"
+                        class="w-full lucky-spin-input rounded-lg p-3.5 text-white focus:outline-none text-center text-sm font-semibold">
+                    <button type="submit" class="w-full btn-spin-submit py-3.5 rounded-xl text-base font-extrabold text-black uppercase tracking-wider">
+                        🎰 Girar Roleta
+                    </button>
+                </form>
+                <p id="luckySpinError" class="text-xs text-red-500 mt-3 hidden font-semibold"></p>
+                <p class="text-[10px] text-gray-500 mt-4">Limite de 1 giro por e-mail a cada 30 dias. O desconto expira em 24h.</p>
+            </div>
+
+            <!-- Passo 2: Animação da Roleta -->
+            <div id="lucky-spin-anim-step" class="hidden text-center py-2">
+                <h3 class="text-xl font-bold text-white mb-1" style="font-family: 'Sora', sans-serif;">Boa sorte! 🤞</h3>
+                <p class="text-gray-400 text-xs mb-3">A roleta está girando...</p>
+
+                <div class="wheel-container">
+                    <!-- Ponteiro -->
+                    <div class="wheel-pointer">
+                        <svg viewBox="0 0 30 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 35L0 0H30L15 35Z" fill="#06b6d4" />
+                            <path d="M15 28L4 2H26L15 28Z" fill="#fff" />
+                        </svg>
+                    </div>
+                    <!-- Canvas Giratório -->
+                    <div class="wheel-canvas-wrap">
+                        <canvas id="wheelCanvas"></canvas>
+                    </div>
+                    <!-- Centro da roleta -->
+                    <div class="wheel-spin-btn-center disabled">RAIO</div>
+                </div>
+            </div>
+
+            <!-- Passo 3: Mensagem de Resultado -->
+            <div id="lucky-spin-result-step" class="hidden text-center py-6">
+                <div id="luckySpinResultMsg" class="space-y-4">
+                    <!-- Preenchido via JS -->
+                </div>
+                <button onclick="document.getElementById('luckySpinModal').classList.add('hidden')" class="mt-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg text-sm transition-colors">
+                    Fechar Janela
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lucky_spin.js') }}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

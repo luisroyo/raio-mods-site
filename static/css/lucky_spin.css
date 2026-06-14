@@ -1,0 +1,206 @@
+/* Estilos para o Giro da Sorte (Lucky Spin) - Estética Cyberpunk/Neon */
+
+/* Botão Flutuante (FAB) */
+.lucky-spin-fab {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 90;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #06b6d4, #10b981);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.lucky-spin-fab:hover {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+}
+
+/* Efeito de pulso no botão flutuante */
+.lucky-spin-fab::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #06b6d4;
+    animation: spin-pulse 2s infinite;
+    opacity: 0;
+}
+
+@keyframes spin-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Modal e Layout da Roleta */
+.wheel-modal-content {
+    background: rgba(10, 10, 10, 0.95);
+    border: 2px solid rgba(6, 182, 212, 0.3);
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+/* Roleta */
+.wheel-container {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    margin: 20px auto;
+}
+
+/* Indicador (Ponteiro) da roleta */
+.wheel-pointer {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 35px;
+    z-index: 10;
+    filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.8));
+    animation: pointer-wiggle 1s ease-in-out infinite alternate;
+}
+
+@keyframes pointer-wiggle {
+    0% { transform: translateX(-50%) rotate(-3deg); }
+    100% { transform: translateX(-50%) rotate(3deg); }
+}
+
+/* O círculo giratório da roleta */
+.wheel-canvas-wrap {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 6px solid #0f172a;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    transition: transform 5s cubic-bezier(0.1, 0.8, 0.1, 1);
+    will-change: transform;
+}
+
+#wheelCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Botão central de girar (Spin) */
+.wheel-spin-btn-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65px;
+    height: 65px;
+    background: #0f172a;
+    border: 3px solid #06b6d4;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.6);
+    z-index: 5;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.wheel-spin-btn-center:hover {
+    background: #06b6d4;
+    color: #000;
+    box-shadow: 0 0 25px #06b6d4;
+    border-color: #fff;
+}
+
+.wheel-spin-btn-center:active {
+    transform: translate(-50%, -50%) scale(0.9);
+}
+
+.wheel-spin-btn-center.disabled {
+    background: #1e293b;
+    border-color: #475569;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Input do E-mail e Botões */
+.lucky-spin-input {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(6, 182, 212, 0.3) !important;
+    color: #fff !important;
+    transition: all 0.3s ease;
+}
+
+.lucky-spin-input:focus {
+    border-color: #06b6d4 !important;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.4) !important;
+}
+
+.btn-spin-submit {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    color: #000;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+.btn-spin-submit:hover {
+    background: linear-gradient(135deg, #22d3ee, #06b6d4);
+    box-shadow: 0 6px 16px rgba(6, 182, 212, 0.5);
+    transform: translateY(-1px);
+}
+
+.btn-spin-submit:disabled {
+    background: #1e293b;
+    color: #475569;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Neon Text */
+.text-neon-cyan {
+    color: #06b6d4;
+    text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.text-neon-green {
+    color: #10b981;
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* Responsividade da roleta */
+@media (max-width: 480px) {
+    .wheel-container {
+        width: 240px;
+        height: 240px;
+    }
+    .wheel-spin-btn-center {
+        width: 55px;
+        height: 55px;
+        font-size: 10px;
+    }
+}

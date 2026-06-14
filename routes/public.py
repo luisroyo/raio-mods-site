@@ -347,3 +347,155 @@ def manifest():
 @public_bp.route('/offline.html')
 def offline():
     return render_template('offline.html')
+
+
+def send_spin_coupon_email(config, to_email, discount_value, coupon_code):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_server = config.get('smtp_server')
+    smtp_port = config.get('smtp_port')
+    smtp_user = config.get('smtp_user')
+    smtp_password = config.get('smtp_password')
+
+    if not all([smtp_server, smtp_port, smtp_user, smtp_password]):
+        return False, "Serviço SMTP não está totalmente configurado."
+
+    msg = MIMEMultipart("alternative")
+    msg['Subject'] = f"Seu cupom de {discount_value}% de desconto chegou! 🎉 - RAIO MODS"
+    msg['From'] = f"RAIO MODS <{smtp_user}>"
+    msg['To'] = to_email
+
+    html = f"""\
+    <html>
+      <body style="background-color: #050505; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
+        <div style="background-color: #111; border: 1px solid #333; border-radius: 8px; max-width: 600px; margin: 0 auto; padding: 30px; text-align: center;">
+            <h1 style="color: #06b6d4; font-size: 28px; margin-bottom: 10px;">RAIO MODS</h1>
+            <h2 style="color: #fff; font-size: 20px;">Parabéns! Você ganhou {discount_value}% de desconto!</h2>
+            <p style="color: #ccc; font-size: 15px; margin-top: 15px;">
+                Use o código abaixo na tela de pagamento da nossa loja para garantir seu desconto.
+            </p>
+            <div style="margin: 25px 0;">
+                <span style="background-color: #06b6d4; color: #000; padding: 12px 25px; border-radius: 6px; font-weight: bold; font-size: 22px; letter-spacing: 2px; display: inline-block;">
+                    {coupon_code}
+                </span>
+            </div>
+            <p style="color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 20px;">
+                Atenção: Este cupom é de uso único e expira em 24 horas!
+            </p>
+            <hr style="border-color: #222; margin: 25px 0;">
+            <p style="color: #666; font-size: 11px;">
+                Se você não solicitou este e-mail no Giro da Sorte da nossa loja, pode desconsiderá-lo com segurança.
+            </p>
+        </div>
+      </body>
+    </html>
+    """
+    msg.attach(MIMEText(html, "html"))
+
+    try:
+        server = smtplib.SMTP(smtp_server, int(smtp_port))
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        return True, "E-mail de desconto enviado com sucesso."
+    except Exception as e:
+        return False, str(e)
+
+
+@public_bp.route('/api/spin', methods=['POST'])
+def lucky_spin():
+    import random
+    import string
+    from datetime import datetime, timedelta
+    from flask import jsonify
+
+    data = request.json or {}
+    email = data.get('email', '').strip().lower()
+
+    if not email or '@' not in email:
+        return jsonify({'error': 'Por favor, insira um e-mail válido.'}), 400
+
+    conn = get_db_connection()
+    try:
+        # 1. Verificar se o SMTP está configurado
+        config_row = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
+        if not config_row:
+            return jsonify({'error': 'Configuração do sistema não localizada.'}), 500
+        
+        config = dict(config_row)
+        if not config.get('smtp_server') or not config.get('smtp_user'):
+            return jsonify({'error': 'O envio de e-mails da roleta não está configurado pelo administrador.'}), 500
+
+        # 2. Verificar se o e-mail já realizou um giro nos últimos 30 dias
+        row = conn.execute('''
+            SELECT 1 FROM lucky_spins 
+            WHERE email = ? AND datetime(created_at) > datetime('now', '-30 days')
+        ''', (email,)).fetchone()
+
+        if row:
+            return jsonify({'error': 'Este e-mail já realizou um giro nos últimos 30 dias.'}), 400
+
+        # 3. Sorteio ponderado (Max 15%)
+        # Índices: 0 = 5%, 1 = 8%, 2 = 10%, 3 = 12%, 4 = 15%
+        options = [
+            {"discount": 5, "weight": 45, "index": 0},
+            {"discount": 8, "weight": 30, "index": 1},
+            {"discount": 10, "weight": 15, "index": 2},
+            {"discount": 12, "weight": 8, "index": 3},
+            {"discount": 15, "weight": 2, "index": 4}
+        ]
+        
+        choices = []
+        for opt in options:
+            choices.extend([opt] * opt["weight"])
+            
+        winner = random.choice(choices)
+        discount_val = winner["discount"]
+        winner_index = winner["index"]
+
+        # 4. Gerar cupom de uso único no banco
+        coupon_code = ""
+        while True:
+            code_rand = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            coupon_code = f"RAIOSPIN{discount_val}-{code_rand}"
+            dup = conn.execute('SELECT 1 FROM coupons WHERE code = ?', (coupon_code,)).fetchone()
+            if not dup:
+                break
+
+        valid_until = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+
+        # 5. Salvar registros no banco (com rollback caso haja falhas)
+        conn.execute('''
+            INSERT INTO coupons (code, discount_type, discount_value, max_uses, current_uses, valid_until)
+            VALUES (?, 'percent', ?, 1, 0, ?)
+        ''', (coupon_code, discount_val, valid_until))
+
+        conn.execute('''
+            INSERT INTO lucky_spins (email, discount_value, coupon_code)
+            VALUES (?, ?, ?)
+        ''', (email, discount_val, coupon_code))
+
+        # 6. Enviar o cupom por e-mail
+        success, msg = send_spin_coupon_email(config, email, discount_val, coupon_code)
+        if not success:
+            conn.rollback()
+            return jsonify({'error': f'Falha ao enviar e-mail com cupom: {msg}'}), 500
+
+        conn.commit()
+        return jsonify({
+            'success': True,
+            'discount': discount_val,
+            'index': winner_index
+        })
+
+    except Exception as e:
+        try:
+            conn.rollback()
+        except:
+            pass
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+    finally:
+        conn.close()

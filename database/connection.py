@@ -222,6 +222,17 @@ def init_db():
         )
     ''')
     
+    # 12. Tabela de Giros da Sorte (Lucky Spins)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS lucky_spins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            discount_value REAL NOT NULL,
+            coupon_code TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     # --- MIGRAÇÕES E ATUALIZAÇÕES ---
 
     # Seed Config (Insere configuração padrão se vazio)

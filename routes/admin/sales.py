@@ -70,13 +70,13 @@ def add_manual_sale():
             )
             sale_id = cursor.lastrowid
 
+        prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (product_id,)).fetchone()
+        prod_name = prod_row['name'] if prod_row else 'Produto'
+
         # Atribuir Pontos de Fidelidade se e-mail estiver definido
         if client_email:
             points_to_add = int(total_price)
             if points_to_add > 0:
-                prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (product_id,)).fetchone()
-                prod_name = prod_row['name'] if prod_row else 'Produto'
-                
                 client_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (client_email,)).fetchone()
                 if client_row:
                     conn.execute('UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (points_to_add, client_email))
@@ -91,7 +91,15 @@ def add_manual_sale():
         conn.commit()
         conn.close()
         
-        return jsonify({'success': True, 'message': 'Venda manual registrada!'})
+        return jsonify({
+            'success': True, 
+            'message': 'Venda manual registrada!',
+            'sale': {
+                'product_name': prod_name,
+                'client_name': client_name,
+                'quantity': quantity
+            }
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

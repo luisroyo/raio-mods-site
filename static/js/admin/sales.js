@@ -23,8 +23,29 @@ function setupManualSaleForm() {
             const data = await res.json();
             const msg = document.getElementById('manualSaleMessage');
             if (data.success) {
-                msg.textContent = '✅ ' + data.message;
-                msg.className = 'mt-4 p-2 bg-green-900/30 border border-green-500 text-green-400 rounded';
+                const sale = data.sale || {};
+                const discountVal = document.getElementById('manual_discount')?.value || '';
+                
+                // Formatar texto do WhatsApp (Sem valores de preço, apenas produto, cliente e desconto)
+                let text = `🚀 *NOVA COMPRA REALIZADA!* \n\n`;
+                text += `👤 *Cliente:* ${sale.client_name || 'Cliente'} \n`;
+                text += `📦 *Produto:* ${sale.product_name || 'Produto'}`;
+                if (discountVal) {
+                    text += ` \n🎟️ *Benefício:* Ganhou ${discountVal}% de desconto através do Giro da Sorte!`;
+                }
+                text += `\n\n⚡ *Adquira o seu também no nosso site! Obrigado pela preferência!*`;
+                
+                const linkZap = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+                
+                msg.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-green-950/40 border border-green-500/50 rounded-lg">
+                        <span class="text-green-400 font-semibold">✅ ${data.message}</span>
+                        <a href="${linkZap}" target="_blank" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all">
+                            💬 Divulgar no WhatsApp
+                        </a>
+                    </div>
+                `;
+                msg.className = 'mt-4';
                 e.target.reset();
                 loadManualSales();
                 if (typeof loadSalesReport === 'function') loadSalesReport();

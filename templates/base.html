@@ -36,7 +36,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/lucky_spin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lucky_spin.css') }}?v=3">
 
     {% block analytics %}{% endblock %}
     {% block extra_css %}{% endblock %}
@@ -390,7 +390,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/lucky_spin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lucky_spin.js') }}?v=3"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

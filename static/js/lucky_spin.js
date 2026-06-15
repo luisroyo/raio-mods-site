@@ -130,15 +130,26 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Verifica se já girou nos últimos 30 dias (UX cache local)
     function checkLocalStorageSpin() {
-        const lastSpinDateStr = localStorage.getItem('last_lucky_spin_date');
-        if (lastSpinDateStr) {
-            const lastSpinDate = new Date(lastSpinDateStr);
-            const diffTime = Math.abs(new Date() - lastSpinDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays <= 30) {
-                if (fab) fab.classList.add('hidden');
+        try {
+            // Permitir resetar ou ignorar o localStorage via parâmetro na URL para facilidade de testes
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('test_spin') || urlParams.has('limpar_roleta') || urlParams.has('reset_roleta') || urlParams.has('test_roleta')) {
+                localStorage.removeItem('last_lucky_spin_date');
+                console.log('[Roleta] Cache local de giros limpo via parâmetro da URL.');
             }
+
+            const lastSpinDateStr = localStorage.getItem('last_lucky_spin_date');
+            if (lastSpinDateStr) {
+                const lastSpinDate = new Date(lastSpinDateStr);
+                const diffTime = Math.abs(new Date() - lastSpinDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays <= 30) {
+                    if (fab) fab.classList.add('hidden');
+                }
+            }
+        } catch (e) {
+            console.warn('[Roleta] Erro ao acessar localStorage (pode estar desativado ou em modo privado):', e);
         }
     }
     
@@ -276,7 +287,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Salva data no localStorage para sumir com o FAB (exceto se for e-mail de teste)
                     if (email !== 'luisroyo25@gmail.com') {
-                        localStorage.setItem('last_lucky_spin_date', new Date().toISOString());
+                        try {
+                            localStorage.setItem('last_lucky_spin_date', new Date().toISOString());
+                        } catch (e) {
+                            console.warn('[Roleta] Erro ao salvar no localStorage:', e);
+                        }
                         if (fab) fab.classList.add('hidden');
                     } else {
                         // Se for e-mail de teste, garante que o FAB permaneça visível

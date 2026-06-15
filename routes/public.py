@@ -429,14 +429,19 @@ def lucky_spin():
         if not config.get('smtp_server') or not config.get('smtp_user'):
             return jsonify({'error': 'O envio de e-mails da roleta não está configurado pelo administrador.'}), 500
 
-        # 2. Verificar se o e-mail já realizou um giro nos últimos 30 dias
-        row = conn.execute('''
-            SELECT 1 FROM lucky_spins 
-            WHERE email = ? AND datetime(created_at) > datetime('now', '-30 days')
-        ''', (email,)).fetchone()
+        # 2. Verificar se o e-mail já realizou um giro nos últimos 30 dias (ignora para e-mail de teste)
+        if email != 'luisroyo25@gmail.com':
+            row = conn.execute('''
+                SELECT 1 FROM lucky_spins 
+                WHERE email = ? AND datetime(created_at) > datetime('now', '-30 days')
+            ''', (email,)).fetchone()
 
-        if row:
-            return jsonify({'error': 'Este e-mail já realizou um giro nos últimos 30 dias.'}), 400
+            if row:
+                return jsonify({'error': 'Este e-mail já realizou um giro nos últimos 30 dias.'}), 400
+
+        # Verificar se o cliente possui cadastro para o Clube de Fidelidade
+        client_row = conn.execute('SELECT 1 FROM clients WHERE email = ?', (email,)).fetchone()
+        client_exists = client_row is not None
 
         # 3. Sorteio ponderado (Max 15%)
         # Índices: 0 = 5%, 1 = 8%, 2 = 10%, 3 = 12%, 4 = 15%
@@ -488,7 +493,8 @@ def lucky_spin():
         return jsonify({
             'success': True,
             'discount': discount_val,
-            'index': winner_index
+            'index': winner_index,
+            'client_exists': client_exists
         })
 
     except Exception as e:

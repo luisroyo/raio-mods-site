@@ -274,15 +274,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     isSpinning = false;
                     
-                    // Salva data no localStorage para sumir com o FAB
-                    localStorage.setItem('last_lucky_spin_date', new Date().toISOString());
-                    if (fab) fab.classList.add('hidden');
+                    // Salva data no localStorage para sumir com o FAB (exceto se for e-mail de teste)
+                    if (email !== 'luisroyo25@gmail.com') {
+                        localStorage.setItem('last_lucky_spin_date', new Date().toISOString());
+                        if (fab) fab.classList.add('hidden');
+                    } else {
+                        // Se for e-mail de teste, garante que o FAB permaneça visível
+                        if (fab) fab.classList.remove('hidden');
+                    }
                     
                     // Exibir resultado final
                     mainStep.classList.add('hidden');
                     resultStep.classList.remove('hidden');
                     
-                    resultMsg.innerHTML = `
+                    let resultHtml = `
                         <div class="text-3xl font-extrabold text-neon-green mb-2" style="font-family: 'Sora', sans-serif;">🎉 GANHOU ${data.discount}%!</div>
                         <p class="text-gray-300 text-sm mb-4">
                             Seu cupom de desconto exclusivo de <strong>${data.discount}%</strong> foi gerado com sucesso e enviado para:
@@ -290,10 +295,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="bg-black/60 border border-white/10 rounded-lg p-2.5 mb-4 text-white font-mono break-all font-semibold">
                             ${email}
                         </div>
-                        <p class="text-xs text-yellow-500 font-bold mb-4">
+                        <p class="text-xs text-yellow-500 font-bold mb-2">
                             ⚠️ Verifique sua caixa de entrada e pasta de Spam. O cupom expira em 24 horas!
                         </p>
                     `;
+                    
+                    if (typeof data.client_exists !== 'undefined' && !data.client_exists) {
+                        resultHtml += `
+                            <div class="mt-4 p-4 bg-cyan-950/20 border border-cyan-500/30 rounded-xl text-center">
+                                <p class="text-xs text-gray-300 mb-3">
+                                    🎁 Quer ganhar mais recompensas? Cadastre-se no nosso <strong>Clube de Fidelidade</strong> para acumular pontos em todas as compras!
+                                </p>
+                                <a href="/cliente/cadastro" class="inline-block px-4 py-2 bg-[#06b6d4] hover:bg-[#22d3ee] text-black font-extrabold rounded-lg text-xs transition-all shadow-[0_0_12px_rgba(6,182,212,0.3)]">
+                                    Participar do Clube Grátis
+                                </a>
+                            </div>
+                        `;
+                    }
+                    
+                    resultMsg.innerHTML = resultHtml;
                 }, 5300);
                 
             } catch (err) {

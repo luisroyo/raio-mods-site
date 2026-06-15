@@ -3,7 +3,7 @@ const ASSETS_TO_CACHE = [
   '/',
   '/static/css/base.css',
   '/static/js/base.js',
-  '/static/logo.png',
+  '/static/logo.webp',
   '/offline.html'
 ];
 

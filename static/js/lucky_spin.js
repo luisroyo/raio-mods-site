@@ -4,13 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const fab = document.getElementById('luckySpinFAB');
     const modal = document.getElementById('luckySpinModal');
     const closeBtn = document.getElementById('closeLuckySpin');
-    const formStep = document.getElementById('lucky-spin-form-step');
-    const animStep = document.getElementById('lucky-spin-anim-step');
+    const mainStep = document.getElementById('lucky-spin-main-step');
     const resultStep = document.getElementById('lucky-spin-result-step');
     const emailInput = document.getElementById('luckySpinEmail');
     const spinForm = document.getElementById('luckySpinForm');
     const spinError = document.getElementById('luckySpinError');
     const resultMsg = document.getElementById('luckySpinResultMsg');
+    const centerBtn = document.getElementById('wheelSpinBtnCenter');
+    const submitBtn = document.getElementById('btnSpinSubmit');
     
     const canvas = document.getElementById('wheelCanvas');
     if (!canvas) return; // Se não estiver na página, aborta
@@ -31,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     
     let isSpinning = false;
+    let currentRotationAngle = 0;
+    let idleAnimationId = null;
+    const idleSpeed = 0.25; // Velocidade do giro ocioso (graus por frame)
     
     // Redimensiona o canvas para alta resolução (Retina display)
     function initCanvasResolution() {
@@ -92,10 +96,39 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
     }
     
+    // Loop de Animação do Giro Lento (Idle)
+    function startIdleSpin() {
+        if (isSpinning) return;
+        
+        // Remove a transição CSS enquanto roda via loop para não lagar
+        if (wheelWrap) {
+            wheelWrap.style.transition = 'none';
+        }
+        
+        function tick() {
+            currentRotationAngle = (currentRotationAngle + idleSpeed) % 360;
+            if (wheelWrap) {
+                wheelWrap.style.transform = `rotate(${currentRotationAngle}deg)`;
+            }
+            idleAnimationId = requestAnimationFrame(tick);
+        }
+        
+        if (!idleAnimationId) {
+            idleAnimationId = requestAnimationFrame(tick);
+        }
+    }
+    
+    function stopIdleSpin() {
+        if (idleAnimationId) {
+            cancelAnimationFrame(idleAnimationId);
+            idleAnimationId = null;
+        }
+    }
+    
     initCanvasResolution();
     drawWheel();
     
-    // Verifica se já girou nos últimos 30 dias (local storage cache apenas para UX do FAB)
+    // Verifica se já girou nos últimos 30 dias (UX cache local)
     function checkLocalStorageSpin() {
         const lastSpinDateStr = localStorage.getItem('last_lucky_spin_date');
         if (lastSpinDateStr) {
@@ -104,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
             if (diffDays <= 30) {
-                // Se girou a menos de 30 dias, esconde o FAB da tela para não poluir visualmente
                 if (fab) fab.classList.add('hidden');
             }
         }
@@ -117,23 +149,29 @@ document.addEventListener('DOMContentLoaded', () => {
         fab.addEventListener('click', () => {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            formStep.classList.remove('hidden');
-            animStep.classList.add('hidden');
+            
+            mainStep.classList.remove('hidden');
             resultStep.classList.add('hidden');
             spinError.classList.add('hidden');
             emailInput.value = '';
             
-            // Reseta a rotação da roleta para 0
-            if (wheelWrap) {
-                wheelWrap.style.transition = 'none';
-                wheelWrap.style.transform = 'rotate(0deg)';
-            }
+            // Re-ativa o botão e input caso estivessem desativados
+            emailInput.disabled = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '🎰 Girar Roleta';
+            centerBtn.classList.remove('disabled');
+            centerBtn.innerHTML = 'Girar';
+            
+            // Reseta a rotação e inicia o giro lento
+            currentRotationAngle = 0;
+            startIdleSpin();
         });
     }
     
     // Fechar o Modal
     function closeModal() {
-        if (isSpinning) return; // Bloqueia fechar durante o giro
+        if (isSpinning) return; // Bloqueia fechar durante o giro rápido
+        stopIdleSpin();
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
@@ -142,6 +180,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
+        });
+    }
+    
+    // Ao clicar no botão central da roleta, submete o formulário
+    if (centerBtn) {
+        centerBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            
+            // Submete o formulário disparando as validações nativas do navegador
+            if (typeof spinForm.requestSubmit === 'function') {
+                spinForm.requestSubmit();
+            } else {
+                const triggerBtn = spinForm.querySelector('button[type="submit"]');
+                if (triggerBtn) triggerBtn.click();
+            }
         });
     }
     
@@ -158,9 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             spinError.classList.add('hidden');
-            const submitBtn = spinForm.querySelector('button[type="submit"]');
+            emailInput.disabled = true;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '🔄 Processando...';
+            centerBtn.classList.add('disabled');
+            centerBtn.innerHTML = '⏳';
             
             try {
                 const res = await fetch('/api/spin', {
@@ -173,20 +228,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.error) {
                     showError(data.error);
+                    emailInput.disabled = false;
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '🎰 Girar Roleta';
+                    centerBtn.classList.remove('disabled');
+                    centerBtn.innerHTML = 'Girar';
                     return;
                 }
                 
-                // Transicionar para a tela da animação da roleta
-                formStep.classList.add('hidden');
-                animStep.classList.remove('hidden');
-                
-                // Iniciar giro da roleta
+                // 1. Para o loop do giro lento para iniciar o giro rápido
+                stopIdleSpin();
                 isSpinning = true;
+                submitBtn.innerHTML = '🎰 Girando...';
+                centerBtn.innerHTML = '🔥';
                 
-                // Mapeia o desconto sorteado para as fatias válidas do canvas
-                // Segments contêm os descontos correspondentes
+                // 2. Mapeia o desconto para as fatias correspondentes
                 const matchedIndices = [];
                 segments.forEach((seg, idx) => {
                     if (seg.value === data.discount) {
@@ -194,15 +250,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 
-                // Escolhe um índice aleatório dentre as fatias que contêm o valor sorteado
                 const winningSegmentIndex = matchedIndices[Math.floor(Math.random() * matchedIndices.length)];
                 
-                // Calcula a rotação necessária
-                // 5 voltas completas (5 * 360) + ângulo da fatia para alinhar no topo (12 horas)
-                const rotations = 5;
+                // 3. Calcula a rotação rápida com base no ângulo atual
+                // Garante transição perfeita somando voltas completas e compensando a fatia sorteada
+                const rotations = 6;
                 const degreesPerSegment = 360 / segments.length;
-                const targetRotation = (rotations * 360) - (winningSegmentIndex * degreesPerSegment + degreesPerSegment / 2) - 90;
                 
+                // Fórmula matemática de precisão:
+                // Alinha o centro da fatia sorteada com a seta superior (12 horas, que fica a -90 graus)
+                const baseMultiple = currentRotationAngle - (currentRotationAngle % 360);
+                const targetRotation = baseMultiple + (rotations * 360) - (winningSegmentIndex * degreesPerSegment + degreesPerSegment / 2) - 90;
+                
+                // Executa a transição física com easing suave
                 setTimeout(() => {
                     if (wheelWrap) {
                         wheelWrap.style.transition = 'transform 5s cubic-bezier(0.1, 0.8, 0.1, 1)';
@@ -210,16 +270,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }, 50);
                 
-                // Aguarda o término da animação do giro (5 segundos)
+                // 4. Aguarda o término da animação do giro (5 segundos)
                 setTimeout(() => {
                     isSpinning = false;
                     
-                    // Salva data no localStorage para sumir com o botão da tela
+                    // Salva data no localStorage para sumir com o FAB
                     localStorage.setItem('last_lucky_spin_date', new Date().toISOString());
                     if (fab) fab.classList.add('hidden');
                     
                     // Exibir resultado final
-                    animStep.classList.add('hidden');
+                    mainStep.classList.add('hidden');
                     resultStep.classList.remove('hidden');
                     
                     resultMsg.innerHTML = `
@@ -238,9 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             } catch (err) {
                 console.error(err);
-                showError('Ocorreu um erro ao conectar ao servidor. Tente novamente mais tarde.');
+                showError('Ocorreu um erro ao conectar ao servidor. Tente novamente.');
+                emailInput.disabled = false;
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '🎰 Girar Roleta';
+                centerBtn.classList.remove('disabled');
+                centerBtn.innerHTML = 'Girar';
             }
         });
     }

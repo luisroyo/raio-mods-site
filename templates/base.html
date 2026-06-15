@@ -340,30 +340,15 @@
                 </svg>
             </button>
 
-            <!-- Passo 1: Formulário de E-mail -->
-            <div id="lucky-spin-form-step" class="text-center py-4">
-                <h3 class="text-2xl font-extrabold text-gradient mb-2" style="font-family: 'Sora', sans-serif;">🎰 Giro da Sorte</h3>
-                <p class="text-gray-300 text-sm mb-6 px-4">
-                    Digite seu e-mail abaixo para girar a roleta e concorrer a até <strong class="text-neon-cyan text-base">15% de desconto</strong> em suas compras!
+            <!-- Passo Único Principal (Roleta + E-mail) -->
+            <div id="lucky-spin-main-step" class="text-center py-2 flex flex-col items-center">
+                <h3 class="text-2xl font-extrabold text-gradient mb-1" style="font-family: 'Sora', sans-serif;">🎰 Giro da Sorte</h3>
+                <p class="text-gray-300 text-xs px-6">
+                    Insira seu e-mail e gire a roleta para concorrer a até <strong class="text-neon-cyan font-bold">15% de desconto</strong>!
                 </p>
 
-                <form id="luckySpinForm" class="space-y-4 max-w-sm mx-auto">
-                    <input type="email" id="luckySpinEmail" required placeholder="Digite seu melhor e-mail *"
-                        class="w-full lucky-spin-input rounded-lg p-3.5 text-white focus:outline-none text-center text-sm font-semibold">
-                    <button type="submit" class="w-full btn-spin-submit py-3.5 rounded-xl text-base font-extrabold text-black uppercase tracking-wider">
-                        🎰 Girar Roleta
-                    </button>
-                </form>
-                <p id="luckySpinError" class="text-xs text-red-500 mt-3 hidden font-semibold"></p>
-                <p class="text-[10px] text-gray-500 mt-4">Limite de 1 giro por e-mail a cada 30 dias. O desconto expira em 24h.</p>
-            </div>
-
-            <!-- Passo 2: Animação da Roleta -->
-            <div id="lucky-spin-anim-step" class="hidden text-center py-2">
-                <h3 class="text-xl font-bold text-white mb-1" style="font-family: 'Sora', sans-serif;">Boa sorte! 🤞</h3>
-                <p class="text-gray-400 text-xs mb-3">A roleta está girando...</p>
-
-                <div class="wheel-container">
+                <!-- Roleta -->
+                <div class="wheel-container my-4">
                     <!-- Ponteiro -->
                     <div class="wheel-pointer">
                         <svg viewBox="0 0 30 35" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -376,11 +361,22 @@
                         <canvas id="wheelCanvas"></canvas>
                     </div>
                     <!-- Centro da roleta -->
-                    <div class="wheel-spin-btn-center disabled">RAIO</div>
+                    <button type="button" id="wheelSpinBtnCenter" class="wheel-spin-btn-center">Girar</button>
                 </div>
+
+                <!-- Formulário de Envio -->
+                <form id="luckySpinForm" class="space-y-3 w-full max-w-xs mx-auto">
+                    <input type="email" id="luckySpinEmail" required placeholder="Digite seu melhor e-mail *"
+                        class="w-full lucky-spin-input rounded-lg p-2.5 text-white focus:outline-none text-center text-xs font-semibold">
+                    <button type="submit" id="btnSpinSubmit" class="w-full btn-spin-submit py-2.5 rounded-xl text-sm font-extrabold text-black uppercase tracking-wider">
+                        🎰 Girar Roleta
+                    </button>
+                </form>
+                <p id="luckySpinError" class="text-xs text-red-500 mt-2 hidden font-semibold"></p>
+                <p class="text-[9px] text-gray-500 mt-3">Limite de 1 giro por e-mail a cada 30 dias. Válido por 24h.</p>
             </div>
 
-            <!-- Passo 3: Mensagem de Resultado -->
+            <!-- Passo de Resultado -->
             <div id="lucky-spin-result-step" class="hidden text-center py-6">
                 <div id="luckySpinResultMsg" class="space-y-4">
                     <!-- Preenchido via JS -->

@@ -190,19 +190,41 @@
 </div>
 
 <!-- Gráficos de Análise -->
-<div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+<div id="mainChartsGrid" class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
     <!-- Faturamento vs Custos vs Lucro -->
-    <div class="border border-indigo-500/30 rounded-lg p-4 bg-indigo-500/5">
+    <div id="financeChartContainer" class="border border-indigo-500/30 rounded-lg p-4 bg-indigo-500/5 col-span-1">
         <h3 class="text-lg font-bold text-indigo-400 mb-4 text-center">Desempenho Financeiro</h3>
-        <div class="relative h-64 w-full">
-            <canvas id="financeChart"></canvas>
+        <div class="grid grid-cols-1 gap-4" id="financeChartsGrid">
+            <div>
+                <p class="text-xs text-center text-gray-400 mb-2 font-bold hidden" id="financeLabelMain">Período Principal</p>
+                <div class="relative h-64 w-full">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+            <div id="financeCompareWrapper" class="hidden">
+                <p class="text-xs text-center text-gray-400 mb-2 font-bold" id="financeLabelCompare">Período Comparativo</p>
+                <div class="relative h-64 w-full">
+                    <canvas id="financeChartCompare"></canvas>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Produtos Mais Vendidos -->
-    <div class="border border-pink-500/30 rounded-lg p-4 bg-pink-500/5">
+    <div id="productsChartContainer" class="border border-pink-500/30 rounded-lg p-4 bg-pink-500/5 col-span-1">
         <h3 class="text-lg font-bold text-pink-400 mb-4 text-center">Top Hacks (Mais Vendidos)</h3>
-        <div class="relative h-64 w-full">
-            <canvas id="productsChart"></canvas>
+        <div class="grid grid-cols-1 gap-4" id="productsChartsGrid">
+            <div>
+                <p class="text-xs text-center text-gray-400 mb-2 font-bold hidden" id="productsLabelMain">Período Principal</p>
+                <div class="relative h-64 w-full">
+                    <canvas id="productsChart"></canvas>
+                </div>
+            </div>
+            <div id="productsCompareWrapper" class="hidden">
+                <p class="text-xs text-center text-gray-400 mb-2 font-bold" id="productsLabelCompare">Período Comparativo</p>
+                <div class="relative h-64 w-full">
+                    <canvas id="productsChartCompare"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -215,17 +237,39 @@
     </div>
 
     <!-- Gráficos de Crescimento e Categoria -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div class="bg-gray-800/50 border border-fuchsia-500/30 rounded-lg p-4">
+    <div id="insightsChartsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div id="growthChartContainer" class="bg-gray-800/50 border border-fuchsia-500/30 rounded-lg p-4 col-span-1">
             <h3 class="text-sm font-bold text-gray-300 mb-2">📈 Crescimento Acumulado (Período)</h3>
-            <div class="relative h-64 w-full">
-                <canvas id="growthChart"></canvas>
+            <div class="grid grid-cols-1 gap-4" id="growthChartsGrid">
+                <div>
+                    <p class="text-xs text-center text-gray-400 mb-2 font-bold hidden" id="growthLabelMain">Período Principal</p>
+                    <div class="relative h-64 w-full">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+                <div id="growthCompareWrapper" class="hidden">
+                    <p class="text-xs text-center text-gray-400 mb-2 font-bold" id="growthLabelCompare">Período Comparativo</p>
+                    <div class="relative h-64 w-full">
+                        <canvas id="growthChartCompare"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="bg-gray-800/50 border border-fuchsia-500/30 rounded-lg p-4">
+        <div id="categoryChartContainer" class="bg-gray-800/50 border border-fuchsia-500/30 rounded-lg p-4 col-span-1">
             <h3 class="text-sm font-bold text-gray-300 mb-2">📊 Lucro e Receita por Categoria</h3>
-            <div class="relative h-64 w-full">
-                <canvas id="categoryChart"></canvas>
+            <div class="grid grid-cols-1 gap-4" id="categoryChartsGrid">
+                <div>
+                    <p class="text-xs text-center text-gray-400 mb-2 font-bold hidden" id="categoryLabelMain">Período Principal</p>
+                    <div class="relative h-64 w-full">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div id="categoryCompareWrapper" class="hidden">
+                    <p class="text-xs text-center text-gray-400 mb-2 font-bold" id="categoryLabelCompare">Período Comparativo</p>
+                    <div class="relative h-64 w-full">
+                        <canvas id="categoryChartCompare"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

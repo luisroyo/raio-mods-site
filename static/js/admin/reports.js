@@ -3,9 +3,149 @@
 ========================= */
 let dashboardInterval = null;
 let financeChartInstance = null;
+let financeChartCompareInstance = null;
 let productsChartInstance = null;
+let productsChartCompareInstance = null;
 let growthChartInstance = null;
+let growthChartCompareInstance = null;
 let categoryChartInstance = null;
+let categoryChartCompareInstance = null;
+
+function updateChartsLayout(isComparing, mainLabel, compareLabel) {
+    // 1. Finance Chart
+    const finContainer = document.getElementById('financeChartContainer');
+    const finGrid = document.getElementById('financeChartsGrid');
+    const finCompareWrapper = document.getElementById('financeCompareWrapper');
+    const finLabelMain = document.getElementById('financeLabelMain');
+    const finLabelCompare = document.getElementById('financeLabelCompare');
+
+    if (finContainer && finGrid && finCompareWrapper) {
+        if (isComparing) {
+            finContainer.classList.remove('col-span-1');
+            finContainer.classList.add('md:col-span-2');
+            finGrid.classList.remove('grid-cols-1');
+            finGrid.classList.add('md:grid-cols-2');
+            finCompareWrapper.classList.remove('hidden');
+            if (finLabelMain) {
+                finLabelMain.classList.remove('hidden');
+                finLabelMain.textContent = mainLabel;
+            }
+            if (finLabelCompare) {
+                finLabelCompare.classList.remove('hidden');
+                finLabelCompare.textContent = compareLabel;
+            }
+        } else {
+            finContainer.classList.add('col-span-1');
+            finContainer.classList.remove('md:col-span-2');
+            finGrid.classList.add('grid-cols-1');
+            finGrid.classList.remove('md:grid-cols-2');
+            finCompareWrapper.classList.add('hidden');
+            if (finLabelMain) finLabelMain.classList.add('hidden');
+            if (finLabelCompare) finLabelCompare.classList.add('hidden');
+        }
+    }
+
+    // 2. Products Chart
+    const prodContainer = document.getElementById('productsChartContainer');
+    const prodGrid = document.getElementById('productsChartsGrid');
+    const prodCompareWrapper = document.getElementById('productsCompareWrapper');
+    const prodLabelMain = document.getElementById('productsLabelMain');
+    const prodLabelCompare = document.getElementById('productsLabelCompare');
+
+    if (prodContainer && prodGrid && prodCompareWrapper) {
+        if (isComparing) {
+            prodContainer.classList.remove('col-span-1');
+            prodContainer.classList.add('md:col-span-2');
+            prodGrid.classList.remove('grid-cols-1');
+            prodGrid.classList.add('md:grid-cols-2');
+            prodCompareWrapper.classList.remove('hidden');
+            if (prodLabelMain) {
+                prodLabelMain.classList.remove('hidden');
+                prodLabelMain.textContent = mainLabel;
+            }
+            if (prodLabelCompare) {
+                prodLabelCompare.classList.remove('hidden');
+                prodLabelCompare.textContent = compareLabel;
+            }
+        } else {
+            prodContainer.classList.add('col-span-1');
+            prodContainer.classList.remove('md:col-span-2');
+            prodGrid.classList.add('grid-cols-1');
+            prodGrid.classList.remove('md:grid-cols-2');
+            prodCompareWrapper.classList.add('hidden');
+            if (prodLabelMain) prodLabelMain.classList.add('hidden');
+            if (prodLabelCompare) prodLabelCompare.classList.add('hidden');
+        }
+    }
+}
+
+function updateInsightsLayout(isComparing, mainLabel, compareLabel) {
+    // 3. Growth Chart
+    const growthContainer = document.getElementById('growthChartContainer');
+    const growthGrid = document.getElementById('growthChartsGrid');
+    const growthCompareWrapper = document.getElementById('growthCompareWrapper');
+    const growthLabelMain = document.getElementById('growthLabelMain');
+    const growthLabelCompare = document.getElementById('growthLabelCompare');
+
+    if (growthContainer && growthGrid && growthCompareWrapper) {
+        if (isComparing) {
+            growthContainer.classList.remove('col-span-1');
+            growthContainer.classList.add('md:col-span-2');
+            growthGrid.classList.remove('grid-cols-1');
+            growthGrid.classList.add('md:grid-cols-2');
+            growthCompareWrapper.classList.remove('hidden');
+            if (growthLabelMain) {
+                growthLabelMain.classList.remove('hidden');
+                growthLabelMain.textContent = mainLabel;
+            }
+            if (growthLabelCompare) {
+                growthLabelCompare.classList.remove('hidden');
+                growthLabelCompare.textContent = compareLabel;
+            }
+        } else {
+            growthContainer.classList.add('col-span-1');
+            growthContainer.classList.remove('md:col-span-2');
+            growthGrid.classList.add('grid-cols-1');
+            growthGrid.classList.remove('md:grid-cols-2');
+            growthCompareWrapper.classList.add('hidden');
+            if (growthLabelMain) growthLabelMain.classList.add('hidden');
+            if (growthLabelCompare) growthLabelCompare.classList.add('hidden');
+        }
+    }
+
+    // 4. Category Chart
+    const catContainer = document.getElementById('categoryChartContainer');
+    const catGrid = document.getElementById('categoryChartsGrid');
+    const catCompareWrapper = document.getElementById('categoryCompareWrapper');
+    const catLabelMain = document.getElementById('categoryLabelMain');
+    const catLabelCompare = document.getElementById('categoryLabelCompare');
+
+    if (catContainer && catGrid && catCompareWrapper) {
+        if (isComparing) {
+            catContainer.classList.remove('col-span-1');
+            catContainer.classList.add('md:col-span-2');
+            catGrid.classList.remove('grid-cols-1');
+            catGrid.classList.add('md:grid-cols-2');
+            catCompareWrapper.classList.remove('hidden');
+            if (catLabelMain) {
+                catLabelMain.classList.remove('hidden');
+                catLabelMain.textContent = mainLabel;
+            }
+            if (catLabelCompare) {
+                catLabelCompare.classList.remove('hidden');
+                catLabelCompare.textContent = compareLabel;
+            }
+        } else {
+            catContainer.classList.add('col-span-1');
+            catContainer.classList.remove('md:col-span-2');
+            catGrid.classList.add('grid-cols-1');
+            catGrid.classList.remove('md:grid-cols-2');
+            catCompareWrapper.classList.add('hidden');
+            if (catLabelMain) catLabelMain.classList.add('hidden');
+            if (catLabelCompare) catLabelCompare.classList.add('hidden');
+        }
+    }
+}
 
 async function loadSalesReport() {
     // Carrega dados iniciais
@@ -165,8 +305,33 @@ async function updateSalesData() {
             }
         }
 
+        const mainStart = document.getElementById('reportDateStart')?.value;
+        const mainEnd = document.getElementById('reportDateEnd')?.value;
+        let mainLabel = 'Período Principal';
+        if (mainStart && mainEnd) {
+            const formatD = (d) => {
+                const p = d.split('-');
+                return p.length === 3 ? `${p[2]}/${p[1]}` : d;
+            };
+            mainLabel = `Principal (${formatD(mainStart)} a ${formatD(mainEnd)})`;
+        }
+
+        const cmpStart = document.getElementById('reportCompareStart')?.value;
+        const cmpEnd = document.getElementById('reportCompareEnd')?.value;
+        let compareLabel = 'Período Comparativo';
+        if (cmpStart && cmpEnd) {
+            const formatD = (d) => {
+                const p = d.split('-');
+                return p.length === 3 ? `${p[2]}/${p[1]}` : d;
+            };
+            compareLabel = `Comparativo (${formatD(cmpStart)} a ${formatD(cmpEnd)})`;
+        }
+
+        const isComparing = compareReport !== null;
+        updateChartsLayout(isComparing, mainLabel, compareLabel);
+
         if (document.getElementById('financeChart') && document.getElementById('productsChart')) {
-            updateCharts(report);
+            updateCharts(report, compareReport);
         }
 
         // --- Deltas (Compare) ---
@@ -267,8 +432,7 @@ async function loadInsights() {
         };
 
         const data = await fetchInsights('reportDateStart', 'reportDateEnd');
-        
-        let compareData = null;
+                let compareData = null;
         if (document.getElementById('enableCompare')?.checked) {
             const cmpStart = document.getElementById('reportCompareStart')?.value;
             const cmpEnd = document.getElementById('reportCompareEnd')?.value;
@@ -276,6 +440,31 @@ async function loadInsights() {
                 compareData = await fetchInsights('reportCompareStart', 'reportCompareEnd');
             }
         }
+
+        const isComparing = compareData !== null;
+        const mainStart = document.getElementById('reportDateStart')?.value;
+        const mainEnd = document.getElementById('reportDateEnd')?.value;
+        let mainLabel = 'Período Principal';
+        if (mainStart && mainEnd) {
+            const formatD = (d) => {
+                const p = d.split('-');
+                return p.length === 3 ? `${p[2]}/${p[1]}` : d;
+            };
+            mainLabel = `Principal (${formatD(mainStart)} a ${formatD(mainEnd)})`;
+        }
+
+        const cmpStartLabel = document.getElementById('reportCompareStart')?.value;
+        const cmpEndLabel = document.getElementById('reportCompareEnd')?.value;
+        let compareLabel = 'Período Comparativo';
+        if (cmpStartLabel && cmpEndLabel) {
+            const formatD = (d) => {
+                const p = d.split('-');
+                return p.length === 3 ? `${p[2]}/${p[1]}` : d;
+            };
+            compareLabel = `Comparativo (${formatD(cmpStartLabel)} a ${formatD(cmpEndLabel)})`;
+        }
+
+        updateInsightsLayout(isComparing, mainLabel, compareLabel);
 
         const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
@@ -394,7 +583,6 @@ async function loadInsights() {
                 stockTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-emerald-500">Estoque saudável ou itens sem volume.</td></tr>';
             }
         }
-
         // --- Insights Charts (Chart.js) ---
         if (typeof Chart === 'undefined') return;
         Chart.defaults.color = '#9ca3af';
@@ -436,6 +624,53 @@ async function loadInsights() {
                         }
                     }
                 });
+            }
+        }
+
+        // 1b. Growth Line Chart Compare
+        if (isComparing && compareData && compareData.sales_over_time) {
+            const ctxGrowthCompare = document.getElementById('growthChartCompare')?.getContext('2d');
+            if (ctxGrowthCompare) {
+                const dateLabelsCompare = compareData.sales_over_time.map(s => {
+                    const parts = s.date.split('-'); 
+                    return `${parts[2]}/${parts[1]}`;
+                });
+                const growthCompareData = {
+                    labels: dateLabelsCompare,
+                    datasets: [{
+                        label: 'Faturamento Total (R$)',
+                        data: compareData.sales_over_time.map(s => s.total),
+                        borderColor: 'rgb(192, 38, 211)', // fuchsia-600
+                        backgroundColor: 'rgba(192, 38, 211, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                };
+
+                if (growthChartCompareInstance) {
+                    growthChartCompareInstance.data = growthCompareData;
+                    growthChartCompareInstance.update();
+                } else {
+                    growthChartCompareInstance = new Chart(ctxGrowthCompare, {
+                        type: 'line',
+                        data: growthCompareData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(75, 85, 99, 0.2)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }
+        } else {
+            if (growthChartCompareInstance) {
+                growthChartCompareInstance.destroy();
+                growthChartCompareInstance = null;
             }
         }
 
@@ -484,12 +719,62 @@ async function loadInsights() {
             }
         }
 
+        // 2b. Category Profits Chart Compare
+        if (isComparing && compareData && compareData.category_profits) {
+            const ctxCategoryCompare = document.getElementById('categoryChartCompare')?.getContext('2d');
+            if (ctxCategoryCompare) {
+                const catLabelsCompare = compareData.category_profits.map(c => c.category);
+                const catRevenuesCompare = compareData.category_profits.map(c => c.revenue);
+                const catProfitsCompare = compareData.category_profits.map(c => c.profit);
+
+                const catCompareData = {
+                    labels: catLabelsCompare,
+                    datasets: [
+                        {
+                            label: 'Receita (R$)',
+                            data: catRevenuesCompare,
+                            backgroundColor: 'rgba(56, 189, 248, 0.6)', // sky
+                            borderWidth: 0
+                        },
+                        {
+                            label: 'Lucro (R$)',
+                            data: catProfitsCompare,
+                            backgroundColor: 'rgba(52, 211, 153, 0.6)', // emerald
+                            borderWidth: 0
+                        }
+                    ]
+                };
+
+                if (categoryChartCompareInstance) {
+                    categoryChartCompareInstance.data = catCompareData;
+                    categoryChartCompareInstance.update();
+                } else {
+                    categoryChartCompareInstance = new Chart(ctxCategoryCompare, {
+                        type: 'bar',
+                        data: catCompareData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top', labels: { color: '#9ca3af' } } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(75, 85, 99, 0.2)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }
+        } else {
+            if (categoryChartCompareInstance) {
+                categoryChartCompareInstance.destroy();
+                categoryChartCompareInstance = null;
+            }
+        }
     } catch (err) {
         console.error('Erro ao buscar insights:', err);
     }
 }
-
-function updateCharts(report) {
+function updateCharts(report, compareReport) {
     if (typeof Chart === 'undefined') return;
 
     // Chart.js Default Texts Colors for Dark Theme
@@ -546,6 +831,64 @@ function updateCharts(report) {
         });
     }
 
+    // 1b. Finance Chart Compare (Bar)
+    if (compareReport) {
+        const ctxFinanceCompare = document.getElementById('financeChartCompare').getContext('2d');
+        const financeCompareData = {
+            labels: ['Faturamento Total', 'Custos Totais', 'Lucro Líquido'],
+            datasets: [{
+                label: 'Valores (R$)',
+                data: [
+                    compareReport.summary.total_revenue,
+                    compareReport.summary.total_costs,
+                    compareReport.summary.total_profit
+                ],
+                backgroundColor: [
+                    'rgba(34, 197, 94, 0.5)',   // Faturamento (Green)
+                    'rgba(239, 68, 68, 0.5)',   // Custo (Red)
+                    'rgba(16, 185, 129, 0.7)'   // Lucro (Emerald)
+                ],
+                borderColor: [
+                    'rgb(34, 197, 94)',
+                    'rgb(239, 68, 68)',
+                    'rgb(16, 185, 129)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        if (financeChartCompareInstance) {
+            financeChartCompareInstance.data = financeCompareData;
+            financeChartCompareInstance.update();
+        } else {
+            financeChartCompareInstance = new Chart(ctxFinanceCompare, {
+                type: 'bar',
+                data: financeCompareData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(75, 85, 99, 0.2)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    } else {
+        if (financeChartCompareInstance) {
+            financeChartCompareInstance.destroy();
+            financeChartCompareInstance = null;
+        }
+    }
+
     // 2. Products Chart (Doughnut) - Top 5
     const ctxProducts = document.getElementById('productsChart').getContext('2d');
     
@@ -598,8 +941,65 @@ function updateCharts(report) {
             }
         });
     }
-}
 
+    // 2b. Products Chart Compare (Doughnut) - Top 5
+    if (compareReport) {
+        const ctxProductsCompare = document.getElementById('productsChartCompare').getContext('2d');
+        const sortedByQtdCompare = [...(compareReport.by_product || [])].sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+        const pLabelsCompare = sortedByQtdCompare.map(p => p.name);
+        const pDataCompare = sortedByQtdCompare.map(p => p.quantity);
+
+        const productsCompareData = {
+            labels: pLabelsCompare,
+            datasets: [{
+                data: pDataCompare,
+                backgroundColor: [
+                    'rgba(56, 189, 248, 0.7)',
+                    'rgba(167, 139, 250, 0.7)',
+                    'rgba(251, 146, 60, 0.7)',
+                    'rgba(244, 114, 182, 0.7)',
+                    'rgba(250, 204, 21, 0.7)'
+                ],
+                borderColor: [
+                    'rgb(56, 189, 248)',
+                    'rgb(167, 139, 250)',
+                    'rgb(251, 146, 60)',
+                    'rgb(244, 114, 182)',
+                    'rgb(250, 204, 21)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        if (productsChartCompareInstance) {
+            productsChartCompareInstance.data = productsCompareData;
+            productsChartCompareInstance.update();
+        } else {
+            productsChartCompareInstance = new Chart(ctxProductsCompare, {
+                type: 'doughnut',
+                data: productsCompareData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'right',
+                            labels: {
+                                color: '#9ca3af',
+                                font: { size: 11 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } else {
+        if (productsChartCompareInstance) {
+            productsChartCompareInstance.destroy();
+            productsChartCompareInstance = null;
+        }
+    }
+}
 function setupDollarRefresh() {
     const btn = document.getElementById('refresh_dolar');
     if (!btn) return;

@@ -418,6 +418,22 @@ def lucky_spin():
     if not email or '@' not in email:
         return jsonify({'error': 'Por favor, insira um e-mail válido.'}), 400
 
+    # Bloqueio de domínios de e-mails temporários/descartáveis comuns
+    disposable_domains = {
+        'yopmail.com', 'mailinator.com', 'tempmail.com', 'guerrillamail.com', 
+        'sharklasers.com', '10minutemail.com', 'temp-mail.org', 'dispostable.com', 
+        'getairmail.com', 'throwawaymail.com', 'tempmailaddress.com', 'boun.cr', 
+        'tempinbox.com', 'trashmail.com', 'maildrop.cc', 'temp-mail.io', 
+        'temp-mail.ru', 'tempmail.net', '10minutemail.net', '10minutemail.co.uk',
+        'guerrillamailblock.com', 'guerrillamail.net', 'guerrillamail.org', 
+        'guerrillamail.biz', 'grr.la', 'pokemail.net', 'generator.email', 
+        'moakt.cc', 'disposable.com', 'crazymailing.com', 'zillamail.com',
+        'tempmail.net', 'fakeinbox.com', 'mailnesia.com', 'mailcatch.com'
+    }
+    email_domain = email.split('@')[-1]
+    if email_domain in disposable_domains:
+        return jsonify({'error': 'Não é permitido usar e-mails temporários na roleta.'}), 400
+
     conn = get_db_connection()
     try:
         # 1. Verificar se o SMTP está configurado

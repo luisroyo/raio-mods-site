@@ -117,7 +117,7 @@ function renderFeedbacks() {
         }
         
         // Data formatada
-        const dateStr = new Date(f.created_at).toLocaleDateString('pt-BR');
+        const dateStr = f.created_at ? new Date(f.created_at.replace(' ', 'T') + 'Z').toLocaleDateString('pt-BR') : '---';
         
         return `
             <div class="bg-gray-900 border-2 border-gray-800 rounded-xl p-5 hover:border-rose-500/30 transition duration-300 flex flex-col justify-between">

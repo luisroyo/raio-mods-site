@@ -125,7 +125,7 @@ async function loadSpins() {
         }
         
         spins.forEach(s => {
-            const date = new Date(s.created_at).toLocaleString('pt-BR');
+            const date = s.created_at ? new Date(s.created_at.replace(' ', 'T') + 'Z').toLocaleString('pt-BR') : '---';
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-gray-800/50 transition';
             tr.innerHTML = `

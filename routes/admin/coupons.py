@@ -61,3 +61,13 @@ def delete_coupon(coupon_id):
     conn.close()
     
     return jsonify({'success': True})
+
+def list_spins():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    spins = conn.execute('SELECT * FROM lucky_spins ORDER BY created_at DESC').fetchall()
+    conn.close()
+    
+    return jsonify([dict(s) for s in spins])

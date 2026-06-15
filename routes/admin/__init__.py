@@ -418,6 +418,10 @@ def add_coupon():
 def delete_coupon(coupon_id):
     return coupons_module.delete_coupon(coupon_id)
 
+@admin_bp.route('/admin/spins/list', methods=['GET'])
+def list_spins():
+    return coupons_module.list_spins()
+
 
 # --- ROTAS DE FEEDBACKS ---
 @admin_bp.route('/admin/feedbacks')

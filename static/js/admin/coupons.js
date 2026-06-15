@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadCoupons();
+    loadSpins();
     
     document.getElementById('couponForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -107,5 +108,36 @@ async function deleteCoupon(id) {
         }
     } catch (e) {
         alert('Erro ao deletar');
+    }
+}
+
+async function loadSpins() {
+    try {
+        const response = await fetch('/admin/spins/list');
+        const spins = await response.json();
+        
+        const tbody = document.getElementById('spinsList');
+        tbody.innerHTML = '';
+        
+        if (spins.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-gray-500">Nenhum giro registrado.</td></tr>';
+            return;
+        }
+        
+        spins.forEach(s => {
+            const date = new Date(s.created_at).toLocaleString('pt-BR');
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-800/50 transition';
+            tr.innerHTML = `
+                <td class="p-4 text-white font-medium">${s.email}</td>
+                <td class="p-4 font-mono text-cyan-400 font-bold">${s.coupon_code}</td>
+                <td class="p-4 text-emerald-400 font-bold">${s.discount_value}%</td>
+                <td class="p-4 text-gray-400 text-sm">${date}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        console.error('Erro ao carregar histórico de giros:', e);
+        document.getElementById('spinsList').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
     }
 }

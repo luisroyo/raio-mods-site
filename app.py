@@ -16,15 +16,27 @@ app.config.from_object(Config)
 
 # Configura o SQLAlchemy para ORM gradual
 DATABASE_URL = os.getenv('DATABASE_URL')
-if DATABASE_URL:
-    db_uri = DATABASE_URL
-    if db_uri.startswith("postgres://"):
-        db_uri = db_uri.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-else:
+db_uri = None
+
+if DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
+    import psycopg2
+    try:
+        # Tenta uma conexao rápida de teste
+        conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
+        conn.close()
+        db_uri = DATABASE_URL
+        if db_uri.startswith("postgres://"):
+            db_uri = db_uri.replace("postgres://", "postgresql://", 1)
+    except Exception as e:
+        print(f"[SQLAlchemy] Erro ao conectar ao PostgreSQL, fallback para SQLite: {e}")
+        db_uri = None
+
+if not db_uri:
     # Fallback para SQLite local
     basedir = os.path.abspath(os.path.dirname(__file__))
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'database.db')}"
+    db_uri = f"sqlite:///{os.path.join(basedir, 'database.db')}"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)

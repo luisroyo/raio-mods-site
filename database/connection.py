@@ -5,24 +5,26 @@ def get_db_path():
     basedir = os.path.abspath(os.path.dirname(__file__))
     return os.path.join(basedir, '../database.db')
 
-from database.models import get_db_connection
+from database.models import get_db_connection, PostgreSQLConnectionWrapper
 
 def init_db():
     DATABASE_URL = os.getenv('DATABASE_URL')
-    is_postgres = DATABASE_URL and (DATABASE_URL.startswith('postgresql://') or DATABASE_URL.startswith('postgres://'))
+    is_postgres_configured = DATABASE_URL and (DATABASE_URL.startswith('postgresql://') or DATABASE_URL.startswith('postgres://'))
     
-    if is_postgres:
+    if is_postgres_configured:
         print("[BD] Verificando banco de dados em: PostgreSQL (Neon)")
     else:
         db_path = get_db_path()
         print(f"[BD] Verificando banco de dados em: {db_path}")
     
     conn = get_db_connection()
-    if is_postgres:
+    is_real_postgres = isinstance(conn, PostgreSQLConnectionWrapper)
+    
+    if is_real_postgres:
         conn.conn.autocommit = True
     cursor = conn.cursor()
     
-    if is_postgres:
+    if is_real_postgres:
         # Criar funções customizadas de compatibilidade com SQLite date(...)
         cursor.execute("""
         CREATE OR REPLACE FUNCTION date(time_val timestamp, mod1 text)

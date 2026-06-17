@@ -1,11 +1,14 @@
 """
 Sales - Vendas manuais e relatório de vendas
 """
-from flask import request, jsonify, session
+from flask import Blueprint, request, jsonify, session
 from database.models import get_db_connection
 from .helpers import get_dolar_hoje, IOF
 
+sales_bp = Blueprint('admin_sales', __name__)
 
+
+@sales_bp.route('/admin/sales/manual/add', methods=['POST'])
 def add_manual_sale():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -104,6 +107,7 @@ def add_manual_sale():
         return jsonify({'error': str(e)}), 500
 
 
+@sales_bp.route('/admin/sales/manual/list', methods=['GET'])
 def list_manual_sales():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -242,6 +246,7 @@ def list_manual_sales():
         return jsonify({'error': str(e)}), 500
 
 
+@sales_bp.route('/admin/sales/manual/edit/<int:sale_id>', methods=['POST'])
 def edit_manual_sale(sale_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -325,6 +330,7 @@ def edit_manual_sale(sale_id):
         return jsonify({'error': str(e)}), 500
 
 
+@sales_bp.route('/admin/sales/manual/delete/<int:sale_id>', methods=['POST'])
 def delete_manual_sale(sale_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -361,6 +367,7 @@ def delete_manual_sale(sale_id):
         return jsonify({'error': str(e)}), 500
 
 
+@sales_bp.route('/admin/sales/report', methods=['GET'])
 def sales_report():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -472,7 +479,7 @@ def sales_report():
     # 1. Agrega Vendas Online
     online_by_product = conn.execute(f'''
         SELECT p.name, COUNT(*) as qtd, 
-               SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total
+               SUM(CAST(REPLACE(REPLACE(CAST(amount AS TEXT), 'R$', ''), ',', '.') AS REAL)) as total
         FROM orders o
         JOIN products p ON o.product_id = p.id
         WHERE o.status = 'approved' {date_clause_orders}
@@ -550,6 +557,7 @@ def sales_report():
     })
 
 
+@sales_bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])
 def get_order_proof(order_id):
     """Retorna dossiê anti-fraude com todas as provas de uma venda online."""
     if not session.get('admin_logged_in'):
@@ -594,6 +602,7 @@ def get_order_proof(order_id):
     })
 
 
+@sales_bp.route('/admin/sales/insights', methods=['GET'])
 def sales_insights():
     """Retorna dados avançados para a aba de Insights"""
     if not session.get('admin_logged_in'):
@@ -629,7 +638,7 @@ def sales_insights():
                 COALESCE(NULLIF(customer_name, ''), customer_email) as display_name,
                 customer_email as email,
                 COUNT(*) as orders_count,
-                SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total_spent
+                SUM(CAST(REPLACE(REPLACE(CAST(amount AS TEXT), 'R$', ''), ',', '.') AS REAL)) as total_spent
             FROM orders o
             WHERE status = 'approved' {date_clause_orders}
             GROUP BY customer_email, customer_name
@@ -686,7 +695,7 @@ def sales_insights():
     # 2. Vendas por Tempo
     time_query_online = f'''
         SELECT date(o.created_at, '-3 hours') as data_venda, 
-               SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total_online
+               SUM(CAST(REPLACE(REPLACE(CAST(amount AS TEXT), 'R$', ''), ',', '.') AS REAL)) as total_online
         FROM orders o
         WHERE o.status = 'approved' {date_clause_orders}
         GROUP BY date(o.created_at, '-3 hours')

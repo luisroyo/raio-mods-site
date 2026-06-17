@@ -26,7 +26,7 @@
 
     <meta name="theme-color" content="#050505">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dist/tailwind.css') }}">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
@@ -425,6 +425,7 @@
 
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lucky_spin.js') }}?v=3"></script>
+    <script src="{{ url_for('static', filename='js/effects.js') }}" defer></script>
 
     {% block extra_js %}{% endblock %}
 </body>

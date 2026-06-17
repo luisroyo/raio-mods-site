@@ -35,3 +35,6 @@ static/uploads/*
 # --- Cache ---
 dolar_cache.json
 dolar.log
+
+# --- Tailwind CSS compiler binary ---
+tailwindcss.exe

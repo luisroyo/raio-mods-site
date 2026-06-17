@@ -1,6 +1,9 @@
-from flask import request, jsonify, session
+from flask import Blueprint, request, jsonify, session
 from database.models import get_db_connection
 
+coupons_bp = Blueprint('admin_coupons', __name__)
+
+@coupons_bp.route('/admin/coupons/list', methods=['GET'])
 def list_coupons():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -11,6 +14,8 @@ def list_coupons():
     
     return jsonify([dict(c) for c in coupons])
 
+
+@coupons_bp.route('/admin/coupons/add', methods=['POST'])
 def add_coupon():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -51,6 +56,8 @@ def add_coupon():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@coupons_bp.route('/admin/coupons/delete/<int:coupon_id>', methods=['POST'])
 def delete_coupon(coupon_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -62,6 +69,8 @@ def delete_coupon(coupon_id):
     
     return jsonify({'success': True})
 
+
+@coupons_bp.route('/admin/spins/list', methods=['GET'])
 def list_spins():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401

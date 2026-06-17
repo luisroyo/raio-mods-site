@@ -15,15 +15,28 @@ from .helpers import (
     get_dolar_hoje, _read_cache, IOF, CUSTO_FIXO_PAINEL_USD, legacy_catalog_ids
 )
 from utils.image_utils import PILLOW_AVAILABLE
-from . import products as products_module
-from . import keys as keys_module
-from . import links as links_module
-from . import sales as sales_module
-from . import recharges as recharges_module
-from . import config as config_module
-from . import feedbacks as feedbacks_module
+
+# Importa os Blueprints dos submódulos
+from .products import products_bp
+from .keys import keys_bp
+from .links import links_bp
+from .sales import sales_bp
+from .recharges import recharges_bp
+from .config import config_bp
+from .feedbacks import feedbacks_bp
+from .coupons import coupons_bp
 
 admin_bp = Blueprint('admin', __name__)
+
+# Registra os Blueprints aninhados
+admin_bp.register_blueprint(products_bp)
+admin_bp.register_blueprint(keys_bp)
+admin_bp.register_blueprint(links_bp)
+admin_bp.register_blueprint(sales_bp)
+admin_bp.register_blueprint(recharges_bp)
+admin_bp.register_blueprint(config_bp)
+admin_bp.register_blueprint(feedbacks_bp)
+admin_bp.register_blueprint(coupons_bp)
 
 
 # --- FUNÇÃO AUXILIAR PARA DADOS ADMIN ---
@@ -71,7 +84,6 @@ def _get_admin_data():
     manual_revenue = float(manual_sales['total'] or 0) if manual_sales else 0.0
 
     # 3. Custos (Regime de Caixa - Apenas Recargas)
-    # O usuário optou por considerar apenas o custo das recargas como custo total
     recharges = conn.execute('SELECT SUM(total_cost_usd * dolar_rate) as total_brl FROM panel_recharges').fetchone()
     total_recharged_brl = float(recharges['total_brl'] or 0) if recharges else 0.0
     
@@ -300,129 +312,6 @@ def debug_dolar():
     return jsonify({'dolar_rate': round(rate, 4), 'timestamp': ts})
 
 
-# --- ROTAS DE PRODUTOS ---
-@admin_bp.route('/admin/add', methods=['POST'])
-def add_product():
-    return products_module.add_product()
-
-@admin_bp.route('/admin/delete/<int:pid>', methods=['POST'])
-def delete_product(pid):
-    return products_module.delete_product(pid)
-
-@admin_bp.route('/admin/edit/<int:pid>', methods=['POST'])
-def edit_product(pid):
-    return products_module.edit_product(pid)
-
-@admin_bp.route('/admin/product/info/<int:pid>', methods=['GET'])
-def product_info(pid):
-    return products_module.product_info(pid)
-
-
-# --- ROTA DE CONFIGURAÇÃO ---
-@admin_bp.route('/admin/config', methods=['POST'])
-def update_config():
-    return config_module.update_config()
-
-@admin_bp.route('/admin/config/backup', methods=['GET'])
-def backup_database():
-    return config_module.backup_database()
-
-
-# --- ROTAS DE CHAVES ---
-@admin_bp.route('/admin/keys/add', methods=['POST'])
-def add_keys():
-    return keys_module.add_keys()
-
-@admin_bp.route('/admin/keys/list/<int:product_id>', methods=['GET'])
-def list_keys(product_id):
-    return keys_module.list_keys(product_id)
-
-@admin_bp.route('/admin/keys/delete/<int:key_id>', methods=['POST'])
-def delete_key(key_id):
-    return keys_module.delete_key(key_id)
-
-
-# --- ROTAS DE LINKS ---
-@admin_bp.route('/admin/links/add', methods=['POST'])
-def add_link():
-    return links_module.add_link()
-
-@admin_bp.route('/admin/links/delete/<int:lid>', methods=['POST'])
-def delete_link(lid):
-    return links_module.delete_link(lid)
-
-@admin_bp.route('/admin/links/edit/<int:lid>', methods=['POST'])
-def edit_link(lid):
-    return links_module.edit_link(lid)
-
-
-# --- ROTAS DE VENDAS MANUAIS ---
-@admin_bp.route('/admin/sales/manual/add', methods=['POST'])
-def add_manual_sale():
-    return sales_module.add_manual_sale()
-
-@admin_bp.route('/admin/sales/manual/list', methods=['GET'])
-def list_manual_sales():
-    return sales_module.list_manual_sales()
-
-@admin_bp.route('/admin/sales/manual/edit/<int:sale_id>', methods=['POST'])
-def edit_manual_sale(sale_id):
-    return sales_module.edit_manual_sale(sale_id)
-
-@admin_bp.route('/admin/sales/manual/delete/<int:sale_id>', methods=['POST'])
-def delete_manual_sale(sale_id):
-    return sales_module.delete_manual_sale(sale_id)
-
-@admin_bp.route('/admin/sales/report', methods=['GET'])
-def sales_report():
-    return sales_module.sales_report()
-
-@admin_bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])
-def order_proof(order_id):
-    return sales_module.get_order_proof(order_id)
-
-@admin_bp.route('/admin/sales/insights', methods=['GET'])
-def sales_insights():
-    return sales_module.sales_insights()
-
-
-# --- ROTAS DE RECARGAS ---
-@admin_bp.route('/admin/panel/recharge', methods=['POST'])
-def add_panel_recharge():
-    return recharges_module.add_panel_recharge()
-
-@admin_bp.route('/admin/panel/recharge/list', methods=['GET'])
-def list_panel_recharges():
-    return recharges_module.list_panel_recharges()
-
-@admin_bp.route('/admin/panel/recharge/edit/<int:recharge_id>', methods=['POST'])
-def edit_panel_recharge(recharge_id):
-    return recharges_module.edit_panel_recharge(recharge_id)
-
-@admin_bp.route('/admin/panel/recharge/delete/<int:recharge_id>', methods=['POST'])
-def delete_panel_recharge(recharge_id):
-    return recharges_module.delete_panel_recharge(recharge_id)
-
-# --- ROTAS DE CUPONS ---
-from . import coupons as coupons_module
-
-@admin_bp.route('/admin/coupons/list', methods=['GET'])
-def list_coupons():
-    return coupons_module.list_coupons()
-
-@admin_bp.route('/admin/coupons/add', methods=['POST'])
-def add_coupon():
-    return coupons_module.add_coupon()
-
-@admin_bp.route('/admin/coupons/delete/<int:coupon_id>', methods=['POST'])
-def delete_coupon(coupon_id):
-    return coupons_module.delete_coupon(coupon_id)
-
-@admin_bp.route('/admin/spins/list', methods=['GET'])
-def list_spins():
-    return coupons_module.list_spins()
-
-
 # --- ROTAS DE FEEDBACKS ---
 @admin_bp.route('/admin/feedbacks')
 def admin_feedbacks():
@@ -436,22 +325,6 @@ def admin_feedbacks():
     except Exception as e:
         print(f"Erro ao carregar feedbacks: {e}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
-
-@admin_bp.route('/admin/feedbacks/list', methods=['GET'])
-def list_feedbacks():
-    return feedbacks_module.list_feedbacks()
-
-@admin_bp.route('/admin/feedbacks/approve/<int:fid>', methods=['POST'])
-def approve_feedback(fid):
-    return feedbacks_module.approve_feedback(fid)
-
-@admin_bp.route('/admin/feedbacks/reject/<int:fid>', methods=['POST'])
-def reject_feedback(fid):
-    return feedbacks_module.reject_feedback(fid)
-
-@admin_bp.route('/admin/feedbacks/delete/<int:fid>', methods=['POST'])
-def delete_feedback(fid):
-    return feedbacks_module.delete_feedback(fid)
 
 
 # --- ROTAS DE FIDELIDADE (LOYALTY) ---
@@ -468,6 +341,7 @@ def admin_loyalty():
     except Exception as e:
         print(f"Erro ao carregar fidelidade: {e}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
 
 @admin_bp.route('/admin/api/loyalty/list', methods=['GET'])
 def admin_loyalty_list():
@@ -512,6 +386,7 @@ def admin_loyalty_list():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/admin/api/loyalty/adjust', methods=['POST'])
 def admin_loyalty_adjust():
     if not session.get('admin_logged_in'):
@@ -552,6 +427,7 @@ def admin_loyalty_adjust():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/admin/api/loyalty/coupons/list', methods=['GET'])
 def admin_points_coupons_list():
     if not session.get('admin_logged_in'):
@@ -565,6 +441,7 @@ def admin_points_coupons_list():
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
 
 @admin_bp.route('/admin/api/loyalty/coupons/add', methods=['POST'])
 def admin_points_coupons_add():
@@ -601,6 +478,7 @@ def admin_points_coupons_add():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @admin_bp.route('/admin/api/loyalty/coupons/delete/<int:cid>', methods=['POST'])
 def admin_points_coupons_delete(cid):
     if not session.get('admin_logged_in'):
@@ -616,6 +494,7 @@ def admin_points_coupons_delete(cid):
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
 
 @admin_bp.route('/admin/api/clients/search', methods=['GET'])
 def admin_clients_search():

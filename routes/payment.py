@@ -296,6 +296,40 @@ def check_coupon():
         logger.error(f"Erro no check_coupon: {e}")
         return jsonify({'error': 'Erro ao validar cupom.'}), 500
 
+# --- Validações de Segurança & Rate Limiting ---
+import re
+import time
+from collections import defaultdict
+
+rate_limit_lock = threading.Lock()
+checkout_requests = defaultdict(list)
+
+def is_rate_limited(ip: str) -> bool:
+    now = time.time()
+    with rate_limit_lock:
+        checkout_requests[ip] = [t for t in checkout_requests[ip] if now - t < 60]
+        if len(checkout_requests[ip]) >= 5:
+            return True
+        checkout_requests[ip].append(now)
+        return False
+
+def validate_email(email_str: str) -> bool:
+    regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(regex, email_str or ''))
+
+def validate_cpf(cpf_str: str) -> bool:
+    cpf = ''.join(filter(str.isdigit, cpf_str or ''))
+    if len(cpf) != 11:
+        return False
+    if cpf in (c * 11 for c in '0123456789'):
+        return False
+    for i in range(9, 11):
+        value = sum((int(cpf[num]) * ((i + 1) - num) for num in range(0, i)))
+        digit = ((value * 10) % 11) % 10
+        if digit != int(cpf[i]):
+            return False
+    return True
+
 # --- Rotas da API ---
 
 @payment_bp.route('/api/checkout', methods=['POST'])
@@ -304,21 +338,31 @@ def create_payment():
     try:
         data = request.json or {}
         product_id = data.get('product_id')
-        email = data.get('email')
+        email = (data.get('email') or '').strip().lower()
         payment_type = data.get('type', 'pix') # 'pix' ou 'card'
         customer_name = (data.get('name') or '').strip()
-        customer_cpf = (data.get('cpf') or '').strip().translate(str.maketrans('', '', '.-'))
+        customer_cpf = ''.join(filter(str.isdigit, data.get('cpf') or ''))
         customer_phone = (data.get('phone') or '').strip()
         terms_accepted = data.get('terms_accepted', False)
         
-        # Validações primárias de payload
+        # 1. Rate limiting check
+        client_ip = _get_client_ip()
+        if is_rate_limited(client_ip):
+            return jsonify({'error': 'Muitas tentativas de compra em pouco tempo. Aguarde um minuto.'}), 429
+            
+        # 2. Validações primárias de payload
         if not product_id or not email:
             return jsonify({'error': 'Dados incompletos'}), 400
 
         if not customer_name or not customer_cpf or not terms_accepted:
             return jsonify({'error': 'Preencha todos os campos obrigatórios e aceite os termos.'}), 400
 
-        client_ip = _get_client_ip()
+        if not validate_email(email):
+            return jsonify({'error': 'Por favor, insira um e-mail válido.'}), 400
+
+        if not validate_cpf(customer_cpf):
+            return jsonify({'error': 'Por favor, insira um CPF válido.'}), 400
+
         terms_ts = datetime.now(timezone.utc).isoformat() if terms_accepted else None
 
         with closing(get_db_connection()) as conn:

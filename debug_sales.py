@@ -40,7 +40,7 @@ print(f"Count: {len(manual)}")
 print("\n[SIMULATION]")
 try:
     # Online Revenue
-    online_rev_row = conn.execute("SELECT SUM(CAST(REPLACE(REPLACE(amount, 'R$', ''), ',', '.') AS REAL)) as total FROM orders WHERE status = 'approved'").fetchone()
+    online_rev_row = conn.execute("SELECT SUM(CAST(REPLACE(REPLACE(CAST(amount AS TEXT), 'R$', ''), ',', '.') AS REAL)) as total FROM orders WHERE status = 'approved'").fetchone()
     online_rev = online_rev_row['total']
     print(f"Online Revenue (SQL): {online_rev}")
 

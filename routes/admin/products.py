@@ -8,9 +8,6 @@ from database.models_orm import Product
 from .helpers import handle_image_upload, IOF, get_dolar_hoje
 import sqlite3
 
-products_bp = Blueprint('admin_products', __name__)
-
-@products_bp.route('/admin/add', methods=['POST'])
 def add_product():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -90,7 +87,6 @@ def add_product():
     return jsonify({'success': True, 'message': 'Adicionado!'})
 
 
-@products_bp.route('/admin/delete/<int:pid>', methods=['POST'])
 def delete_product(pid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -111,7 +107,6 @@ def delete_product(pid):
         return jsonify({'error': f'Erro ao remover produto: {str(e)}'}), 500
 
 
-@products_bp.route('/admin/edit/<int:pid>', methods=['POST'])
 def edit_product(pid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -234,7 +229,6 @@ def edit_product(pid):
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
-@products_bp.route('/admin/product/info/<int:pid>', methods=['GET'])
 def product_info(pid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -270,3 +264,11 @@ def product_info(pid):
     except Exception as e:
         print(f"Erro product_info: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+def register_products_routes(bp):
+    bp.route('/admin/add', methods=['POST'])(add_product)
+    bp.route('/admin/delete/<int:pid>', methods=['POST'])(delete_product)
+    bp.route('/admin/edit/<int:pid>', methods=['POST'])(edit_product)
+    bp.route('/admin/product/info/<int:pid>', methods=['GET'])(product_info)
+

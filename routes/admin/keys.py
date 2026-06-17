@@ -4,9 +4,6 @@ Keys - Gerenciamento de chaves de produtos
 from flask import Blueprint, request, jsonify, session
 from database.models import get_db_connection
 
-keys_bp = Blueprint('admin_keys', __name__)
-
-@keys_bp.route('/admin/keys/add', methods=['POST'])
 def add_keys():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -38,7 +35,6 @@ def add_keys():
     return jsonify({'success': True, 'message': f'{count} chaves adicionadas com sucesso!'})
 
 
-@keys_bp.route('/admin/keys/list/<int:product_id>', methods=['GET'])
 def list_keys(product_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -53,7 +49,6 @@ def list_keys(product_id):
     return jsonify([dict(k) for k in keys])
 
 
-@keys_bp.route('/admin/keys/delete/<int:key_id>', methods=['POST'])
 def delete_key(key_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -64,3 +59,10 @@ def delete_key(key_id):
     conn.close()
     
     return jsonify({'success': True})
+
+
+def register_keys_routes(bp):
+    bp.route('/admin/keys/add', methods=['POST'])(add_keys)
+    bp.route('/admin/keys/list/<int:product_id>', methods=['GET'])(list_keys)
+    bp.route('/admin/keys/delete/<int:key_id>', methods=['POST'])(delete_key)
+

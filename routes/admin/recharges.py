@@ -5,9 +5,6 @@ from flask import Blueprint, request, jsonify, session
 from database.models import get_db_connection
 from .helpers import get_dolar_hoje
 
-recharges_bp = Blueprint('admin_recharges', __name__)
-
-@recharges_bp.route('/admin/panel/recharge', methods=['POST'])
 def add_panel_recharge():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -46,7 +43,6 @@ def add_panel_recharge():
         return jsonify({'error': str(e)}), 500
 
 
-@recharges_bp.route('/admin/panel/recharge/list', methods=['GET'])
 def list_panel_recharges():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -88,7 +84,6 @@ def list_panel_recharges():
         return jsonify({'error': str(e)}), 500
 
 
-@recharges_bp.route('/admin/panel/recharge/edit/<int:recharge_id>', methods=['POST'])
 def edit_panel_recharge(recharge_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -136,7 +131,6 @@ def edit_panel_recharge(recharge_id):
         return jsonify({'error': str(e)}), 500
 
 
-@recharges_bp.route('/admin/panel/recharge/delete/<int:recharge_id>', methods=['POST'])
 def delete_panel_recharge(recharge_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -147,3 +141,11 @@ def delete_panel_recharge(recharge_id):
     conn.close()
     
     return jsonify({'success': True})
+
+
+def register_recharges_routes(bp):
+    bp.route('/admin/panel/recharge', methods=['POST'])(add_panel_recharge)
+    bp.route('/admin/panel/recharge/list', methods=['GET'])(list_panel_recharges)
+    bp.route('/admin/panel/recharge/edit/<int:recharge_id>', methods=['POST'])(edit_panel_recharge)
+    bp.route('/admin/panel/recharge/delete/<int:recharge_id>', methods=['POST'])(delete_panel_recharge)
+

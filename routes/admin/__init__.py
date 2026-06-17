@@ -16,27 +16,27 @@ from .helpers import (
 )
 from utils.image_utils import PILLOW_AVAILABLE
 
-# Importa os Blueprints dos submódulos
-from .products import products_bp
-from .keys import keys_bp
-from .links import links_bp
-from .sales import sales_bp
-from .recharges import recharges_bp
-from .config import config_bp
-from .feedbacks import feedbacks_bp
-from .coupons import coupons_bp
+# Importa as rotas dos submódulos
+from .products import register_products_routes
+from .keys import register_keys_routes
+from .links import register_links_routes
+from .sales import register_sales_routes
+from .recharges import register_recharges_routes
+from .config import register_config_routes
+from .feedbacks import register_feedbacks_routes
+from .coupons import register_coupons_routes
 
 admin_bp = Blueprint('admin', __name__)
 
-# Registra os Blueprints aninhados
-admin_bp.register_blueprint(products_bp)
-admin_bp.register_blueprint(keys_bp)
-admin_bp.register_blueprint(links_bp)
-admin_bp.register_blueprint(sales_bp)
-admin_bp.register_blueprint(recharges_bp)
-admin_bp.register_blueprint(config_bp)
-admin_bp.register_blueprint(feedbacks_bp)
-admin_bp.register_blueprint(coupons_bp)
+# Registra as rotas diretamente no Blueprint admin
+register_products_routes(admin_bp)
+register_keys_routes(admin_bp)
+register_links_routes(admin_bp)
+register_sales_routes(admin_bp)
+register_recharges_routes(admin_bp)
+register_config_routes(admin_bp)
+register_feedbacks_routes(admin_bp)
+register_coupons_routes(admin_bp)
 
 
 # --- FUNÇÃO AUXILIAR PARA DADOS ADMIN ---

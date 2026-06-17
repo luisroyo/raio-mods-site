@@ -1,9 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from database.models import get_db_connection
 
-feedbacks_bp = Blueprint('admin_feedbacks', __name__)
-
-@feedbacks_bp.route('/admin/feedbacks/list', methods=['GET'])
 def list_feedbacks():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -21,7 +18,6 @@ def list_feedbacks():
     return jsonify([dict(f) for f in feedbacks])
 
 
-@feedbacks_bp.route('/admin/feedbacks/approve/<int:fid>', methods=['POST'])
 def approve_feedback(fid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -34,7 +30,6 @@ def approve_feedback(fid):
     return jsonify({'success': True, 'message': 'Feedback aprovado com sucesso!'})
 
 
-@feedbacks_bp.route('/admin/feedbacks/reject/<int:fid>', methods=['POST'])
 def reject_feedback(fid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -47,7 +42,6 @@ def reject_feedback(fid):
     return jsonify({'success': True, 'message': 'Feedback rejeitado com sucesso!'})
 
 
-@feedbacks_bp.route('/admin/feedbacks/delete/<int:fid>', methods=['POST'])
 def delete_feedback(fid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -58,3 +52,11 @@ def delete_feedback(fid):
     conn.close()
     
     return jsonify({'success': True, 'message': 'Feedback excluído com sucesso!'})
+
+
+def register_feedbacks_routes(bp):
+    bp.route('/admin/feedbacks/list', methods=['GET'])(list_feedbacks)
+    bp.route('/admin/feedbacks/approve/<int:fid>', methods=['POST'])(approve_feedback)
+    bp.route('/admin/feedbacks/reject/<int:fid>', methods=['POST'])(reject_feedback)
+    bp.route('/admin/feedbacks/delete/<int:fid>', methods=['POST'])(delete_feedback)
+

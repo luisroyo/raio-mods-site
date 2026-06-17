@@ -7,9 +7,6 @@ from database.connection import get_db_path
 import os
 import time
 
-config_bp = Blueprint('admin_config', __name__)
-
-@config_bp.route('/admin/config', methods=['POST'])
 def update_config():
     if not session.get('admin_logged_in'):
         return jsonify({'error': 'Não autorizado'}), 401
@@ -56,7 +53,6 @@ def update_config():
     return jsonify({'success': True})
 
 
-@config_bp.route('/admin/config/backup', methods=['GET'])
 def backup_database():
     if not session.get('admin_logged_in'):
         return jsonify({'error': 'Não autorizado'}), 401
@@ -76,3 +72,9 @@ def backup_database():
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+def register_config_routes(bp):
+    bp.route('/admin/config', methods=['POST'])(update_config)
+    bp.route('/admin/config/backup', methods=['GET'])(backup_database)
+

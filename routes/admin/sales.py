@@ -5,10 +5,6 @@ from flask import Blueprint, request, jsonify, session
 from database.models import get_db_connection
 from .helpers import get_dolar_hoje, IOF
 
-sales_bp = Blueprint('admin_sales', __name__)
-
-
-@sales_bp.route('/admin/sales/manual/add', methods=['POST'])
 def add_manual_sale():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -107,7 +103,6 @@ def add_manual_sale():
         return jsonify({'error': str(e)}), 500
 
 
-@sales_bp.route('/admin/sales/manual/list', methods=['GET'])
 def list_manual_sales():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -246,7 +241,6 @@ def list_manual_sales():
         return jsonify({'error': str(e)}), 500
 
 
-@sales_bp.route('/admin/sales/manual/edit/<int:sale_id>', methods=['POST'])
 def edit_manual_sale(sale_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -330,7 +324,6 @@ def edit_manual_sale(sale_id):
         return jsonify({'error': str(e)}), 500
 
 
-@sales_bp.route('/admin/sales/manual/delete/<int:sale_id>', methods=['POST'])
 def delete_manual_sale(sale_id):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -367,7 +360,6 @@ def delete_manual_sale(sale_id):
         return jsonify({'error': str(e)}), 500
 
 
-@sales_bp.route('/admin/sales/report', methods=['GET'])
 def sales_report():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -557,7 +549,6 @@ def sales_report():
     })
 
 
-@sales_bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])
 def get_order_proof(order_id):
     """Retorna dossiê anti-fraude com todas as provas de uma venda online."""
     if not session.get('admin_logged_in'):
@@ -602,7 +593,6 @@ def get_order_proof(order_id):
     })
 
 
-@sales_bp.route('/admin/sales/insights', methods=['GET'])
 def sales_insights():
     """Retorna dados avançados para a aba de Insights"""
     if not session.get('admin_logged_in'):
@@ -858,3 +848,14 @@ def sales_insights():
         'total_revenue': round(all_rev, 2),
         'total_orders': total_orders
     })
+
+
+def register_sales_routes(bp):
+    bp.route('/admin/sales/manual/add', methods=['POST'])(add_manual_sale)
+    bp.route('/admin/sales/manual/list', methods=['GET'])(list_manual_sales)
+    bp.route('/admin/sales/manual/edit/<int:sale_id>', methods=['POST'])(edit_manual_sale)
+    bp.route('/admin/sales/manual/delete/<int:sale_id>', methods=['POST'])(delete_manual_sale)
+    bp.route('/admin/sales/report', methods=['GET'])(sales_report)
+    bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])(get_order_proof)
+    bp.route('/admin/sales/insights', methods=['GET'])(sales_insights)
+

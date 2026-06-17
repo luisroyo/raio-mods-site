@@ -5,9 +5,6 @@ from flask import Blueprint, request, jsonify, session
 from database.models import get_db_connection
 from .helpers import handle_image_upload
 
-links_bp = Blueprint('admin_links', __name__)
-
-@links_bp.route('/admin/links/add', methods=['POST'])
 def add_link():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -35,7 +32,6 @@ def add_link():
     return jsonify({'success': True})
 
 
-@links_bp.route('/admin/links/delete/<int:lid>', methods=['POST'])
 def delete_link(lid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -46,7 +42,6 @@ def delete_link(lid):
     return jsonify({'success': True})
 
 
-@links_bp.route('/admin/links/edit/<int:lid>', methods=['POST'])
 def edit_link(lid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -77,3 +72,10 @@ def edit_link(lid):
     conn.commit()
     conn.close()
     return jsonify({'success': True})
+
+
+def register_links_routes(bp):
+    bp.route('/admin/links/add', methods=['POST'])(add_link)
+    bp.route('/admin/links/delete/<int:lid>', methods=['POST'])(delete_link)
+    bp.route('/admin/links/edit/<int:lid>', methods=['POST'])(edit_link)
+

@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof setupMobileMenu === 'function') setupMobileMenu();
     if (typeof setupKeyForm === 'function') setupKeyForm();
     if (typeof setupManualSaleForm === 'function') setupManualSaleForm();
+    if (typeof setupKeyRedeemForm === 'function') setupKeyRedeemForm();
     if (typeof setupPanelRechargeForm === 'function') setupPanelRechargeForm();
 
 });

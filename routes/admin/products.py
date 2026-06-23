@@ -268,14 +268,24 @@ def product_info(pid):
             else:
                 calculated_cost_brl = round(cost_usd * dolar_rate, 2)
 
+        # Buscar estoque de chaves disponíveis
+        conn = get_db_connection()
+        stock_row = conn.execute('SELECT COUNT(*) FROM product_keys WHERE product_id = ? AND is_used = 0', (pid,)).fetchone()
+        stock_count = stock_row[0] if stock_row else 0
+        conn.close()
+
         return jsonify({
             'id': prod.id,
+            'name': prod.name,
+            'price': prod.price,
+            'promo_price': prod.promo_price,
             'cost_usd': round(cost_usd, 2),
             'cost_brl': round(cost_brl, 2),
             'apply_iof': apply_iof,
             'is_active': int(prod.is_active) if prod.is_active is not None else 1,
             'dolar_rate': round(dolar_rate, 4),
-            'calculated_cost_brl': calculated_cost_brl
+            'calculated_cost_brl': calculated_cost_brl,
+            'stock': stock_count
         })
     except Exception as e:
         print(f"Erro product_info: {e}")

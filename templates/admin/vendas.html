@@ -8,13 +8,17 @@
 
 <!-- Tabs -->
 <div class="mb-6 border-b border-gray-700">
-    <nav class="flex gap-4">
+    <nav class="flex gap-4 overflow-x-auto pb-1">
         <button type="button" onclick="showSalesTab('manual')" id="tab-manual"
-            class="px-6 py-3 font-bold text-purple-400 border-b-2 border-purple-400">
+            class="px-6 py-3 font-bold text-purple-400 border-b-2 border-purple-400 whitespace-nowrap">
             🛒 Vendas Manuais
         </button>
+        <button type="button" onclick="showSalesTab('resgate')" id="tab-resgate"
+            class="px-6 py-3 font-bold text-gray-400 border-b-2 border-transparent hover:text-cyan-400 whitespace-nowrap">
+            🔑 Resgatar Chave
+        </button>
         <button type="button" onclick="showSalesTab('recargas')" id="tab-recargas"
-            class="px-6 py-3 font-bold text-gray-400 border-b-2 border-transparent hover:text-orange-400">
+            class="px-6 py-3 font-bold text-gray-400 border-b-2 border-transparent hover:text-orange-400 whitespace-nowrap">
             📦 Recargas de Painel
         </button>
     </nav>
@@ -248,6 +252,79 @@ function convertUsdToBrl() {
     </div>
 </div>
 
+<!-- Resgate de Chaves -->
+<div id="section-resgate" class="sales-tab-content hidden">
+    <div class="mb-8 border-2 border-cyan-500 rounded-lg p-6 bg-cyan-500/5">
+        <h3 class="text-xl font-bold text-cyan-400 mb-4">🔑 Resgatar Chave & Registrar Venda</h3>
+        <form id="keyRedeemForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Selecione o Produto</label>
+                    <select name="product_id" id="redeem_product_id" required onchange="onRedeemProductChange()"
+                        class="w-full px-4 py-3 bg-gray-800 border border-cyan-500 rounded text-white text-sm focus:outline-none focus:border-cyan-400">
+                        <option value="">Selecione um Produto</option>
+                        {% for p in simple_products %}
+                        <option value="{{ p.id }}">{{ p.name }} - {{ p.price }}</option>
+                        {% endfor %}
+                        {% for c in parent_products %}
+                        <optgroup label="📁 {{ c.name }}">
+                            {% for sub in subproducts_by_parent.get(c.id, []) %}
+                            {% if not sub.is_folder %}
+                            <option value="{{ sub.id }}">&nbsp;&nbsp;{{ sub.name }} - {{ sub.price }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Status do Estoque</label>
+                    <div id="redeem_stock_status" class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded text-gray-400 text-sm flex items-center justify-between h-[46px]">
+                        <span>Selecione um produto para verificar estoque</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Preço de Venda cobrado do Cliente (R$)</label>
+                    <input type="text" name="unit_price" id="redeem_unit_price" placeholder="Ex: 25.90" required
+                        class="w-full px-4 py-3 bg-gray-800 border border-green-500 rounded text-white text-sm focus:outline-none focus:border-green-400">
+                    <p class="text-[10px] text-gray-500 mt-1">Preencha o valor real cobrado (mude na hora para aplicar descontos)</p>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Buscar Cliente Cadastrado (Opcional)</label>
+                    <div class="relative">
+                        <input type="text" id="redeemClientSearchInput" placeholder="Digite ID, Nome ou E-mail para buscar..."
+                            class="w-full px-4 py-3 bg-gray-800 border border-cyan-500/40 focus:border-cyan-500 rounded text-white text-sm focus:outline-none"
+                            oninput="searchClientsForRedeem(this.value)" autocomplete="off">
+                        
+                        <!-- Lista flutuante do autocomplete -->
+                        <div id="redeemClientSearchResults" class="absolute left-0 right-0 mt-1 bg-gray-900 border border-cyan-500/30 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nome do Cliente (opcional)</label>
+                    <input type="text" name="client_name" id="redeem_client_name" placeholder="Ex: João Silva"
+                        class="w-full px-4 py-3 bg-gray-800 border border-cyan-500 rounded text-white text-sm focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">E-mail do Cliente (opcional para fidelidade)</label>
+                    <input type="email" name="client_email" id="redeem_client_email" placeholder="Ex: cliente@email.com"
+                        class="w-full px-4 py-3 bg-gray-800 border border-cyan-500 rounded text-white text-sm focus:outline-none focus:border-cyan-400">
+                </div>
+            </div>
+            
+            <button type="submit" id="btnSubmitRedeem" disabled
+                class="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg disabled:opacity-50 transition-all text-sm tracking-wider uppercase">🔑 Resgatar Chave & Registrar Venda</button>
+        </form>
+        <div id="keyRedeemMessage" class="mt-4 hidden"></div>
+    </div>
+</div>
+
 <!-- Recargas de Painel -->
 <div id="section-recargas" class="sales-tab-content hidden">
     <div class="mb-8 border-2 border-orange-500 rounded-lg p-6 bg-orange-500/5">
@@ -343,7 +420,7 @@ function convertUsdToBrl() {
 function showSalesTab(tab) {
     document.querySelectorAll('.sales-tab-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('[id^="tab-"]').forEach(el => {
-        el.classList.remove('text-purple-400', 'text-orange-400', 'border-purple-400', 'border-orange-400');
+        el.classList.remove('text-purple-400', 'text-orange-400', 'text-cyan-400', 'border-purple-400', 'border-orange-400', 'border-cyan-400');
         el.classList.add('text-gray-400', 'border-transparent');
     });
     
@@ -352,6 +429,8 @@ function showSalesTab(tab) {
     activeTab.classList.remove('text-gray-400', 'border-transparent');
     if (tab === 'manual') {
         activeTab.classList.add('text-purple-400', 'border-purple-400');
+    } else if (tab === 'resgate') {
+        activeTab.classList.add('text-cyan-400', 'border-cyan-400');
     } else {
         activeTab.classList.add('text-orange-400', 'border-orange-400');
         if (typeof loadPanelRecharges === 'function') loadPanelRecharges(1);
@@ -361,7 +440,7 @@ function showSalesTab(tab) {
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=10" defer></script>
+<script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=11" defer></script>
 <script src="{{ url_for('static', filename='js/admin/recharges.js') }}?v=10" defer></script>
 <script>
     let clientSearchTimeout = null;
@@ -409,11 +488,66 @@ function showSalesTab(tab) {
         document.getElementById('clientSearchResults').classList.add('hidden');
     }
 
+    let redeemClientSearchTimeout = null;
+    function searchClientsForRedeem(query) {
+        clearTimeout(redeemClientSearchTimeout);
+        const resultsDiv = document.getElementById('redeemClientSearchResults');
+        if (!query || query.trim().length < 2) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+        
+        redeemClientSearchTimeout = setTimeout(async () => {
+            try {
+                const res = await fetch(`/admin/api/clients/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                
+                if (data.clients && data.clients.length > 0) {
+                    resultsDiv.innerHTML = data.clients.map(c => {
+                        return `
+                            <div onclick="selectClientForRedeem('${c.name}', '${c.email}', '${c.client_id}')" 
+                                 class="p-3 hover:bg-cyan-950/40 border-b border-gray-800/80 cursor-pointer text-sm text-gray-300 hover:text-white transition flex justify-between items-center">
+                                <div>
+                                    <strong class="text-white">${c.name}</strong>
+                                    <div class="text-xs text-gray-500 font-mono">${c.email}</div>
+                                </div>
+                                <span class="px-1.5 py-0.5 bg-cyan-950 text-cyan-400 border border-cyan-500/20 rounded font-mono text-[10px] font-bold">${c.client_id}</span>
+                            </div>
+                        `;
+                    }).join("");
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    resultsDiv.innerHTML = `<div class="p-3 text-xs text-gray-500 text-center">Nenhum cliente cadastrado encontrado.</div>`;
+                    resultsDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Erro na busca de clientes para resgate:", err);
+            }
+        }, 300);
+    }
+
+    function selectClientForRedeem(name, email, clientId) {
+        document.getElementById('redeem_client_name').value = name;
+        document.getElementById('redeem_client_email').value = email;
+        document.getElementById('redeemClientSearchInput').value = `${name} (${clientId})`;
+        document.getElementById('redeemClientSearchResults').classList.add('hidden');
+    }
+
     // Fechar lista ao clicar fora
     document.addEventListener('click', function(e) {
         const searchDiv = document.getElementById('clientSearchInput');
         const resultsDiv = document.getElementById('clientSearchResults');
         if (searchDiv && resultsDiv && !searchDiv.contains(e.target) && !resultsDiv.contains(e.target)) {
+            resultsDiv.classList.add('hidden');
+        }
+
+        const redeemSearchDiv = document.getElementById('redeemClientSearchInput');
+        const redeemResultsDiv = document.getElementById('redeemClientSearchResults');
+        if (redeemSearchDiv && redeemResultsDiv && !redeemSearchDiv.contains(e.target) && !redeemResultsDiv.contains(e.target)) {
+            redeemResultsDiv.classList.add('hidden');
+        }
+    });
+</script>esultsDiv.contains(e.target)) {
             resultsDiv.classList.add('hidden');
         }
     });

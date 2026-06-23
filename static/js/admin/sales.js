@@ -391,3 +391,184 @@ async function viewOrderProof(orderId) {
         alert('Erro ao carregar provas: ' + err);
     }
 }
+
+
+// --- RESGATE DE CHAVES (ADMIN) ---
+
+async function onRedeemProductChange() {
+    const pid = document.getElementById('redeem_product_id').value;
+    const stockStatus = document.getElementById('redeem_stock_status');
+    const priceInput = document.getElementById('redeem_unit_price');
+    const submitBtn = document.getElementById('btnSubmitRedeem');
+    
+    if (!pid) {
+        stockStatus.innerHTML = '<span>Selecione um produto para verificar estoque</span>';
+        priceInput.value = '';
+        submitBtn.disabled = true;
+        return;
+    }
+    
+    stockStatus.innerHTML = '<span class="text-gray-400">Verificando estoque...</span>';
+    
+    try {
+        const res = await fetch(`/admin/product/info/${pid}`);
+        if (!res.ok) throw new Error('Falha ao buscar dados');
+        const info = await res.json();
+        
+        // Exibir quantidade de chaves disponíveis
+        const qty = info.stock || 0;
+        let colorClass = 'text-red-500 font-bold';
+        let icon = '🔴';
+        if (qty > 5) {
+            colorClass = 'text-green-400 font-bold';
+            icon = '🟢';
+        } else if (qty > 0) {
+            colorClass = 'text-yellow-400 font-bold';
+            icon = '🟡';
+        }
+        
+        stockStatus.innerHTML = `
+            <span class="${colorClass}">${icon} ${qty} chaves disponíveis</span>
+            <span class="text-xs text-gray-500 font-mono">ID: ${pid}</span>
+        `;
+        
+        // Preencher preço sugerido (verificar se tem preço promocional)
+        let price = info.price || '';
+        if (info.promo_price) {
+            price = info.promo_price;
+        }
+        
+        // Limpar o prefixo R$ e espaços se houver no banco
+        if (price) {
+            price = parseFloat(String(price).replace('R$', '').replace(',', '.').trim()).toFixed(2);
+        }
+        priceInput.value = price;
+        
+        // Habilitar ou desabilitar o botão com base no estoque
+        submitBtn.disabled = (qty <= 0);
+    } catch (err) {
+        console.error(err);
+        stockStatus.innerHTML = '<span class="text-red-500">Erro ao carregar informações</span>';
+        submitBtn.disabled = true;
+    }
+}
+
+function setupKeyRedeemForm() {
+    const form = document.getElementById('keyRedeemForm');
+    if (!form) return;
+    
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('btnSubmitRedeem');
+        const originalText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Processando resgate...';
+        
+        const msg = document.getElementById('keyRedeemMessage');
+        const formData = new FormData(form);
+        
+        try {
+            const res = await fetch('/admin/keys/redeem', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (data.success) {
+                // Fechar mensagens antigas
+                msg.classList.add('hidden');
+                
+                // Exibir modal de resgate com sucesso contendo feedback visual de cópia e WhatsApp
+                const sale = data.sale || {};
+                const key = data.key || '';
+                
+                // Formatar texto para divulgação no WhatsApp
+                let zapText = `🚀 *CHAVE DE ATIVAÇÃO RECEBIDA!* \n\n`;
+                if (sale.client_name) {
+                    zapText += `👤 *Cliente:* ${sale.client_name} \n`;
+                }
+                zapText += `📦 *Produto:* ${sale.product_name} \n`;
+                zapText += `🔑 *Chave:* \`${key}\` \n\n`;
+                zapText += `⚡ *Obrigado pela preferência! Ative seu produto agora mesmo.*`;
+                
+                const linkZap = `https://api.whatsapp.com/send?text=${encodeURIComponent(zapText)}`;
+                
+                const modalHtml = `
+                <div class="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm" id="redeemSuccessModal">
+                    <div class="bg-gray-900 border-2 border-cyan-500 rounded-xl w-full max-w-md overflow-hidden shadow-[0_0_30px_rgba(0,242,255,0.2)]">
+                        <div class="bg-cyan-500/10 p-4 border-b border-cyan-500/30 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-cyan-400">🔑 Chave Resgatada!</h3>
+                            <button onclick="document.getElementById('redeemSuccessModal').remove()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <p class="text-gray-300 text-sm text-center">A chave foi resgatada e a venda registrada com sucesso no sistema.</p>
+                            
+                            <div class="border border-cyan-500/20 rounded-lg p-4 bg-black/40 text-center">
+                                <span class="text-[10px] text-gray-500 block mb-1 uppercase tracking-wider font-bold">Chave de Ativação</span>
+                                <code id="redeemedKeyValue" class="text-white text-lg font-mono font-bold select-all break-all">${key}</code>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button onclick="copyRedeemedKey()" id="btnCopyRedeem" 
+                                    class="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs transition-all uppercase tracking-wider">
+                                    📋 Copiar Chave
+                                </button>
+                                <a href="${linkZap}" target="_blank" 
+                                    class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                                    💬 Enviar p/ Cliente
+                                </a>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button onclick="document.getElementById('redeemSuccessModal').remove()" class="text-gray-500 hover:text-gray-300 text-xs underline">
+                                    Fechar Janela
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                
+                document.getElementById('redeemSuccessModal')?.remove();
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                // Limpar campos
+                form.reset();
+                document.getElementById('redeemClientSearchInput').value = '';
+                
+                // Recarregar vendas, estoque do produto e relatório financeiro
+                onRedeemProductChange();
+                loadManualSales();
+                if (typeof loadSalesReport === 'function') loadSalesReport();
+            } else {
+                msg.textContent = '❌ ' + (data.error || 'Erro ao resgatar chave');
+                msg.className = 'mt-4 p-3 bg-red-900/30 border border-red-500 text-red-400 rounded-lg text-sm';
+                msg.classList.remove('hidden');
+            }
+        } catch (err) {
+            console.error(err);
+            msg.textContent = '❌ Erro de conexão com o servidor';
+            msg.className = 'mt-4 p-3 bg-red-900/30 border border-red-500 text-red-400 rounded-lg text-sm';
+            msg.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalText;
+        }
+    });
+}
+
+function copyRedeemedKey() {
+    const keyEl = document.getElementById('redeemedKeyValue');
+    const btn = document.getElementById('btnCopyRedeem');
+    if (!keyEl || !btn) return;
+    
+    navigator.clipboard.writeText(keyEl.innerText.trim()).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = '✅ Copiado!';
+        btn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
+        btn.classList.add('bg-green-600');
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.classList.add('bg-cyan-600', 'hover:bg-cyan-500');
+            btn.classList.remove('bg-green-600');
+        }, 1500);
+    }).catch(err => {
+        console.error('Erro ao copiar chave:', err);
+    });
+}

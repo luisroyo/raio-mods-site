@@ -521,3 +521,121 @@ def admin_clients_search():
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+
+@admin_bp.route('/admin/pdv')
+def admin_pdv():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    
+    conn = get_db_connection()
+    try:
+        # Pega os produtos ativos e catalogo=0 que possuem chaves disponiveis
+        # Conta chaves em estoque para cada produto
+        products = conn.execute('''
+            SELECT p.*, COUNT(k.id) as stock
+            FROM products p
+            LEFT JOIN product_keys k ON k.product_id = p.id AND k.is_used = 0
+            WHERE p.is_active = 1 AND p.is_catalog = 0
+            GROUP BY p.id
+            HAVING stock > 0
+            ORDER BY p.sort_order ASC, p.id ASC
+        ''').fetchall()
+        
+        # Obter configurações de suporte/WhatsApp
+        config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
+        
+        # Estatísticas de feedbacks pendentes (para passar ao base_admin)
+        pending_feedbacks_count = conn.execute("SELECT COUNT(*) FROM feedbacks WHERE status = 'pending'").fetchone()[0]
+    except Exception as e:
+        print(f"Erro ao carregar PDV: {e}")
+        products = []
+        config = None
+        pending_feedbacks_count = 0
+    finally:
+        conn.close()
+
+    from routes.admin.helpers import get_dolar_hoje
+    dolar_rate = get_dolar_hoje()
+    
+    return render_template('admin/pdv.html', 
+                           products=[dict(p) for p in products], 
+                           config=config, 
+                           financeiro={'dolar_hoje': round(dolar_rate, 4)},
+                           pending_feedbacks_count=pending_feedbacks_count)
+
+
+@admin_bp.route('/admin/api/pdv/clients/search', methods=['GET'])
+def admin_pdv_clients_search():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+        
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'clients': []})
+        
+    conn = get_db_connection()
+    try:
+        # 1. Buscar na tabela clients
+        clients = conn.execute(
+            '''SELECT client_id, name, email, phone 
+               FROM clients 
+               WHERE name LIKE ? OR email LIKE ? OR client_id LIKE ? OR phone LIKE ?
+               LIMIT 10''',
+            (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%')
+        ).fetchall()
+        
+        results = []
+        emails_seen = set()
+        names_seen = set()
+        
+        for c in clients:
+            item = {
+                'name': c['name'],
+                'email': c['email'] or '',
+                'phone': c['phone'] or '',
+                'client_id': c['client_id'] or '',
+                'source': 'cadastro'
+            }
+            results.append(item)
+            if c['email']:
+                emails_seen.add(c['email'].lower().strip())
+            names_seen.add(c['name'].lower().strip())
+            
+        # 2. Buscar na tabela manual_sales (nomes/emails distintos)
+        manual = conn.execute(
+            '''SELECT DISTINCT client_name, client_email 
+               FROM manual_sales 
+               WHERE (client_name LIKE ? OR client_email LIKE ?) 
+                 AND client_name IS NOT NULL AND client_name != ''
+               LIMIT 10''',
+            (f'%{query}%', f'%{query}%')
+        ).fetchall()
+        
+        for m in manual:
+            name = m['client_name'].strip()
+            email = (m['client_email'] or '').strip()
+            
+            # Se já vimos o e-mail ou o nome exato, pula
+            if email and email.lower() in emails_seen:
+                continue
+            if name.lower() in names_seen:
+                continue
+                
+            item = {
+                'name': name,
+                'email': email,
+                'phone': '',
+                'client_id': 'Manual',
+                'source': 'histórico'
+            }
+            results.append(item)
+            if email:
+                emails_seen.add(email.lower())
+            names_seen.add(name.lower())
+            
+        return jsonify({'clients': results[:15]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()

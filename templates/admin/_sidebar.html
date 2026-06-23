@@ -68,6 +68,12 @@
             </span>
             {% endif %}
         </a>
+        
+        <a href="{{ url_for('admin.admin_resellers') }}" 
+           class="flex items-center gap-3 px-3 py-3 rounded-lg transition text-sm
+                  {% if request.endpoint == 'admin.admin_resellers' %}bg-indigo-500/20 text-indigo-400 border border-indigo-500{% else %}text-gray-300 hover:bg-gray-800{% endif %}">
+            🤝 Revendedores
+        </a>
     </nav>
 
     <!-- Ações Rápidas -->

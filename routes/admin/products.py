@@ -21,6 +21,11 @@ def add_product():
     promo_price = (request.form.get('promo_price') or '').strip()
     promo_label = (request.form.get('promo_label') or '').strip()
     
+    try:
+        reseller_price = float(request.form.get('reseller_price', 0) or 0)
+    except:
+        reseller_price = 0.0
+    
     # cost_usd
     try:
         cost_usd = float(request.form.get('cost_usd', 0) or 0)
@@ -75,8 +80,8 @@ def add_product():
     conn = get_db_connection()
     try:
         conn.execute(
-            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier)
+            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price)
         )
         conn.commit()
     except sqlite3.OperationalError as e:
@@ -157,6 +162,12 @@ def edit_product(pid):
             promo_price = ""
             promo_label = ""
         
+        # reseller_price
+        try:
+            reseller_price = float(request.form.get('reseller_price') or existing.get('reseller_price', 0) or 0)
+        except:
+            reseller_price = float(existing.get('reseller_price', 0) or 0)
+            
         # cost_usd
         try:
             cost_usd = float(request.form.get('cost_usd') or existing.get('cost_usd', 0) or 0)
@@ -212,8 +223,8 @@ def edit_product(pid):
         img = handle_image_upload(request, existing.get('image', '')) or ''
 
         conn.execute(
-            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, is_active=?, supplier=? WHERE id=?',
-            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, pid)
+            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, is_active=?, supplier=?, reseller_price=? WHERE id=?',
+            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, pid)
         )
         conn.commit()
         conn.close()

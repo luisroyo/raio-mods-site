@@ -339,6 +339,19 @@ def init_db():
         )
     ''')
     
+    # 13. Tabela de Transações de Revendedores (Histórico/Extrato)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reseller_transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reseller_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            transaction_type TEXT NOT NULL, -- 'add_balance', 'remove_balance', 'purchase'
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (reseller_id) REFERENCES clients (id)
+        )
+    ''')
+    
     # --- MIGRAÇÕES E ATUALIZAÇÕES ---
 
     # Seed Config (Insere configuração padrão se vazio)
@@ -359,7 +372,8 @@ def init_db():
         ('cost_brl', 'REAL DEFAULT 0'),
         ('apply_iof', 'INTEGER DEFAULT 1'),
         ('is_active', 'INTEGER DEFAULT 1'),
-        ('supplier', 'TEXT DEFAULT ""')
+        ('supplier', 'TEXT DEFAULT ""'),
+        ('reseller_price', 'REAL DEFAULT 0')
     ]
 
     for col_name, col_type in new_columns_products:
@@ -378,6 +392,20 @@ def init_db():
         try:
             cursor.execute('ALTER TABLE config ADD COLUMN pix_copia_cola TEXT DEFAULT ""')
         except: pass
+
+    # --- MIGRAÇÃO: Colunas de Revendedor (clients) ---
+    reseller_columns = [
+        ('is_reseller', 'INTEGER DEFAULT 0'),
+        ('wallet_balance', 'REAL DEFAULT 0.0')
+    ]
+    for col_name, col_type in reseller_columns:
+        try:
+            cursor.execute(f'SELECT {col_name} FROM clients LIMIT 1')
+        except sqlite3.OperationalError:
+            try:
+                print(f"--> Adicionando coluna {col_name} em clients...")
+                cursor.execute(f'ALTER TABLE clients ADD COLUMN {col_name} {col_type}')
+            except: pass
 
     # Migração config: Token do Mercado Pago (NOVO)
     try:

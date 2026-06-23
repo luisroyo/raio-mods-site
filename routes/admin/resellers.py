@@ -164,3 +164,17 @@ def register_resellers_routes(admin_bp):
             return jsonify({'error': str(e)}), 500
         finally:
             conn.close()
+
+    @admin_bp.route('/admin/api/resellers/list', methods=['GET'])
+    def admin_api_resellers_list():
+        if not session.get('admin_logged_in'):
+            return jsonify({'error': '401'}), 401
+            
+        conn = get_db_connection()
+        try:
+            clients = conn.execute('SELECT id, client_id, name, email, phone, is_reseller, wallet_balance, created_at FROM clients ORDER BY is_reseller DESC, name ASC').fetchall()
+            return jsonify({'success': True, 'resellers': [dict(c) for c in clients]})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()

@@ -18,5 +18,20 @@
       "type": "image/png"
     }
   ],
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "shortcuts": [
+    {
+      "name": "PDV Rápido",
+      "short_name": "PDV",
+      "description": "Abrir o ponto de venda rápido",
+      "url": "/admin/pdv",
+      "icons": [
+        {
+          "src": "/static/logo-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

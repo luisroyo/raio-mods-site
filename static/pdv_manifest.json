@@ -1,0 +1,17 @@
+{
+  "name": "PDV RAIO - Venda Rápida",
+  "short_name": "PDV RAIO",
+  "start_url": "/admin/pdv",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "description": "Painel rápido de resgate de chaves e registro de vendas.",
+  "icons": [
+    {
+      "src": "/static/pdv-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait-primary"
+}

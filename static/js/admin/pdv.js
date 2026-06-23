@@ -161,7 +161,7 @@ function setupPDVCheckoutForm() {
                     zapText += `👤 *Cliente:* ${sale.client_name} \n`;
                 }
                 zapText += `📦 *Produto:* ${sale.product_name} \n`;
-                zapText += `🔑 *Chave de Ativação:* *${key.trim()}* \n\n`;
+                zapText += `🔑 *Chave de Ativação:* ${key.trim()} \n\n`;
                 zapText += `⚡ *Obrigado pela preferência! Ative o seu produto agora mesmo.*`;
 
                 const linkZap = `https://api.whatsapp.com/send?text=${encodeURIComponent(zapText)}`;

@@ -22,7 +22,8 @@ def add_product():
     promo_label = (request.form.get('promo_label') or '').strip()
     
     try:
-        reseller_price = float(request.form.get('reseller_price', 0) or 0)
+        rp_val = request.form.get('reseller_price')
+        reseller_price = float(str(rp_val).replace(',', '.') if rp_val else 0.0)
     except:
         reseller_price = 0.0
     
@@ -164,7 +165,11 @@ def edit_product(pid):
         
         # reseller_price
         try:
-            reseller_price = float(request.form.get('reseller_price') or existing.get('reseller_price', 0) or 0)
+            rp_val = request.form.get('reseller_price')
+            if rp_val:
+                reseller_price = float(str(rp_val).replace(',', '.'))
+            else:
+                reseller_price = float(existing.get('reseller_price', 0) or 0)
         except:
             reseller_price = float(existing.get('reseller_price', 0) or 0)
             

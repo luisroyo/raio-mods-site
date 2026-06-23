@@ -228,7 +228,7 @@ def register_resellers_routes(admin_bp):
             
         conn = get_db_connection()
         try:
-            conn.execute('DELETE FROM reseller_transactions WHERE client_id = ?', (client_id,))
+            conn.execute('DELETE FROM reseller_transactions WHERE reseller_id = ?', (client_id,))
             conn.execute('DELETE FROM clients WHERE id = ?', (client_id,))
             conn.commit()
             return jsonify({'success': True, 'message': 'Usuário excluído com sucesso!'})

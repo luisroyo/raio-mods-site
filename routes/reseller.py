@@ -82,7 +82,7 @@ def dashboard():
         ''').fetchall()
         
         # Pega o historico
-        history = conn.execute('SELECT * FROM reseller_transactions WHERE client_id = ? ORDER BY created_at DESC LIMIT 10', (reseller_id,)).fetchall()
+        history = conn.execute('SELECT * FROM reseller_transactions WHERE reseller_id = ? ORDER BY created_at DESC LIMIT 10', (reseller_id,)).fetchall()
         
         return render_template('reseller/dashboard.html', 
                                balance=balance, 
@@ -139,7 +139,7 @@ def redeem():
         
         # Registra no historico do revendedor
         conn.execute(
-            'INSERT INTO reseller_transactions (client_id, transaction_type, amount, description) VALUES (?, ?, ?, ?)',
+            'INSERT INTO reseller_transactions (reseller_id, transaction_type, amount, description) VALUES (?, ?, ?, ?)',
             (reseller_id, 'purchase', reseller_price, f'Resgate: {product["name"]}')
         )
         

@@ -178,3 +178,62 @@ def register_resellers_routes(admin_bp):
             return jsonify({'error': str(e)}), 500
         finally:
             conn.close()
+
+    @admin_bp.route('/admin/api/resellers/edit', methods=['POST'])
+    def admin_api_resellers_edit():
+        if not session.get('admin_logged_in'):
+            return jsonify({'error': '401'}), 401
+            
+        data = request.json or {}
+        client_id = data.get('id')
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip().lower()
+        phone = data.get('phone', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not client_id or not name or not email:
+            return jsonify({'error': 'ID, nome e email são obrigatórios.'}), 400
+            
+        conn = get_db_connection()
+        try:
+            if password:
+                try:
+                    from werkzeug.security import generate_password_hash
+                    password_hash = generate_password_hash(password)
+                except ImportError:
+                    password_hash = hashlib.sha256(password.encode()).hexdigest()
+                    
+                conn.execute('UPDATE clients SET name=?, email=?, phone=?, password_hash=? WHERE id=?', (name, email, phone, password_hash, client_id))
+            else:
+                conn.execute('UPDATE clients SET name=?, email=?, phone=? WHERE id=?', (name, email, phone, client_id))
+                
+            conn.commit()
+            return jsonify({'success': True, 'message': 'Dados atualizados com sucesso!'})
+        except Exception as e:
+            conn.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()
+
+    @admin_bp.route('/admin/api/resellers/delete', methods=['POST'])
+    def admin_api_resellers_delete():
+        if not session.get('admin_logged_in'):
+            return jsonify({'error': '401'}), 401
+            
+        data = request.json or {}
+        client_id = data.get('id')
+        
+        if not client_id:
+            return jsonify({'error': 'ID inválido.'}), 400
+            
+        conn = get_db_connection()
+        try:
+            conn.execute('DELETE FROM reseller_transactions WHERE client_id = ?', (client_id,))
+            conn.execute('DELETE FROM clients WHERE id = ?', (client_id,))
+            conn.commit()
+            return jsonify({'success': True, 'message': 'Usuário excluído com sucesso!'})
+        except Exception as e:
+            conn.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()

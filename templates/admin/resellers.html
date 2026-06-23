@@ -142,6 +142,48 @@
     </div>
 </div>
 
+<!-- Modal de Editar Usuário -->
+<div id="editUserModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md shadow-2xl transform scale-95 opacity-0 transition-all duration-300" id="editUserModalContent">
+        <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-white">✏️ Editar Usuário</h3>
+            <button onclick="closeEditUserModal()" class="text-gray-400 hover:text-white transition">✕</button>
+        </div>
+        <form id="editUserForm" onsubmit="submitEditUser(event)" class="p-5 space-y-4">
+            <input type="hidden" id="editUserId">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Nome Completo</label>
+                <input type="text" id="editName" required class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-2.5 outline-none focus:border-indigo-500">
+            </div>
+            
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">E-mail</label>
+                <input type="email" id="editEmail" required class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-2.5 outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">WhatsApp</label>
+                <input type="text" id="editPhone" class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-2.5 outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="pt-2 border-t border-gray-700">
+                <label class="block text-xs text-red-400 font-bold mb-1">Nova Senha (Opcional)</label>
+                <input type="text" id="editPassword" placeholder="Deixe em branco para manter a atual" class="w-full bg-gray-900 border border-red-500/50 text-white rounded-lg p-2.5 outline-none focus:border-red-500 placeholder-gray-500">
+                <p class="text-[10px] text-gray-500 mt-1">Preencha apenas se quiser alterar a senha do cliente.</p>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="deleteUser()" class="w-1/3 bg-gray-700 hover:bg-red-600 text-white font-bold py-3 px-2 rounded-lg transition text-sm">
+                    🗑️ Excluir
+                </button>
+                <button type="submit" id="btnSubmitEditUser" class="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-indigo-900/20 text-sm">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}

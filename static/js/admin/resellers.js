@@ -70,6 +70,9 @@ function renderTable() {
                     <button onclick="openHistoryModal(${c.id})" class="p-1.5 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition" title="Ver Extrato">
                         📜
                     </button>
+                    <button onclick="openEditUserModal(${c.id})" class="p-1.5 bg-blue-500/10 text-blue-400 rounded hover:bg-blue-500/20 transition" title="Editar Usuário">
+                        ✏️
+                    </button>
                 </div>
             </td>
         </tr>
@@ -288,5 +291,99 @@ async function submitAddReseller(event) {
     } finally {
         btn.disabled = false;
         btn.innerText = originalText;
+    }
+}
+
+// --- Editar e Excluir ---
+
+function openEditUserModal(id) {
+    const client = allClients.find(c => c.id === id);
+    if (!client) return;
+    
+    document.getElementById('editUserId').value = client.id;
+    document.getElementById('editName').value = client.name;
+    document.getElementById('editEmail').value = client.email;
+    document.getElementById('editPhone').value = client.phone || '';
+    document.getElementById('editPassword').value = '';
+    
+    const modal = document.getElementById('editUserModal');
+    const content = document.getElementById('editUserModalContent');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+function closeEditUserModal() {
+    const modal = document.getElementById('editUserModal');
+    const content = document.getElementById('editUserModalContent');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+async function submitEditUser(event) {
+    event.preventDefault();
+    const btn = document.getElementById('btnSubmitEditUser');
+    const originalText = btn.innerText;
+    
+    const id = document.getElementById('editUserId').value;
+    const name = document.getElementById('editName').value;
+    const email = document.getElementById('editEmail').value;
+    const phone = document.getElementById('editPhone').value;
+    const password = document.getElementById('editPassword').value;
+    
+    btn.disabled = true;
+    btn.innerText = 'Salvando...';
+    
+    try {
+        const res = await fetch('/admin/api/resellers/edit', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id, name, email, phone, password})
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            alert('Dados atualizados com sucesso!');
+            closeEditUserModal();
+            loadResellers();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch(e) {
+        alert('Erro de conexão');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+}
+
+async function deleteUser() {
+    const id = document.getElementById('editUserId').value;
+    if (!id) return;
+    
+    if (!confirm('Tem certeza absoluta que deseja excluir este usuário? Todo o histórico dele será perdido. Essa ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    try {
+        const res = await fetch('/admin/api/resellers/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id})
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            alert('Usuário excluído!');
+            closeEditUserModal();
+            loadResellers();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch(e) {
+        alert('Erro de conexão');
     }
 }

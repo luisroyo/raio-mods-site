@@ -112,7 +112,7 @@ def redeem():
         conn.execute('BEGIN TRANSACTION')
         
         # Pega preco do produto e estoque
-        product = conn.execute('SELECT name, reseller_price FROM products WHERE id = ?', (product_id,)).fetchone()
+        product = conn.execute('SELECT name, reseller_price, cost_usd, cost_brl, apply_iof FROM products WHERE id = ?', (product_id,)).fetchone()
         if not product:
             return jsonify({'error': 'Produto não encontrado'}), 404
             
@@ -126,7 +126,7 @@ def redeem():
             return jsonify({'error': 'Sem estoque para este produto.'}), 400
             
         # Verifica saldo
-        client = conn.execute('SELECT wallet_balance FROM clients WHERE id = ?', (reseller_id,)).fetchone()
+        client = conn.execute('SELECT wallet_balance, name FROM clients WHERE id = ?', (reseller_id,)).fetchone()
         balance = client['wallet_balance'] or 0.0
         
         if balance < reseller_price:
@@ -142,6 +142,31 @@ def redeem():
             'INSERT INTO reseller_transactions (reseller_id, transaction_type, amount, description) VALUES (?, ?, ?, ?)',
             (reseller_id, 'purchase', reseller_price, f'Resgate: {product["name"]}')
         )
+
+        # Registra na tabela de Vendas Manuais para o Faturamento do Admin
+        try:
+            cost_usd = product['cost_usd'] or 0.0
+            cost_brl = product['cost_brl'] or 0.0
+            apply_iof = product['apply_iof'] if product['apply_iof'] is not None else 1
+            cost_per_unit_brl = 0.0
+            
+            if cost_brl > 0:
+                cost_per_unit_brl = round(cost_brl, 2)
+            elif cost_usd > 0:
+                from routes.admin.helpers import get_dolar_hoje, IOF
+                dolar_rate = get_dolar_hoje()
+                if apply_iof == 1:
+                    cost_per_unit_brl = round(cost_usd * dolar_rate * IOF, 2)
+                else:
+                    cost_per_unit_brl = round(cost_usd * dolar_rate, 2)
+                    
+            client_name = f"Revendedor: {client['name']}"
+            conn.execute('''
+                INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (product_id, 1, reseller_price, cost_per_unit_brl, reseller_price, client_name))
+        except Exception as e:
+            print(f"Erro ao registrar venda manual para revendedor: {e}")
         
         conn.commit()
         return jsonify({

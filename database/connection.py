@@ -491,6 +491,16 @@ def init_db():
         except Exception as e:
             print(f"Erro ao adicionar coluna client_email: {e}")
 
+    # --- MIGRAÇÃO: Adicionar coluna used_by_email na tabela product_keys ---
+    try:
+        cursor.execute('SELECT used_by_email FROM product_keys LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            print("--> Adicionando coluna used_by_email em product_keys...")
+            cursor.execute('ALTER TABLE product_keys ADD COLUMN used_by_email TEXT DEFAULT ""')
+        except Exception as e:
+            print(f"Erro ao adicionar coluna used_by_email: {e}")
+
     conn.commit()
     conn.close()
     print("[OK] Banco de dados inicializado/atualizado com sucesso!")

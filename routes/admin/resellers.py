@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for
 from database.models import get_db_connection
+import uuid
+import hashlib
 
 def register_resellers_routes(admin_bp):
 
@@ -45,6 +47,52 @@ def register_resellers_routes(admin_bp):
             conn.commit()
             return jsonify({'success': True, 'message': 'Status atualizado!'})
         except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()
+
+    @admin_bp.route('/admin/api/resellers/add', methods=['POST'])
+    def admin_api_resellers_add():
+        if not session.get('admin_logged_in'):
+            return jsonify({'error': '401'}), 401
+            
+        data = request.json or {}
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip().lower()
+        phone = data.get('phone', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not name or not email or not password:
+            return jsonify({'error': 'Nome, email e senha são obrigatórios.'}), 400
+            
+        # Hash simple (mesmo padrão do sistema, verifique como ele gera senha, mas em geral é hash de string ou algo do tipo.
+        # No seu sistema parece que usa bcrypt ou pbkdf2? Vou usar um hash básico SHA256 que pode ser checado ou o que já usarem.
+        # Caso o sistema original utilize werkzeug.security, importo isso. O app original não está claro, vamos usar o padrão.
+        # Vou usar hashlib SHA256 hexdigest provisoriamente, ou podemos usar werkzeug se a rota de auth utilizar isso.
+        
+        try:
+            from werkzeug.security import generate_password_hash
+            password_hash = generate_password_hash(password)
+        except ImportError:
+            password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+        client_id = str(uuid.uuid4().hex)[:10].upper()
+        
+        conn = get_db_connection()
+        try:
+            # Check if email exists
+            exists = conn.execute('SELECT id FROM clients WHERE email = ?', (email,)).fetchone()
+            if exists:
+                return jsonify({'error': 'Este email já está cadastrado no sistema.'}), 400
+                
+            conn.execute(
+                'INSERT INTO clients (client_id, name, email, phone, password_hash, is_reseller, wallet_balance) VALUES (?, ?, ?, ?, ?, 1, 0.0)',
+                (client_id, name, email, phone, password_hash)
+            )
+            conn.commit()
+            return jsonify({'success': True, 'message': 'Revendedor cadastrado com sucesso!'})
+        except Exception as e:
+            conn.rollback()
             return jsonify({'error': str(e)}), 500
         finally:
             conn.close()

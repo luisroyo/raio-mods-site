@@ -35,129 +35,36 @@
     {% endif %}
 
     {% if products %}
-    {% if products_by_category %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
-        {% for category, category_products in products_by_category.items() %}
-        
-        {% if category and category != 'Sem categoria' %}
-        <div class="col-span-full flex flex-col md:flex-row md:items-center gap-4 mt-8 mb-4 category-header-modern" data-aos="fade-up">
-            <div class="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-gray-900 to-[#0a0a0a] border border-gray-800 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.15)] flex-shrink-0">
-                <div class="p-2 bg-cyan-500/20 text-cyan-400 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-xl md:text-2xl font-bold text-white uppercase tracking-wider" style="font-family: 'Sora', sans-serif;">{{ category }}</h2>
-            </div>
-            <div class="flex-grow h-px bg-gradient-to-r from-gray-800 to-transparent w-full md:w-auto"></div>
+    <!-- Filtro de Categorias (Exibido apenas se houver mais de uma categoria cadastrada) -->
+    {% if products_by_category and products_by_category|length > 1 %}
+    <div class="mb-8" data-aos="fade-up">
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-gray-400 text-xs md:text-sm mr-2 uppercase tracking-wider font-semibold">Categoria:</span>
         </div>
-        {% endif %}
-
-        {% for product in category_products %}
-            {% if product.id in catalog_ids %}
-            <a href="{{ url_for('public.catalogo', parent_id=product.id) }}"
-                class="card-base card-catalog catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}" style="display: block; text-decoration: none;">
-                <div
-                    class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50">
-                    <span class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    <span class="text-[10px] font-bold text-green-400 tracking-wider">ON</span>
-                </div>
-                {% if product.image %}
-                <div class="catalog-img-container mb-3 w-10/12 mx-auto aspect-square overflow-hidden group-hover:border-accent-purple transition-colors">
-                    <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
-                        class="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500">
-                </div>
-                {% endif %}
-                <div class="text-center">
-                    <h3 class="text-xl md:text-2xl font-bold catalog-title mb-1">{{ product.name }}</h3>
-                    {% if product.supplier %}
-                    <span class="text-[10px] text-cyan-400 bg-cyan-950/30 border border-cyan-800/40 px-2.5 py-0.5 rounded-full inline-block mb-3 font-semibold">
-                        👤 {{ product.supplier }}
-                    </span>
-                    {% endif %}
-                    <p class="text-gray-400 text-xs mb-4 min-h-[30px] leading-relaxed">{{ product.description }}</p>
-                    <div class="catalog-btn py-1.5 px-4 text-xs font-bold w-full mx-auto inline-block border border-purple-500 rounded text-purple-400 hover:bg-purple-500 hover:text-white transition">
-                        <span>📂 ABRIR CATÁLOGO</span>
-                    </div>
-                </div>
-            </a>
-            {% else %}
-            <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
-                <div class="badge-status absolute top-4 right-4 z-10">
-                    <div class="dot"></div>
-                    ATUALIZADO
-                </div>
-                {% if product.promo_price or product.promo_label %}
-                <div class="badge-promo">
-                    {{ product.promo_label or 'PROMO' }}
-                </div>
-                {% endif %}
-                {% if product.image %}
-                <div class="catalog-img-container mb-3 w-10/12 mx-auto">
-                    <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" decoding="async"
-                        class="w-full h-full object-cover">
-                </div>
-                {% endif %}
-
-                <h3 class="text-xl font-bold catalog-title mb-1">{{ product.name }}</h3>
-                {% if product.supplier %}
-                <span class="text-[10px] text-cyan-400 bg-cyan-950/30 border border-cyan-800/40 px-2.5 py-0.5 rounded-full inline-block mb-3 font-semibold">
-                    👤 {{ product.supplier }}
-                </span>
-                {% endif %}
-
-                <p class="text-gray-400 mb-3 text-xs flex-grow leading-relaxed">
-                    {{ product.description }}
-                </p>
-
-                <div class="mb-4 mt-auto">
-                    {% if product.promo_price %}
-                    <p class="text-sm text-gray-500 line-through mb-0.5">{{ product.price }}</p>
-                    <p class="price-shimmer text-2xl font-extrabold mb-1">{{ product.promo_price }}</p>
-                    {% else %}
-                    <p class="price-shimmer text-2xl font-extrabold mb-1">{{ product.price }}</p>
-                    {% endif %}
-                    {% if product.tagline %}
-                    <p class="text-[11px] text-gray-400">{{ product.tagline }}</p>
-                    {% endif %}
-                </div>
-
-                {% set display_price = product.promo_price or product.price %}
-                {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
-                <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')"
-                    class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 py-2 text-sm cursor-pointer">
-                    <span>🛒 Comprar</span>
-                </button>
-                {% else %}
-                <div class="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-center">
-                    <p class="text-amber-400 font-semibold mb-2">Sem estoque no momento.</p>
-                    <p class="text-gray-400 text-sm mb-3">Entre em contato com o administrador pelo WhatsApp para mais
-                        informações.</p>
-                    {% if whatsapp_contact %}
-                    <a href="https://wa.me/{{ whatsapp_contact }}" target="_blank" rel="noopener"
-                        class="inline-flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors">
-                        📲 Contatar no WhatsApp
-                    </a>
-                    {% else %}
-                    <p class="text-gray-500 text-xs">WhatsApp não configurado. Contate o suporte.</p>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-            {% endif %}
-        {% endfor %}
-        {% endfor %}
+        <div class="category-filter-container gap-2">
+            <button onclick="filterCategory('all', this)"
+               class="category-filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition-all border bg-cyan-500 text-black border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.4)] active">
+                Todas
+            </button>
+            {% for cat_name in products_by_category.keys() %}
+            <button onclick="filterCategory('{{ cat_name|replace("'", "\\'") }}', this)"
+               class="category-filter-btn px-4 py-1.5 rounded-full text-xs font-bold transition-all border bg-black/40 text-gray-400 border-gray-800 hover:border-gray-600 hover:text-white">
+                {{ cat_name }}
+            </button>
+            {% endfor %}
+        </div>
     </div>
-    {% else %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-20">
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
         {% for product in products %}
+        
+        {# LÓGICA DE CATÁLOGO (PASTAS) #}
         {% if product.id in catalog_ids %}
         <a href="{{ url_for('public.catalogo', parent_id=product.id) }}"
-            class="card-base card-catalog catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}" style="display: block; text-decoration: none;">
+            class="card-base card-catalog catalog-product-card group product-card-item" 
+            data-category="{{ product.category or 'Sem categoria' }}"
+            data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}" style="display: block; text-decoration: none;">
             <div
                 class="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-green-500/50">
                 <span class="relative flex h-2 w-2">
@@ -175,19 +82,30 @@
             {% endif %}
             <div class="text-center">
                 <h3 class="text-xl md:text-2xl font-bold catalog-title mb-1">{{ product.name }}</h3>
-                {% if product.supplier %}
-                <span class="text-[10px] text-cyan-400 bg-cyan-950/30 border border-cyan-800/40 px-2.5 py-0.5 rounded-full inline-block mb-3 font-semibold">
-                    👤 {{ product.supplier }}
-                </span>
-                {% endif %}
+                <div class="flex flex-wrap justify-center gap-1.5 mb-3">
+                    {% if product.supplier %}
+                    <span class="text-[10px] text-cyan-400 bg-cyan-950/30 border border-cyan-800/40 px-2.5 py-0.5 rounded-full font-semibold">
+                        👤 {{ product.supplier }}
+                    </span>
+                    {% endif %}
+                    {% if product.category and product.category != 'Sem categoria' %}
+                    <span class="text-[10px] text-purple-400 bg-purple-950/30 border border-purple-800/40 px-2.5 py-0.5 rounded-full font-semibold">
+                        🏷️ {{ product.category }}
+                    </span>
+                    {% endif %}
+                </div>
                 <p class="text-gray-400 text-xs mb-4 min-h-[30px] leading-relaxed">{{ product.description }}</p>
                 <div class="catalog-btn py-1.5 px-4 text-xs font-bold w-full mx-auto inline-block border border-purple-500 rounded text-purple-400 hover:bg-purple-500 hover:text-white transition">
                     <span>📂 ABRIR CATÁLOGO</span>
                 </div>
             </div>
         </a>
+
+        {# LÓGICA DE PRODUTOS SIMPLES #}
         {% else %}
-        <div class="catalog-product-card group" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+        <div class="catalog-product-card group product-card-item" 
+            data-category="{{ product.category or 'Sem categoria' }}"
+            data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
             <div class="badge-status absolute top-4 right-4 z-10">
                 <div class="dot"></div>
                 ATUALIZADO
@@ -205,11 +123,18 @@
             {% endif %}
 
             <h3 class="text-xl font-bold catalog-title mb-1">{{ product.name }}</h3>
-            {% if product.supplier %}
-            <span class="text-[10px] text-cyan-400 bg-cyan-950/30 border border-cyan-800/40 px-2.5 py-0.5 rounded-full inline-block mb-3 font-semibold">
-                👤 {{ product.supplier }}
-            </span>
-            {% endif %}
+            <div class="flex flex-wrap justify-start gap-1.5 mb-3">
+                {% if product.supplier %}
+                <span class="text-[10px] text-cyan-400 bg-cyan-950/30 border border-cyan-800/40 px-2.5 py-0.5 rounded-full font-semibold">
+                    👤 {{ product.supplier }}
+                </span>
+                {% endif %}
+                {% if product.category and product.category != 'Sem categoria' %}
+                <span class="text-[10px] text-purple-400 bg-purple-950/30 border border-purple-800/40 px-2.5 py-0.5 rounded-full font-semibold">
+                    🏷️ {{ product.category }}
+                </span>
+                {% endif %}
+            </div>
 
             <p class="text-gray-400 mb-3 text-xs flex-grow leading-relaxed">
                 {{ product.description }}
@@ -252,7 +177,6 @@
         {% endif %}
         {% endfor %}
     </div>
-    {% endif %}
     {% else %}
     <div class="empty-catalog" data-aos="fade-up">
         <p class="text-xl neon-cyan mb-4">Nenhuma opção neste catálogo ainda.</p>
@@ -282,4 +206,41 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/catalogo.js') }}"></script>
+<script>
+function filterCategory(category, button) {
+    // Atualiza a classe ativa nos botões de filtro
+    document.querySelectorAll('.category-filter-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-cyan-500', 'text-black', 'border-cyan-400');
+        btn.classList.add('bg-black/40', 'text-gray-400', 'border-gray-800');
+    });
+    
+    // Adiciona o estilo ativo no botão clicado
+    if (category === 'all') {
+        button.classList.add('bg-cyan-500', 'text-black', 'border-cyan-400');
+    } else {
+        button.classList.add('active');
+        button.classList.remove('bg-black/40', 'text-gray-400', 'border-gray-800');
+    }
+    
+    // Filtra os cards de produtos
+    document.querySelectorAll('.product-card-item').forEach(card => {
+        const cardCategory = card.getAttribute('data-category');
+        
+        if (category === 'all' || cardCategory === category) {
+            card.classList.remove('hidden');
+            card.classList.remove('animate-filter-in');
+            // Força reflow para reiniciar animação CSS
+            void card.offsetWidth;
+            card.classList.add('animate-filter-in');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+
+    // Atualiza as animações do AOS para recalcular posições dos elementos visíveis
+    if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+    }
+}
+</script>
 {% endblock %}

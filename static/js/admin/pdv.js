@@ -181,15 +181,21 @@ function setupPDVCheckoutForm() {
                                 <code id="pdvRedeemedKeyValue" class="text-white text-lg font-mono font-bold select-all break-all">${key}</code>
                             </div>
                             
-                            <div class="flex gap-2">
+                            <div class="space-y-2">
                                 <button onclick="copyPDVKey()" id="btnCopyPDV" 
-                                    class="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs transition-all uppercase tracking-wider">
+                                    class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs transition-all uppercase tracking-wider">
                                     📋 Copiar Chave
                                 </button>
-                                <a href="${linkZap}" target="_blank" 
-                                    class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
-                                    💬 Enviar WhatsApp
-                                </a>
+                                <div class="flex gap-2">
+                                    <a href="${linkZap}" target="_blank" 
+                                        class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                                        💬 WhatsApp
+                                    </a>
+                                    <a href="https://t.me/share/url?url=&text=${encodeURIComponent(zapText)}" target="_blank" 
+                                        class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                                        ✈️ Telegram
+                                    </a>
+                                </div>
                             </div>
                             
                             <div class="text-center pt-2">

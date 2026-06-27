@@ -36,13 +36,17 @@ function setupManualSaleForm() {
                 text += `\n\n⚡ *Adquira o seu também no nosso site! Obrigado pela preferência!*`;
                 
                 const linkZap = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-                
                 msg.innerHTML = `
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-green-950/40 border border-green-500/50 rounded-lg">
-                        <span class="text-green-400 font-semibold">✅ ${data.message}</span>
-                        <a href="${linkZap}" target="_blank" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all">
-                            💬 Divulgar no WhatsApp
-                        </a>
+                        <span class="text-green-400 font-semibold text-center sm:text-left">✅ ${data.message}</span>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <a href="${linkZap}" target="_blank" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all">
+                                💬 WhatsApp
+                            </a>
+                            <a href="https://t.me/share/url?url=&text=${encodeURIComponent(text)}" target="_blank" class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all">
+                                ✈️ Telegram
+                            </a>
+                        </div>
                     </div>
                 `;
                 msg.className = 'mt-4';
@@ -505,15 +509,21 @@ function setupKeyRedeemForm() {
                                 <code id="redeemedKeyValue" class="text-white text-lg font-mono font-bold select-all break-all">${key}</code>
                             </div>
                             
-                            <div class="flex gap-2">
+                            <div class="space-y-2">
                                 <button onclick="copyRedeemedKey()" id="btnCopyRedeem" 
-                                    class="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs transition-all uppercase tracking-wider">
+                                    class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs transition-all uppercase tracking-wider">
                                     📋 Copiar Chave
                                 </button>
-                                <a href="${linkZap}" target="_blank" 
-                                    class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
-                                    💬 Enviar p/ Cliente
-                                </a>
+                                <div class="flex gap-2">
+                                    <a href="${linkZap}" target="_blank" 
+                                        class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                                        💬 WhatsApp
+                                    </a>
+                                    <a href="https://t.me/share/url?url=&text=${encodeURIComponent(zapText)}" target="_blank" 
+                                        class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                                        ✈️ Telegram
+                                    </a>
+                                </div>
                             </div>
                             
                             <div class="text-center">

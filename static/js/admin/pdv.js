@@ -31,7 +31,7 @@ function filterPDVProducts(query) {
 }
 
 // Abrir modal de checkout para o produto selecionado
-function openPDVCheckout(id, name, price, promoPrice, stock) {
+function openPDVCheckout(id, name, price, promoPrice, stock, downloadLink = '') {
     document.getElementById('checkout_product_id').value = id;
     document.getElementById('checkout_product_name').innerText = name;
     document.getElementById('checkout_product_stock').innerText = `🟢 ${stock} chaves livres em estoque`;
@@ -47,6 +47,12 @@ function openPDVCheckout(id, name, price, promoPrice, stock) {
         finalPrice = parseFloat(String(finalPrice).replace('R$', '').replace(',', '.').trim()).toFixed(2);
     }
     document.getElementById('checkout_unit_price').value = finalPrice;
+
+    // Preencher o link de download se houver
+    const dlInput = document.getElementById('pdv_download_link');
+    if (dlInput) {
+        dlInput.value = downloadLink;
+    }
 
     // Limpar campos de cliente
     document.getElementById('pdvClientSearchInput').value = '';
@@ -161,7 +167,12 @@ function setupPDVCheckoutForm() {
                     zapText += `👤 *Cliente:* ${sale.client_name} \n`;
                 }
                 zapText += `📦 *Produto:* ${sale.product_name} \n`;
-                zapText += `🔑 *Chave de Ativação:* ${key.trim()} \n\n`;
+                zapText += `🔑 *Chave de Ativação:* ${key.trim()} \n`;
+                if (sale.download_link) {
+                    zapText += `⬇️ *Download:* ${sale.download_link} \n\n`;
+                } else {
+                    zapText += `\n`;
+                }
                 zapText += `⚡ *Obrigado pela preferência! Ative o seu produto agora mesmo.*`;
 
                 const linkZap = `https://api.whatsapp.com/send?text=${encodeURIComponent(zapText)}`;

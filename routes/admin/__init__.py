@@ -542,6 +542,9 @@ def admin_pdv():
             ORDER BY p.sort_order ASC, p.id ASC
         ''').fetchall()
         
+        # Obter links para o autocomplete
+        links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
+        
         # Obter configurações de suporte/WhatsApp
         config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
         
@@ -550,6 +553,7 @@ def admin_pdv():
     except Exception as e:
         print(f"Erro ao carregar PDV: {e}")
         products = []
+        links = []
         config = None
         pending_feedbacks_count = 0
     finally:
@@ -561,6 +565,7 @@ def admin_pdv():
     return render_template('admin/pdv.html', 
                            products=[dict(p) for p in products], 
                            config=config, 
+                           links=[dict(l) for l in links],
                            financeiro={'dolar_hoje': round(dolar_rate, 4)},
                            pending_feedbacks_count=pending_feedbacks_count)
 

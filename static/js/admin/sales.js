@@ -46,7 +46,7 @@ function setupManualSaleForm() {
                             <a href="${linkZap}" target="_blank" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all">
                                 💬 WhatsApp
                             </a>
-                            <a href="https://t.me/share/url?text=${encodeURIComponent(text)}" target="_blank" class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all">
+                            <a href="tg://msg?text=${encodeURIComponent(text)}" target="_blank" class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all">
                                 ✈️ Telegram
                             </a>
                         </div>
@@ -532,7 +532,7 @@ function setupKeyRedeemForm() {
                                         class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
                                         💬 WhatsApp
                                     </a>
-                                    <a href="https://t.me/share/url?text=${encodeURIComponent(zapText)}" target="_blank" 
+                                    <a href="tg://msg?text=${encodeURIComponent(zapText)}" target="_blank" 
                                         class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
                                         ✈️ Telegram
                                     </a>

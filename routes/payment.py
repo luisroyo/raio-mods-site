@@ -177,16 +177,19 @@ def process_approved_payment(order_ref: str, p_id: str):
 
         conn.commit()
 
-        # Envia e-mail de notificação para o Admin de forma assíncrona
-        product = conn.execute('SELECT name FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+        # Envia e-mails de notificação (Admin e Cliente) de forma assíncrona
+        product = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (order['product_id'],)).fetchone()
         config = conn.execute('SELECT smtp_server, smtp_port, smtp_user, smtp_password FROM config WHERE id = 1').fetchone()
 
         if config and config['smtp_server'] and config['smtp_user']:
             prod_name = product['name'] if product else 'Produto Desconhecido'
+            product_dict = dict(product) if product else {}
+            download_link = product_dict.get('download_link') or ''
             order_dict = dict(order)
             config_dict = dict(config)
             
-            def send_email():
+            # 1. Enviar e-mail de notificação para o Admin
+            def send_admin_email():
                 try:
                     msg = MIMEMultipart("alternative")
                     msg['Subject'] = f"Nova Venda! 🚀 - {prod_name}"
@@ -227,7 +230,73 @@ def process_approved_payment(order_ref: str, p_id: str):
                 except Exception as e:
                     logger.error(f"Erro ao enviar e-mail de notificação para admin: {e}")
                     
-            threading.Thread(target=send_email).start()
+            threading.Thread(target=send_admin_email).start()
+
+            # 2. Enviar e-mail com a Chave para o Cliente (se houver chave associada)
+            # Para evitar consultas no banco dentro da thread (e possíveis locks), extraímos o valor da chave antes.
+            key_value = None
+            if key:
+                try:
+                    key_value = key['key_value']
+                except Exception:
+                    pass
+
+            if key_value:
+                def send_customer_email():
+                    try:
+                        msg = MIMEMultipart("alternative")
+                        msg['Subject'] = f"Seu produto está pronto! ⚡ - {prod_name}"
+                        msg['From'] = f"RAIO MODS <{config_dict['smtp_user']}>"
+                        msg['To'] = customer_email
+                        
+                        html_download = ""
+                        if download_link and download_link.strip():
+                            html_download = f"""
+                            <p style="color: #ccc; font-size: 15px; margin-top: 20px;">
+                                <strong>Link para Download / Instruções:</strong><br>
+                                <a href="{download_link}" target="_blank" style="color: #06b6d4; text-decoration: underline; font-weight: bold;">Clique aqui para baixar</a>
+                            </p>
+                            """
+                        
+                        html = f"""
+                        <html>
+                          <body style="background-color: #050505; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
+                            <div style="background-color: #111; border: 1px solid #333; border-radius: 8px; max-width: 600px; margin: 0 auto; padding: 30px; text-align: center;">
+                                <h1 style="color: #06b6d4; font-size: 28px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px;">RAIO MODS</h1>
+                                <h2 style="color: #fff; font-size: 20px; margin-bottom: 20px;">Obrigado por sua compra! 🎉</h2>
+                                <p style="color: #ccc; font-size: 15px;">
+                                    Seu pagamento para o produto <strong>{prod_name}</strong> foi aprovado.
+                                </p>
+                                <p style="color: #ccc; font-size: 15px; margin-top: 15px;">
+                                    Abaixo está a sua chave de ativação / licença:
+                                </p>
+                                <div style="margin: 25px 0;">
+                                    <span style="background-color: #1a1a1a; border: 2px dashed #06b6d4; color: #06b6d4; padding: 12px 25px; border-radius: 6px; font-weight: bold; font-size: 20px; letter-spacing: 1px; display: inline-block; font-family: monospace;">
+                                        {key_value}
+                                    </span>
+                                </div>
+                                {html_download}
+                                <hr style="border-color: #222; margin: 25px 0;">
+                                <p style="color: #888; font-size: 12px; line-height: 1.4;">
+                                    Referência do Pedido: <strong>{order_ref}</strong><br>
+                                    Caso precise de ajuda ou suporte, entre em contato através do nosso WhatsApp.
+                                </p>
+                            </div>
+                          </body>
+                        </html>
+                        """
+                        msg.attach(MIMEText(html, "html"))
+                        
+                        server = smtplib.SMTP(config_dict['smtp_server'], int(config_dict['smtp_port']))
+                        server.starttls()
+                        server.login(config_dict['smtp_user'], config_dict['smtp_password'])
+                        server.sendmail(config_dict['smtp_user'], customer_email, msg.as_string())
+                        server.quit()
+                        logger.info(f"Email de entrega de chave enviado para {customer_email} com sucesso.")
+                    except Exception as e:
+                        logger.error(f"Erro ao enviar e-mail de entrega de chave para o cliente: {e}")
+
+                threading.Thread(target=send_customer_email).start()
 
 
 

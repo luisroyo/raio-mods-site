@@ -202,7 +202,7 @@ function setupPDVCheckoutForm() {
                                         class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
                                         💬 WhatsApp
                                     </a>
-                                    <a href="https://t.me/share/url?url=&text=${encodeURIComponent(zapText)}" target="_blank" 
+                                    <a href="https://t.me/share/url?text=${encodeURIComponent(zapText)}" target="_blank" 
                                         class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs text-center flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
                                         ✈️ Telegram
                                     </a>

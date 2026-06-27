@@ -460,7 +460,7 @@ function showSalesTab(tab) {
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=11" defer></script>
+<script src="{{ url_for('static', filename='js/admin/sales.js') }}?v=12" defer></script>
 <script src="{{ url_for('static', filename='js/admin/recharges.js') }}?v=10" defer></script>
 <script>
     let clientSearchTimeout = null;
@@ -565,10 +565,6 @@ function showSalesTab(tab) {
         const redeemResultsDiv = document.getElementById('redeemClientSearchResults');
         if (redeemSearchDiv && redeemResultsDiv && !redeemSearchDiv.contains(e.target) && !redeemResultsDiv.contains(e.target)) {
             redeemResultsDiv.classList.add('hidden');
-        }
-    });
-</script>esultsDiv.contains(e.target)) {
-            resultsDiv.classList.add('hidden');
         }
     });
 </script>

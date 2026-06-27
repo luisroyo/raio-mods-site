@@ -22,6 +22,7 @@ class Product(db.Model):
     cost_brl = db.Column(db.Float, default=0.0)
     apply_iof = db.Column(db.Integer, default=1)
     supplier = db.Column(db.String, default="")
+    download_link = db.Column(db.String, default="")
 
 class Order(db.Model):
     __tablename__ = 'orders'

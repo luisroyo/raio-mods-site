@@ -20,6 +20,7 @@ def add_product():
     payment_url = (request.form.get('payment_url') or '').strip()
     promo_price = (request.form.get('promo_price') or '').strip()
     promo_label = (request.form.get('promo_label') or '').strip()
+    download_link = (request.form.get('download_link') or '').strip()
     
     try:
         rp_val = request.form.get('reseller_price')
@@ -81,8 +82,8 @@ def add_product():
     conn = get_db_connection()
     try:
         conn.execute(
-            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price)
+            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, download_link) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, download_link)
         )
         conn.commit()
     except sqlite3.OperationalError as e:
@@ -157,6 +158,12 @@ def edit_product(pid):
             promo_label = promo_label.strip()
         else:
             promo_label = existing.get('promo_label', '')
+            
+        download_link = request.form.get('download_link')
+        if download_link is not None:
+            download_link = download_link.strip()
+        else:
+            download_link = existing.get('download_link', '')
 
         # Se o preço da promoção for vazio, limpa a promoção inteira
         if not promo_price:
@@ -228,8 +235,8 @@ def edit_product(pid):
         img = handle_image_upload(request, existing.get('image', '')) or ''
 
         conn.execute(
-            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, is_active=?, supplier=?, reseller_price=? WHERE id=?',
-            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, pid)
+            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, is_active=?, supplier=?, reseller_price=?, download_link=? WHERE id=?',
+            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, download_link, pid)
         )
         conn.commit()
         conn.close()
@@ -285,7 +292,8 @@ def product_info(pid):
             'is_active': int(prod.is_active) if prod.is_active is not None else 1,
             'dolar_rate': round(dolar_rate, 4),
             'calculated_cost_brl': calculated_cost_brl,
-            'stock': stock_count
+            'stock': stock_count,
+            'download_link': prod.download_link or ''
         })
     except Exception as e:
         print(f"Erro product_info: {e}")

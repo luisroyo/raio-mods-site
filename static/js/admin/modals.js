@@ -35,7 +35,7 @@ function openAddSubproductModal(pid, name, isCategory) {
 function openEditModal(
     id, name, desc, price, cat, img,
     tagline, sort, pid, isCat,
-    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice
+    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice, downloadLink
 ) {
     setVal('edit_id', id);
     setVal('edit_name', name);
@@ -46,6 +46,7 @@ function openEditModal(
     setVal('edit_sort_order', sort || 0);
     setVal('edit_is_catalog', isCat);
     setVal('edit_payment_url', payUrl);
+    setVal('edit_download_link', downloadLink || '');
     setVal('edit_promo_price', promoPrice);
     setVal('edit_promo_label', promoLabel);
     setVal('edit_cost_usd', costUsd || 0);

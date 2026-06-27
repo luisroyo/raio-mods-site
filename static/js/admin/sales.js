@@ -30,6 +30,9 @@ function setupManualSaleForm() {
                 let text = `🚀 *NOVA COMPRA REALIZADA!* \n\n`;
                 text += `👤 *Cliente:* ${sale.client_name || 'Cliente'} \n`;
                 text += `📦 *Produto:* ${sale.product_name || 'Produto'}`;
+                if (sale.download_link) {
+                    text += ` \n⬇️ *Download:* ${sale.download_link}`;
+                }
                 if (discountVal) {
                     text += ` \n🎟️ *Benefício:* Ganhou ${discountVal}% de desconto através do Giro da Sorte!`;
                 }
@@ -489,7 +492,12 @@ function setupKeyRedeemForm() {
                     zapText += `👤 *Cliente:* ${sale.client_name} \n`;
                 }
                 zapText += `📦 *Produto:* ${sale.product_name} \n`;
-                zapText += `🔑 *Chave:* ${key.trim()} \n\n`;
+                zapText += `🔑 *Chave:* ${key.trim()} \n`;
+                if (sale.download_link) {
+                    zapText += `⬇️ *Download:* ${sale.download_link} \n\n`;
+                } else {
+                    zapText += `\n`;
+                }
                 zapText += `⚡ *Obrigado pela preferência! Ative seu produto agora mesmo.*`;
                 
                 const linkZap = `https://api.whatsapp.com/send?text=${encodeURIComponent(zapText)}`;

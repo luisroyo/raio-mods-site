@@ -69,8 +69,9 @@ def add_manual_sale():
             )
             sale_id = cursor.lastrowid
 
-        prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (product_id,)).fetchone()
+        prod_row = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (product_id,)).fetchone()
         prod_name = prod_row['name'] if prod_row else 'Produto'
+        download_link = prod_row['download_link'] if prod_row and 'download_link' in prod_row.keys() else ''
 
         # Atribuir Pontos de Fidelidade se e-mail estiver definido
         if client_email:
@@ -96,7 +97,8 @@ def add_manual_sale():
             'sale': {
                 'product_name': prod_name,
                 'client_name': client_name,
-                'quantity': quantity
+                'quantity': quantity,
+                'download_link': download_link
             }
         })
     except Exception as e:

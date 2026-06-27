@@ -213,7 +213,7 @@
                 if (data.success) {
                     Swal.close();
                     updateBalanceDisplay(data.new_balance);
-                    showKeyModal(data.key);
+                    showKeyModal(data.key, data.download_link);
                     // Atualiza a pagina apos fechar pra refletir estoque e historico
                 } else {
                     Swal.fire({icon: 'error', title: 'Erro', text: data.error, background: '#1e293b', color: '#fff'});
@@ -223,8 +223,29 @@
             }
         }
 
-        function showKeyModal(keyStr) {
+        function showKeyModal(keyStr, downloadLink) {
             document.getElementById('keyValue').innerText = keyStr;
+            let downloadHtml = '';
+            if (downloadLink) {
+                downloadHtml = `
+                <div class="mt-4 p-3 bg-blue-900/30 border border-blue-500/50 rounded-xl text-left">
+                    <p class="text-sm font-bold text-blue-400 mb-1">⬇️ Link de Download</p>
+                    <a href="${downloadLink}" target="_blank" class="text-xs text-blue-300 hover:text-white break-all">${downloadLink}</a>
+                </div>
+                `;
+            }
+            
+            const modalBody = document.getElementById('keyModal').querySelector('.bg-gray-800');
+            // Remove previous download link if it exists
+            const prevLink = modalBody.querySelector('.bg-blue-900\\/30');
+            if(prevLink) prevLink.remove();
+            
+            if (downloadLink) {
+                // Insert right before the buttons
+                const buttonsDiv = modalBody.querySelector('.flex.gap-3');
+                buttonsDiv.insertAdjacentHTML('beforebegin', downloadHtml);
+            }
+            
             document.getElementById('keyModal').classList.remove('hidden');
         }
 

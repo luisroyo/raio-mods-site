@@ -112,7 +112,7 @@ def redeem():
         conn.execute('BEGIN TRANSACTION')
         
         # Pega preco do produto e estoque
-        product = conn.execute('SELECT name, reseller_price, cost_usd, cost_brl, apply_iof FROM products WHERE id = ?', (product_id,)).fetchone()
+        product = conn.execute('SELECT name, reseller_price, cost_usd, cost_brl, apply_iof, download_link FROM products WHERE id = ?', (product_id,)).fetchone()
         if not product:
             return jsonify({'error': 'Produto não encontrado'}), 404
             
@@ -173,7 +173,8 @@ def redeem():
             'success': True,
             'key': key_row['key_value'],
             'new_balance': new_balance,
-            'message': 'Chave resgatada com sucesso!'
+            'message': 'Chave resgatada com sucesso!',
+            'download_link': product['download_link'] if 'download_link' in dict(product) else ''
         })
     except Exception as e:
         conn.rollback()

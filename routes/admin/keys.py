@@ -77,7 +77,7 @@ def redeem_key_admin():
         conn = get_db_connection()
         
         # 1. Verificar se o produto existe
-        product = conn.execute('SELECT name, cost_usd, cost_brl, apply_iof FROM products WHERE id = ?', (product_id,)).fetchone()
+        product = conn.execute('SELECT name, cost_usd, cost_brl, apply_iof, download_link FROM products WHERE id = ?', (product_id,)).fetchone()
         if not product:
             conn.close()
             return jsonify({'error': 'Produto não encontrado'}), 404
@@ -144,7 +144,8 @@ def redeem_key_admin():
                 'product_name': product['name'],
                 'client_name': client_name,
                 'unit_price': unit_price,
-                'key_value': key_row['key_value']
+                'key_value': key_row['key_value'],
+                'download_link': product['download_link'] if 'download_link' in dict(product) else ''
             }
         })
     except Exception as e:

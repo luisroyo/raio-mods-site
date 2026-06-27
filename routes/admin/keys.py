@@ -135,6 +135,12 @@ def redeem_key_admin():
         conn.commit()
         conn.close()
         
+        form_download_link = request.form.get('download_link')
+        if form_download_link and form_download_link.strip():
+            download_link = form_download_link.strip()
+        else:
+            download_link = product['download_link'] if 'download_link' in dict(product) else ''
+
         return jsonify({
             'success': True,
             'message': 'Chave resgatada e venda registrada com sucesso!',
@@ -145,7 +151,7 @@ def redeem_key_admin():
                 'client_name': client_name,
                 'unit_price': unit_price,
                 'key_value': key_row['key_value'],
-                'download_link': product['download_link'] if 'download_link' in dict(product) else ''
+                'download_link': download_link
             }
         })
     except Exception as e:

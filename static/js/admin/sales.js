@@ -97,6 +97,8 @@ function setupManualSaleForm() {
                         const drSpan = document.getElementById('dolarRate');
                         if (drSpan) drSpan.textContent = info.dolar_rate.toFixed(4);
                     }
+                    const dlInput = document.getElementById('manual_download_link');
+                    if (dlInput) dlInput.value = info.download_link || '';
                 }
             } catch (err) {
                 console.error('Erro ao buscar info do produto:', err);
@@ -450,6 +452,9 @@ async function onRedeemProductChange() {
             price = parseFloat(String(price).replace('R$', '').replace(',', '.').trim()).toFixed(2);
         }
         priceInput.value = price;
+        
+        const dlInput = document.getElementById('redeem_download_link');
+        if (dlInput) dlInput.value = info.download_link || '';
         
         // Habilitar ou desabilitar o botão com base no estoque
         submitBtn.disabled = (qty <= 0);

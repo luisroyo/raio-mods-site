@@ -109,7 +109,21 @@
                         </select>
                     </div>
                 </div>
+                <div class="mt-4">
+                    <label class="block text-xs text-gray-400 mb-1">Link de Download para o Cliente (Opcional)</label>
+                    <input type="text" list="registered_links" name="download_link" id="manual_download_link" placeholder="Opcional. Será preenchido se o produto já possuir um link."
+                        class="w-full px-4 py-2 bg-gray-800 border border-blue-500 rounded text-white">
+                </div>
             </div>
+            
+            <datalist id="registered_links">
+                {% for link in links %}
+                {% if link.download_link %}
+                <option value="{{ link.download_link }}">{{ link.title }}</option>
+                {% endif %}
+                {% endfor %}
+            </datalist>
+
             <button type="submit"
                 class="w-full py-3 bg-purple-600 text-white font-bold rounded hover:bg-purple-500">💾 Registrar Venda</button>
         </form>
@@ -316,6 +330,12 @@ function convertUsdToBrl() {
                     <input type="email" name="client_email" id="redeem_client_email" placeholder="Ex: cliente@email.com"
                         class="w-full px-4 py-3 bg-gray-800 border border-cyan-500 rounded text-white text-sm focus:outline-none focus:border-cyan-400">
                 </div>
+            </div>
+
+            <div class="mt-4">
+                <label class="block text-xs text-gray-400 mb-1">Link de Download para o Cliente (Opcional)</label>
+                <input type="text" list="registered_links" name="download_link" id="redeem_download_link" placeholder="Opcional. Será preenchido se o produto já possuir um link."
+                    class="w-full px-4 py-3 bg-gray-800 border border-blue-500 rounded text-white text-sm focus:outline-none focus:border-blue-400">
             </div>
             
             <button type="submit" id="btnSubmitRedeem" disabled

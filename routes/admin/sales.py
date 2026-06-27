@@ -71,7 +71,12 @@ def add_manual_sale():
 
         prod_row = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (product_id,)).fetchone()
         prod_name = prod_row['name'] if prod_row else 'Produto'
-        download_link = prod_row['download_link'] if prod_row and 'download_link' in prod_row.keys() else ''
+        
+        form_download_link = request.form.get('download_link')
+        if form_download_link and form_download_link.strip():
+            download_link = form_download_link.strip()
+        else:
+            download_link = prod_row['download_link'] if prod_row and 'download_link' in prod_row.keys() else ''
 
         # Atribuir Pontos de Fidelidade se e-mail estiver definido
         if client_email:

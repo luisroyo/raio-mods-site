@@ -215,11 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (isSpinning) return;
             
-            const email = emailInput.value.trim();
-            if (!email || !email.includes('@')) {
-                showError('Por favor, insira um e-mail válido.');
-                return;
+            let deviceId = localStorage.getItem('lucky_spin_device_id');
+            if (!deviceId) {
+                deviceId = 'spin-' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('lucky_spin_device_id', deviceId);
             }
+            const email = deviceId + '@guest.com';
             
             spinError.classList.add('hidden');
             emailInput.disabled = true;

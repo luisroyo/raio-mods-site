@@ -344,7 +344,7 @@
             <div id="lucky-spin-main-step" class="text-center py-2 flex flex-col items-center">
                 <h3 class="text-2xl font-extrabold text-gradient mb-1" style="font-family: 'Sora', sans-serif;">🎰 Giro da Sorte</h3>
                 <p class="text-gray-300 text-xs px-6">
-                    Insira seu e-mail e gire a roleta para concorrer a até <strong class="text-neon-cyan font-bold">15% de desconto</strong>!
+                    Gire a roleta para concorrer a até <strong class="text-neon-cyan font-bold">15% de desconto</strong>!
                 </p>
 
                 <!-- Roleta -->
@@ -366,14 +366,13 @@
 
                 <!-- Formulário de Envio -->
                 <form id="luckySpinForm" class="space-y-3 w-full max-w-xs mx-auto">
-                    <input type="email" id="luckySpinEmail" required placeholder="Digite seu melhor e-mail *"
-                        class="w-full lucky-spin-input rounded-lg p-2.5 text-white focus:outline-none text-center text-xs font-semibold">
+                    <input type="hidden" id="luckySpinEmail" value="guest@roleta.com">
                     <button type="submit" id="btnSpinSubmit" class="w-full btn-spin-submit py-2.5 rounded-xl text-sm font-extrabold text-black uppercase tracking-wider">
                         🎰 Girar Roleta
                     </button>
                 </form>
                 <p id="luckySpinError" class="text-xs text-red-500 mt-2 hidden font-semibold"></p>
-                <p class="text-[9px] text-gray-500 mt-3">Limite de 1 giro por e-mail a cada 30 dias. Válido por 24h.</p>
+                <p class="text-[9px] text-gray-500 mt-3">Limite de 1 giro por dispositivo a cada 30 dias. Válido por 24h.</p>
             </div>
 
             <!-- Passo de Resultado -->

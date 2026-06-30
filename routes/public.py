@@ -436,15 +436,33 @@ def lucky_spin():
 
     conn = get_db_connection()
     try:
-        # 2. Verificar se o e-mail já realizou um giro nos últimos 30 dias (ignora para e-mail de teste)
+        # Pegar o IP real do cliente
+        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if client_ip:
+            client_ip = client_ip.split(',')[0].strip()
+        else:
+            client_ip = 'unknown'
+
+        # Verificar se o IP já realizou um giro nas últimas 24 horas
+        if client_ip != 'unknown' and client_ip != '127.0.0.1':
+            ip_marker = f"ip:{client_ip}"
+            row = conn.execute('''
+                SELECT 1 FROM lucky_spins 
+                WHERE email = ? AND datetime(created_at) > datetime('now', '-1 day')
+            ''', (ip_marker,)).fetchone()
+
+            if row:
+                return jsonify({'error': 'Limite atingido: Apenas 1 giro por conexão (IP) a cada 24 horas.'}), 400
+
+        # Verificar também pelo Device ID gerado no frontend (que vem como email)
         if email != 'luisroyo25@gmail.com':
             row = conn.execute('''
                 SELECT 1 FROM lucky_spins 
-                WHERE email = ? AND datetime(created_at) > datetime('now', '-30 days')
+                WHERE email = ? AND datetime(created_at) > datetime('now', '-1 day')
             ''', (email,)).fetchone()
 
             if row:
-                return jsonify({'error': 'Este e-mail já realizou um giro nos últimos 30 dias.'}), 400
+                return jsonify({'error': 'Este dispositivo já girou a roleta hoje.'}), 400
 
         # Verificar se o cliente possui cadastro para o Clube de Fidelidade
         client_row = conn.execute('SELECT 1 FROM clients WHERE email = ?', (email,)).fetchone()
@@ -489,6 +507,13 @@ def lucky_spin():
             INSERT INTO lucky_spins (email, discount_value, coupon_code)
             VALUES (?, ?, ?)
         ''', (email, discount_val, coupon_code))
+
+        # Registrar também o IP para bloqueio
+        if client_ip != 'unknown' and client_ip != '127.0.0.1':
+            conn.execute('''
+                INSERT INTO lucky_spins (email, discount_value, coupon_code)
+                VALUES (?, ?, ?)
+            ''', (f"ip:{client_ip}", discount_val, coupon_code))
 
         # 6. Exibição direto na tela (e-mail removido)
         conn.commit()

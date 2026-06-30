@@ -242,6 +242,15 @@ async function loadManualSales() {
             let clientInfo = '';
             let actions = '';
 
+            let statusBadge = '';
+            if (sale.status === 'pending') {
+                statusBadge = '<span class="px-2 py-1 bg-red-900/50 text-red-400 rounded text-xs border border-red-500/30" title="R$ 0,00 Pago">Fiado</span>';
+            } else if (sale.status === 'partial') {
+                statusBadge = `<span class="px-2 py-1 bg-orange-900/50 text-orange-400 rounded text-xs border border-orange-500/30" title="R$ ${(sale.paid_amount || 0).toFixed(2)} Pago">Parcial</span>`;
+            } else {
+                statusBadge = '<span class="px-2 py-1 bg-green-900/50 text-green-400 rounded text-xs border border-green-500/30">Pago</span>';
+            }
+
             if (sale.type === 'online') {
                 typeBadge = '<span class="px-2 py-1 bg-green-900/50 text-green-400 rounded text-xs border border-green-500/30">Online</span>';
                 clientInfo = `<span class="text-xs text-gray-300">${sale.client_info || 'N/A'}</span>`;
@@ -249,7 +258,14 @@ async function loadManualSales() {
             } else {
                 typeBadge = '<span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs border border-purple-500/30">Manual</span>';
                 clientInfo = `<span class="text-xs text-gray-400 italic">${sale.client_info || '-'}</span>`;
+                
+                let payButton = '';
+                if (sale.status !== 'paid') {
+                    payButton = `<button onclick="payManualSale(${sale.id}, ${sale.total_price}, ${sale.paid_amount || 0})" class="text-green-400 hover:text-green-300 mr-2" title="Dar Baixa">💰</button>`;
+                }
+                
                 actions = `
+                    ${payButton}
                     <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.client_info || "")}, ${JSON.stringify(sale.created_at)})' class="text-blue-400 hover:text-blue-300 mr-2" title="Editar">✏️</button>
                     <button onclick="deleteManualSale(${sale.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
                 `;
@@ -263,6 +279,7 @@ async function loadManualSales() {
                 <td class="p-2 text-right text-gray-500">R$ ${sale.cost_per_unit_brl.toFixed(2)}</td>
                 <td class="p-2 text-right font-bold text-green-400">R$ ${totalVenda}</td>
                 <td class="p-2 text-right font-bold text-yellow-400">R$ ${lucro}</td>
+                <td class="p-2 text-center">${statusBadge}</td>
                 <td class="p-2 text-left">${clientInfo}</td>
                 <td class="p-2 text-center text-xs text-gray-500">${dataStr}</td>
                 <td class="p-2 text-center">
@@ -321,6 +338,32 @@ async function deleteManualSale(id) {
         }
     } catch {
         alert('Erro ao excluir');
+    }
+}
+
+async function payManualSale(id, total, paid) {
+    const remaining = (total - paid).toFixed(2);
+    const amountStr = prompt(`Dar baixa na venda (Total: R$ ${total.toFixed(2)} | Falta: R$ ${remaining})\n\nDeixe em branco para dar baixa no valor total que falta, ou digite o valor parcial recebido:`);
+    
+    if (amountStr === null) return; // Cancelado
+    
+    const formData = new FormData();
+    if (amountStr.trim() !== '') {
+        formData.append('paid_amount', amountStr);
+    }
+    
+    try {
+        const res = await fetch(`/admin/sales/manual/pay/${id}`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            alert('Pagamento atualizado com sucesso!');
+            loadManualSales();
+            if (typeof loadSalesReport === 'function') loadSalesReport();
+        } else {
+            alert('Erro: ' + (data.error || 'Desconhecido'));
+        }
+    } catch {
+        alert('Erro de conexão ao processar pagamento.');
     }
 }
 

@@ -145,6 +145,8 @@ def list_manual_sales():
                 ms.total_price, 
                 (ms.total_price - (ms.quantity * ms.cost_per_unit_brl)) as profit,
                 (CASE WHEN ms.client_email IS NOT NULL AND ms.client_email != '' THEN ms.client_name || ' (' || ms.client_email || ')' ELSE ms.client_name END) as client_info,
+                ms.status,
+                ms.paid_amount,
                 ms.created_at
             FROM manual_sales ms
             JOIN products p ON ms.product_id = p.id
@@ -174,6 +176,8 @@ def list_manual_sales():
                 {online_amount_clean} as total_price,
                 ({online_amount_clean} - {cost_expr}) as profit,
                 (CASE WHEN o.customer_name IS NOT NULL AND o.customer_name != '' THEN o.customer_name || ' (' || o.customer_email || ')' ELSE o.customer_email END) as client_info,
+                'paid' as status,
+                {online_amount_clean} as paid_amount,
                 o.created_at
             FROM orders o
             JOIN products p ON o.product_id = p.id
@@ -857,6 +861,48 @@ def sales_insights():
     })
 
 
+def pay_manual_sale(sale_id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        paid_amount_str = request.form.get('paid_amount', '').strip()
+        conn = get_db_connection()
+        
+        # Check if sale exists
+        sale = conn.execute('SELECT * FROM manual_sales WHERE id = ?', (sale_id,)).fetchone()
+        if not sale:
+            conn.close()
+            return jsonify({'error': 'Venda não encontrada'}), 404
+            
+        total_price = sale['total_price']
+        
+        # If no amount provided, assume full payment
+        if not paid_amount_str:
+            paid_amount = total_price
+            status = 'paid'
+        else:
+            paid_amount = float(paid_amount_str.replace('R$', '').replace(',', '.'))
+            # Get previous paid amount
+            prev_paid = sale['paid_amount'] or 0.0
+            new_total_paid = prev_paid + paid_amount
+            
+            if new_total_paid >= total_price:
+                paid_amount = total_price
+                status = 'paid'
+            else:
+                paid_amount = new_total_paid
+                status = 'partial'
+                
+        conn.execute('UPDATE manual_sales SET status = ?, paid_amount = ? WHERE id = ?', (status, paid_amount, sale_id))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Pagamento registrado com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': f'Erro: {str(e)}'}), 500
+
+
 def register_sales_routes(bp):
     bp.route('/admin/sales/manual/add', methods=['POST'])(add_manual_sale)
     bp.route('/admin/sales/manual/list', methods=['GET'])(list_manual_sales)
@@ -865,4 +911,5 @@ def register_sales_routes(bp):
     bp.route('/admin/sales/report', methods=['GET'])(sales_report)
     bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])(get_order_proof)
     bp.route('/admin/sales/insights', methods=['GET'])(sales_insights)
+    bp.route('/admin/sales/manual/pay/<int:sale_id>', methods=['POST'])(pay_manual_sale)
 

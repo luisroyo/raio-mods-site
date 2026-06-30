@@ -60,6 +60,13 @@ function openPDVCheckout(id, name, price, promoPrice, stock, downloadLink = '') 
     document.getElementById('pdv_client_email').value = '';
     document.getElementById('pdvClientSearchResults').classList.add('hidden');
 
+    // Reset payment status
+    const paymentSelect = document.getElementById('pdv_payment_status');
+    if (paymentSelect) {
+        paymentSelect.value = 'paid';
+        togglePDVPaidAmount();
+    }
+
     // Mostrar modal
     const modal = document.getElementById('pdvCheckoutModal');
     modal.classList.remove('hidden');
@@ -69,6 +76,21 @@ function openPDVCheckout(id, name, price, promoPrice, stock, downloadLink = '') 
 function closePDVCheckout() {
     const modal = document.getElementById('pdvCheckoutModal');
     modal.classList.add('hidden');
+}
+
+function togglePDVPaidAmount() {
+    const status = document.getElementById('pdv_payment_status').value;
+    const wrapper = document.getElementById('pdv_paid_amount_wrapper');
+    const input = document.getElementById('pdv_paid_amount');
+    
+    if (status === 'partial') {
+        wrapper.classList.remove('hidden');
+        input.setAttribute('required', 'true');
+    } else {
+        wrapper.classList.add('hidden');
+        input.removeAttribute('required');
+        input.value = '';
+    }
 }
 
 // Autocomplete de Clientes Unificado (Clientes Cadastrados + Vendas Manuais)

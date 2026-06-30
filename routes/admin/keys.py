@@ -71,6 +71,18 @@ def redeem_key_admin():
         client_email = (request.form.get('client_email') or '').strip().lower()
         unit_price = float(str(request.form.get('unit_price', 0)).replace('R$', '').replace(',', '.'))
         
+        payment_status = request.form.get('payment_status', 'paid')
+        paid_amount_str = request.form.get('paid_amount', '')
+        paid_amount = unit_price
+        
+        if payment_status == 'pending':
+            paid_amount = 0.0
+        elif payment_status == 'partial':
+            try:
+                paid_amount = float(str(paid_amount_str).replace('R$', '').replace(',', '.'))
+            except:
+                paid_amount = 0.0
+        
         if not product_id or unit_price < 0:
             return jsonify({'error': 'Dados inválidos'}), 400
             
@@ -112,9 +124,9 @@ def redeem_key_admin():
                 
         # 5. Inserir na tabela de manual_sales
         cursor = conn.execute('''
-            INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email)
-            VALUES (?, 1, ?, ?, ?, ?, ?)
-        ''', (product_id, unit_price, cost_per_unit_brl, unit_price, client_name, client_email))
+            INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount)
+            VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?)
+        ''', (product_id, unit_price, cost_per_unit_brl, unit_price, client_name, client_email, payment_status, paid_amount))
         sale_id = cursor.lastrowid
         
         # 6. Atribuir pontos de fidelidade se e-mail estiver definido

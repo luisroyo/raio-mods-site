@@ -305,30 +305,73 @@ document.addEventListener('DOMContentLoaded', () => {
                     let resultHtml = `
                         <div class="text-3xl font-extrabold text-neon-green mb-2" style="font-family: 'Sora', sans-serif;">🎉 GANHOU ${data.discount}%!</div>
                         <p class="text-gray-300 text-sm mb-4">
-                            Seu cupom de desconto exclusivo de <strong>${data.discount}%</strong> foi gerado com sucesso e enviado para:
+                            Seu cupom de desconto exclusivo de <strong>${data.discount}%</strong> foi gerado! Use-o agora:
                         </p>
-                        <div class="bg-black/60 border border-white/10 rounded-lg p-2.5 mb-4 text-white font-mono break-all font-semibold">
-                            ${email}
+                        
+                        <div class="flex items-center justify-between bg-black/60 border border-white/10 rounded-lg p-3 mb-4">
+                            <span id="couponCodeText" class="text-white font-mono text-xl font-bold tracking-wider">${data.coupon_code}</span>
+                            <button id="copyCouponBtn" class="ml-3 bg-[#10b981]/20 text-[#10b981] hover:bg-[#10b981]/30 px-3 py-1.5 rounded-md text-sm font-bold transition-colors">
+                                Copiar
+                            </button>
                         </div>
-                        <p class="text-xs text-yellow-500 font-bold mb-2">
-                            ⚠️ Verifique sua caixa de entrada e pasta de Spam. O cupom expira em 24 horas!
-                        </p>
+                        
+                        <div class="flex flex-col items-center justify-center p-3 mb-4 bg-red-950/30 border border-red-500/30 rounded-lg">
+                            <p class="text-xs text-red-400 font-bold mb-1 uppercase tracking-wider">⏳ Expira em</p>
+                            <div id="countdownTimer" class="text-2xl font-mono text-red-500 font-bold">15:00</div>
+                        </div>
+                        
+                        <a href="/" class="block w-full py-3 bg-[#06b6d4] hover:bg-[#22d3ee] text-black text-center font-extrabold rounded-lg text-sm transition-all shadow-[0_0_12px_rgba(6,182,212,0.3)] mb-4" onclick="document.getElementById('luckySpinModal').classList.add('hidden');">
+                            IR PARA A LOJA 🛒
+                        </a>
                     `;
                     
                     if (typeof data.client_exists !== 'undefined' && !data.client_exists) {
                         resultHtml += `
-                            <div class="mt-4 p-4 bg-cyan-950/20 border border-cyan-500/30 rounded-xl text-center">
-                                <p class="text-xs text-gray-300 mb-3">
-                                    🎁 Quer ganhar mais recompensas? Cadastre-se no nosso <strong>Clube de Fidelidade</strong> para acumular pontos em todas as compras!
+                            <div class="mt-2 p-3 bg-cyan-950/20 border border-cyan-500/30 rounded-xl text-center">
+                                <p class="text-xs text-gray-300 mb-2">
+                                    🎁 Cadastre-se no nosso <strong>Clube de Fidelidade</strong> para acumular pontos!
                                 </p>
-                                <a href="/cliente/cadastro" class="inline-block px-4 py-2 bg-[#06b6d4] hover:bg-[#22d3ee] text-black font-extrabold rounded-lg text-xs transition-all shadow-[0_0_12px_rgba(6,182,212,0.3)]">
-                                    Participar do Clube Grátis
+                                <a href="/cliente/cadastro" class="inline-block px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-lg text-xs transition-all border border-gray-600">
+                                    Participar do Clube
                                 </a>
                             </div>
                         `;
                     }
                     
                     resultMsg.innerHTML = resultHtml;
+
+                    // Inicializar botão de copiar
+                    const copyBtn = document.getElementById('copyCouponBtn');
+                    if (copyBtn) {
+                        copyBtn.addEventListener('click', () => {
+                            navigator.clipboard.writeText(data.coupon_code).then(() => {
+                                const originalText = copyBtn.innerText;
+                                copyBtn.innerText = 'Copiado! ✓';
+                                copyBtn.classList.remove('text-[#10b981]', 'bg-[#10b981]/20');
+                                copyBtn.classList.add('text-white', 'bg-green-600');
+                                setTimeout(() => {
+                                    copyBtn.innerText = originalText;
+                                    copyBtn.classList.add('text-[#10b981]', 'bg-[#10b981]/20');
+                                    copyBtn.classList.remove('text-white', 'bg-green-600');
+                                }, 2000);
+                            });
+                        });
+                    }
+                    
+                    // Inicializar o cronômetro
+                    let timeLeft = 15 * 60; // 15 minutos em segundos
+                    const timerEl = document.getElementById('countdownTimer');
+                    const timerInterval = setInterval(() => {
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                            timerEl.innerText = "00:00";
+                            return;
+                        }
+                        timeLeft--;
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        timerEl.innerText = \`\${minutes.toString().padStart(2, '0')}:\${seconds.toString().padStart(2, '0')}\`;
+                    }, 1000);
                 }, 5300);
                 
             } catch (err) {

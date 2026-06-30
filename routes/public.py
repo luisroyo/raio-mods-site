@@ -436,15 +436,6 @@ def lucky_spin():
 
     conn = get_db_connection()
     try:
-        # 1. Verificar se o SMTP está configurado
-        config_row = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
-        if not config_row:
-            return jsonify({'error': 'Configuração do sistema não localizada.'}), 500
-        
-        config = dict(config_row)
-        if not config.get('smtp_server') or not config.get('smtp_user'):
-            return jsonify({'error': 'O envio de e-mails da roleta não está configurado pelo administrador.'}), 500
-
         # 2. Verificar se o e-mail já realizou um giro nos últimos 30 dias (ignora para e-mail de teste)
         if email != 'luisroyo25@gmail.com':
             row = conn.execute('''
@@ -499,17 +490,13 @@ def lucky_spin():
             VALUES (?, ?, ?)
         ''', (email, discount_val, coupon_code))
 
-        # 6. Enviar o cupom por e-mail
-        success, msg = send_spin_coupon_email(config, email, discount_val, coupon_code)
-        if not success:
-            conn.rollback()
-            return jsonify({'error': f'Falha ao enviar e-mail com cupom: {msg}'}), 500
-
+        # 6. Exibição direto na tela (e-mail removido)
         conn.commit()
         return jsonify({
             'success': True,
             'discount': discount_val,
             'index': winner_index,
+            'coupon_code': coupon_code,
             'client_exists': client_exists
         })
 

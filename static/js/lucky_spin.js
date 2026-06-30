@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         timeLeft--;
                         const minutes = Math.floor(timeLeft / 60);
                         const seconds = timeLeft % 60;
-                        timerEl.innerText = \`\${minutes.toString().padStart(2, '0')}:\${seconds.toString().padStart(2, '0')}\`;
+                        timerEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                     }, 1000);
                 }, 5300);
                 

@@ -492,6 +492,21 @@ def init_db():
         except Exception as e:
             print(f"Erro ao adicionar coluna client_email: {e}")
 
+    # --- MIGRAÇÃO: Adicionar colunas status e paid_amount na tabela manual_sales ---
+    manual_sales_columns = [
+        ('status', "TEXT DEFAULT 'paid'"),
+        ('paid_amount', 'REAL DEFAULT 0.0')
+    ]
+    for col_name, col_type in manual_sales_columns:
+        try:
+            cursor.execute(f'SELECT {col_name} FROM manual_sales LIMIT 1')
+        except sqlite3.OperationalError:
+            try:
+                print(f"--> Adicionando coluna {col_name} em manual_sales...")
+                cursor.execute(f'ALTER TABLE manual_sales ADD COLUMN {col_name} {col_type}')
+            except Exception as e:
+                print(f"Erro ao adicionar coluna {col_name}: {e}")
+
     # --- MIGRAÇÃO: Adicionar coluna used_by_email na tabela product_keys ---
     try:
         cursor.execute('SELECT used_by_email FROM product_keys LIMIT 1')

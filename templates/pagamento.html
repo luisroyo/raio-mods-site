@@ -47,7 +47,7 @@
             
             {% if product.payment_url %}
             <div class="mercadopago-box">
-                <h3 class="text-xl font-bold text-blue-400 mb-4">Opção Recomendada: Cartão / Pix Automático</h3>
+                <h3 class="text-xl font-bold text-blue-400 mb-4">Pagamento Automático (Pix/Cartão)</h3>
                 <a href="{{ product.payment_url }}" target="_blank" class="btn-mercadopago">
                     💳 PAGAR AGORA (MERCADO PAGO)
                 </a>
@@ -58,42 +58,6 @@
             {% endif %}
         </div>
 
-        {% if not product or (product_stock is defined and product_stock > 0) %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <section class="pix-manual-section" data-aos="fade-right">
-                <h3 class="text-xl font-bold neon-green mb-4 text-center">Pix Manual</h3>
-                <p id="pix-intro" class="text-gray-400 text-center mb-4 text-sm">Copie a chave abaixo para pagar via PIX.</p>
-                
-                <div id="qrcode-wrapper" class="flex justify-center mb-4">
-                    <div class="qrcode-container">
-                        <div id="qrcode"></div>
-                    </div>
-                </div>
-
-                <div class="key-box">
-                    <p class="text-sm text-gray-400 mb-1">Chave Pix:</p>
-                    <p class="key-text text-lg" id="pixKey">{{ config['pix_key'] if config else '' }}</p>
-                    <button onclick="copyText('pixKey')" class="btn-copy">Copiar Chave</button>
-                </div>
-            </section>
-
-            <section class="crypto-section" data-aos="fade-left">
-                <h3 class="text-xl font-bold text-yellow-400 mb-4 text-center">Binance Pay / Crypto</h3>
-                <p class="text-gray-400 text-center mb-4 text-sm">USDT (Rede BEP20 - BSC).</p>
-                <div class="key-box">
-                    <p class="text-sm text-gray-400 mb-1">Carteira USDT (BEP20):</p>
-                    <p class="key-text text-sm" id="cryptoKey">{{ config.binance_wallet }}</p>
-                    <button onclick="copyText('cryptoKey')" class="btn-copy">Copiar</button>
-                </div>
-            </section>
-        </div>
-
-        <div class="text-center mt-12" data-aos="fade-up">
-            <p class="text-gray-300 mb-4">Após o pagamento, envie o comprovante:</p>
-            <a href="https://wa.me/{{ whatsapp_contact or (config.whatsapp_number if config else '') or '' }}" target="_blank" class="btn-whatsapp">
-                📲 Enviar Comprovante no WhatsApp
-            </a>
-        </div>
         {% endif %}
     </main>
 {% endblock %}

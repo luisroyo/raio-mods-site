@@ -109,6 +109,20 @@
                         </select>
                     </div>
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t border-gray-700 pt-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 font-bold">Status do Pagamento</label>
+                        <select name="status" id="manual_status" onchange="togglePaidAmount()" class="w-full px-4 py-2 bg-gray-800 border border-yellow-500 rounded text-white text-sm">
+                            <option value="paid">✅ Pago (Valor Integral)</option>
+                            <option value="pending">⏳ Fiado (Pendente)</option>
+                            <option value="partial">💰 Pago Parcialmente</option>
+                        </select>
+                    </div>
+                    <div id="div_paid_amount" class="hidden">
+                        <label class="block text-xs text-gray-400 mb-1">Valor Recebido (R$)</label>
+                        <input type="text" name="paid_amount" id="manual_paid_amount" placeholder="Ex: 10.00" class="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded text-white">
+                    </div>
+                </div>
                 <div class="mt-4">
                     <label class="block text-xs text-gray-400 mb-1">Link de Download para o Cliente (Opcional)</label>
                     <input type="text" list="registered_links" name="download_link" id="manual_download_link" placeholder="Opcional. Será preenchido se o produto já possuir um link."
@@ -133,6 +147,21 @@
 <script>
 // Cotação do dólar disponível no template
 window.DOLAR_RATE = {{ financeiro.dolar_hoje }};
+
+function togglePaidAmount() {
+    const statusSelect = document.getElementById('manual_status');
+    const divPaid = document.getElementById('div_paid_amount');
+    const inputPaid = document.getElementById('manual_paid_amount');
+    if (statusSelect && divPaid) {
+        if (statusSelect.value === 'partial') {
+            divPaid.classList.remove('hidden');
+            inputPaid.required = true;
+        } else {
+            divPaid.classList.add('hidden');
+            inputPaid.required = false;
+        }
+    }
+}
 
 function convertUsdToBrl() {
     const usdInput = document.getElementById('costUsd');

@@ -50,6 +50,15 @@ def add_manual_sale():
             except Exception as e:
                 print(f"Erro ao calcular custo automático: {e}")
         
+        status = request.form.get('status', 'paid')
+        raw_paid = request.form.get('paid_amount', '')
+        if status == 'paid':
+            paid_amount = total_price
+        elif status == 'pending':
+            paid_amount = 0.0
+        else:
+            paid_amount = float(str(raw_paid).replace('R$', '').replace(',', '.')) if raw_paid else 0.0
+
         conn = get_db_connection()
         if created_at:
             # Substituir T por espaço para formato SQL
@@ -58,14 +67,14 @@ def add_manual_sale():
             if len(created_at) == 10:
                 created_at += " 12:00:00"
             cursor = conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at) VALUES (?,?,?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at)
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount)
             )
             sale_id = cursor.lastrowid
         else:
             cursor = conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email) VALUES (?,?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email)
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount) VALUES (?,?,?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount)
             )
             sale_id = cursor.lastrowid
 
@@ -293,21 +302,30 @@ def edit_manual_sale(sale_id):
                     (old_email, -old_points, 'admin_rollback', f"Estorno (Edição) da Venda manual #{sale_id}")
                 )
 
+        status = request.form.get('status', 'paid')
+        raw_paid = request.form.get('paid_amount', '')
+        if status == 'paid':
+            paid_amount = total_price
+        elif status == 'pending':
+            paid_amount = 0.0
+        else:
+            paid_amount = float(str(raw_paid).replace('R$', '').replace(',', '.')) if raw_paid else 0.0
+
         if created_at:
             created_at = created_at.replace('T', ' ')
             if len(created_at) == 10:
                 created_at += " 12:00:00"
             conn.execute('''
                 UPDATE manual_sales 
-                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, client_email=?, created_at=?
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, client_email=?, created_at=?, status=?, paid_amount=?
                 WHERE id=?
-            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, sale_id))
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount, sale_id))
         else:
             conn.execute('''
                 UPDATE manual_sales 
-                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, client_email=?
+                SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, client_email=?, status=?, paid_amount=?
                 WHERE id=?
-            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, sale_id))
+            ''', (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount, sale_id))
 
         # Adicionar novos pontos se houver novo e-mail
         if client_email:

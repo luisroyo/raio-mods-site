@@ -134,6 +134,7 @@ def list_manual_sales():
         date_start = request.args.get('date_start', '')
         date_end = request.args.get('date_end', '')
         search = request.args.get('search', '').strip()
+        status_filter = request.args.get('status', '')
         
         dolar_hoje = get_dolar_hoje()
         
@@ -223,6 +224,13 @@ def list_manual_sales():
         if search:
             combined_query += ' AND client_info LIKE ?'
             params.append(f'%{search}%')
+            
+        if status_filter:
+            if status_filter == 'debt':
+                combined_query += " AND status IN ('pending', 'partial')"
+            else:
+                combined_query += ' AND status = ?'
+                params.append(status_filter)
             
         # Count total and sums
         count_query = f'''

@@ -10,6 +10,7 @@ let salesTotalPages = 1;
 // Filter State
 let salesCategory = '';
 let salesSupplier = '';
+let salesStatus = '';
 let salesDateStart = '';
 let salesDateEnd = '';
 let salesSearch = '';
@@ -161,6 +162,7 @@ function nextSalesPage() {
 function applySalesFilters() {
     salesCategory = document.getElementById('filterCategory').value;
     salesSupplier = document.getElementById('filterSupplier')?.value || '';
+    salesStatus = document.getElementById('filterStatus')?.value || '';
     salesDateStart = document.getElementById('filterDateStart').value;
     salesDateEnd = document.getElementById('filterDateEnd').value;
     salesSearch = document.getElementById('filterSearch')?.value || '';
@@ -171,6 +173,7 @@ function applySalesFilters() {
 function clearSalesFilters() {
     salesCategory = '';
     salesSupplier = '';
+    salesStatus = '';
     salesDateStart = '';
     salesDateEnd = '';
     salesSearch = '';
@@ -178,6 +181,8 @@ function clearSalesFilters() {
     document.getElementById('filterCategory').value = '';
     const supplierEl = document.getElementById('filterSupplier');
     if (supplierEl) supplierEl.value = '';
+    const statusEl = document.getElementById('filterStatus');
+    if (statusEl) statusEl.value = '';
     document.getElementById('filterDateStart').value = '';
     document.getElementById('filterDateEnd').value = '';
     const searchEl = document.getElementById('filterSearch');
@@ -192,6 +197,7 @@ async function loadManualSales() {
         let url = `/admin/sales/manual/list?page=${salesPage}&limit=${salesLimit}`;
         if (salesCategory) url += `&category=${encodeURIComponent(salesCategory)}`;
         if (salesSupplier) url += `&supplier=${encodeURIComponent(salesSupplier)}`;
+        if (salesStatus) url += `&status=${encodeURIComponent(salesStatus)}`;
         if (salesDateStart) url += `&date_start=${salesDateStart}`;
         if (salesDateEnd) url += `&date_end=${salesDateEnd}`;
         if (salesSearch) url += `&search=${encodeURIComponent(salesSearch)}`;

@@ -74,30 +74,3 @@ function openEditModal(
 
     document.getElementById('editModal')?.classList.add('modal-active');
 }
-
-function switchConfigTab(tab) {
-    // Esconde todos
-    document.getElementById('view-config-payment').classList.add('hidden');
-    document.getElementById('view-config-system').classList.add('hidden');
-
-    // Mostra o selecionado
-    document.getElementById('view-config-' + tab).classList.remove('hidden');
-
-    // Atualiza botões
-    const btnPay = document.getElementById('tab-config-payment');
-    const btnSys = document.getElementById('tab-config-system');
-
-    if (tab === 'payment') {
-        btnPay.classList.add('border-yellow-500', 'bg-gray-900', 'text-yellow-500');
-        btnPay.classList.remove('text-gray-500');
-
-        btnSys.classList.remove('border-yellow-500', 'bg-gray-900', 'text-yellow-500');
-        btnSys.classList.add('text-gray-500');
-    } else {
-        btnSys.classList.add('border-yellow-500', 'bg-gray-900', 'text-yellow-500');
-        btnSys.classList.remove('text-gray-500');
-
-        btnPay.classList.remove('border-yellow-500', 'bg-gray-900', 'text-yellow-500');
-        btnPay.classList.add('text-gray-500');
-    }
-}

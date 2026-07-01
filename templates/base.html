@@ -87,8 +87,6 @@
                             class="text-xs md:text-sm transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Início</a>
                         <a href="{{ url_for('public.links') }}"
                             class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Links</a>
-                        <a href="{{ url_for('public.pagamento') }}"
-                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.pagamento' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Pagamento</a>
                         <a href="{{ url_for('public.seguranca') }}"
                             class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Segurança</a>
                         <a href="{{ url_for('client.login_page') }}"
@@ -129,8 +127,6 @@
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Início</a>
             <a href="{{ url_for('public.links') }}"
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.links' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Links</a>
-            <a href="{{ url_for('public.pagamento') }}"
-                class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.pagamento' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Pagamento</a>
             <a href="{{ url_for('public.seguranca') }}"
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.seguranca' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Segurança</a>
             <a href="{{ url_for('client.login_page') }}"
@@ -161,9 +157,6 @@
                     <span class="text-gray-600">|</span>
                     <a href="{{ url_for('public.links') }}"
                         class="transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Links</a>
-                    <span class="text-gray-600">|</span>
-                    <a href="{{ url_for('public.pagamento') }}"
-                        class="transition-colors {% if request.endpoint == 'public.pagamento' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Pagamento</a>
                     <span class="text-gray-600">|</span>
                     <a href="{{ url_for('public.seguranca') }}"
                         class="transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Segurança</a>
@@ -401,12 +394,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
             <span class="text-[10px] font-medium tracking-wide">Links</span>
-        </a>
-        <a href="{{ url_for('public.pagamento') }}" class="flex flex-col items-center justify-center flex-1 text-center py-1 transition-all duration-200 {% if request.endpoint == 'public.pagamento' %}text-neon-cyan{% else %}text-gray-400 hover:text-white{% endif %}">
-            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
-            <span class="text-[10px] font-medium tracking-wide">Pagamento</span>
         </a>
         <a href="{{ url_for('public.seguranca') }}" class="flex flex-col items-center justify-center flex-1 text-center py-1 transition-all duration-200 {% if request.endpoint == 'public.seguranca' %}text-neon-cyan{% else %}text-gray-400 hover:text-white{% endif %}">
             <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

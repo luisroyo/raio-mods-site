@@ -68,6 +68,21 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
+                        <label class="block text-sm text-gray-400 mb-1 font-bold">Status do Pagamento</label>
+                        <select name="status" id="edit_sale_status" onchange="toggleEditPaidAmount()" class="w-full px-4 py-2 bg-black border border-yellow-500 rounded text-white text-sm">
+                            <option value="paid">✅ Pago (Valor Integral)</option>
+                            <option value="pending">⏳ Fiado (Pendente)</option>
+                            <option value="partial">💰 Pago Parcialmente</option>
+                        </select>
+                    </div>
+                    <div id="div_edit_paid_amount" class="hidden">
+                        <label class="block text-sm text-gray-400 mb-1">Valor Recebido (R$)</label>
+                        <input type="text" name="paid_amount" id="edit_sale_paid_amount" placeholder="Ex: 10.00" class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                         <label class="block text-sm text-gray-400 mb-1">Nome do Cliente (Opcional)</label>
                         <input type="text" id="edit_sale_client_name" name="client_name" placeholder="Ex: João Silva"
                             class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
@@ -89,6 +104,21 @@
 </div>
 
 <script>
+    function toggleEditPaidAmount() {
+        const statusSelect = document.getElementById('edit_sale_status');
+        const divPaid = document.getElementById('div_edit_paid_amount');
+        const inputPaid = document.getElementById('edit_sale_paid_amount');
+        if (statusSelect && divPaid) {
+            if (statusSelect.value === 'partial') {
+                divPaid.classList.remove('hidden');
+                inputPaid.required = true;
+            } else {
+                divPaid.classList.add('hidden');
+                inputPaid.required = false;
+            }
+        }
+    }
+
     function convertEditUsdToBrl() {
         const usdInput = document.getElementById('edit_sale_cost_usd');
         const brlInput = document.getElementById('edit_sale_cost');

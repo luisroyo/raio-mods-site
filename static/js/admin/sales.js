@@ -266,7 +266,7 @@ async function loadManualSales() {
                 
                 actions = `
                     ${payButton}
-                    <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.client_info || "")}, ${JSON.stringify(sale.created_at)})' class="text-blue-400 hover:text-blue-300 mr-2" title="Editar">✏️</button>
+                    <button onclick='openEditManualSale(${sale.id}, ${sale.product_id}, ${sale.quantity}, ${sale.unit_price.toFixed(2)}, ${sale.cost_per_unit_brl.toFixed(2)}, ${JSON.stringify(sale.client_info || "")}, ${JSON.stringify(sale.created_at)}, "${sale.status}", ${sale.paid_amount})' class="text-blue-400 hover:text-blue-300 mr-2" title="Editar">✏️</button>
                     <button onclick="deleteManualSale(${sale.id})" class="text-red-400 hover:text-red-300" title="Excluir">🗑️</button>
                 `;
             }
@@ -292,12 +292,22 @@ async function loadManualSales() {
     }
 }
 
-function openEditManualSale(id, pid, qty, price, cost, notes, createdAt) {
+function openEditManualSale(id, pid, qty, price, cost, notes, createdAt, status, paidAmount) {
     document.getElementById('edit_sale_id').value = id;
     document.getElementById('edit_sale_product_id').value = pid;
     document.getElementById('edit_sale_quantity').value = qty;
     document.getElementById('edit_sale_unit_price').value = price;
     document.getElementById('edit_sale_cost').value = cost;
+    
+    const statusSelect = document.getElementById('edit_sale_status');
+    const paidInput = document.getElementById('edit_sale_paid_amount');
+    if (statusSelect) {
+        statusSelect.value = status || 'paid';
+        toggleEditPaidAmount();
+    }
+    if (paidInput && paidAmount !== undefined) {
+        paidInput.value = paidAmount > 0 ? parseFloat(paidAmount).toFixed(2) : '';
+    }
     
     let name = notes || '';
     let email = '';

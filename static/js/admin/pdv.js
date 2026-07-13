@@ -6,16 +6,41 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPDVCheckoutForm();
 });
 
-// Filtragem de produtos por nome na busca rápida
-function filterPDVProducts(query) {
-    const term = query.trim().toLowerCase();
+let currentPDVCategory = 'all';
+
+function setPDVCategory(category, btnElement) {
+    currentPDVCategory = category;
+    
+    // Atualiza classes dos botões
+    document.querySelectorAll('.pdv-category-btn').forEach(btn => {
+        btn.classList.remove('bg-cyan-600', 'text-white', 'shadow-[0_0_10px_rgba(6,182,212,0.4)]', 'active');
+        btn.classList.add('bg-gray-800', 'text-gray-400', 'border', 'border-gray-700');
+    });
+    
+    if (btnElement) {
+        btnElement.classList.remove('bg-gray-800', 'text-gray-400', 'border', 'border-gray-700');
+        btnElement.classList.add('bg-cyan-600', 'text-white', 'shadow-[0_0_10px_rgba(6,182,212,0.4)]', 'active');
+    }
+
+    filterPDVProducts();
+}
+
+// Filtragem de produtos por nome e categoria na busca rápida
+function filterPDVProducts() {
+    const searchInput = document.getElementById('pdvSearchProduct');
+    const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
     const cards = document.querySelectorAll('#pdvProductsGrid .product-card');
     const emptyState = document.getElementById('pdvEmptyState');
     let visibleCount = 0;
 
     cards.forEach(card => {
         const prodName = card.dataset.productName || '';
-        if (prodName.includes(term)) {
+        const prodCategory = card.dataset.category || '';
+        
+        const matchesSearch = prodName.includes(term);
+        const matchesCategory = (currentPDVCategory === 'all' || prodCategory === currentPDVCategory);
+
+        if (matchesSearch && matchesCategory) {
             card.classList.remove('hidden');
             visibleCount++;
         } else {

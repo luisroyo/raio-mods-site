@@ -542,6 +542,9 @@ def admin_pdv():
             ORDER BY p.sort_order ASC, p.id ASC
         ''').fetchall()
         
+        products_list = [dict(p) for p in products]
+        categories = sorted(list(set(p.get('category') for p in products_list if p.get('category'))))
+        
         # Obter links para o autocomplete
         links = conn.execute('SELECT * FROM links ORDER BY created_at DESC').fetchall()
         
@@ -552,7 +555,8 @@ def admin_pdv():
         pending_feedbacks_count = conn.execute("SELECT COUNT(*) FROM feedbacks WHERE status = 'pending'").fetchone()[0]
     except Exception as e:
         print(f"Erro ao carregar PDV: {e}")
-        products = []
+        products_list = []
+        categories = []
         links = []
         config = None
         pending_feedbacks_count = 0
@@ -563,7 +567,8 @@ def admin_pdv():
     dolar_rate = get_dolar_hoje()
     
     return render_template('admin/pdv.html', 
-                           products=[dict(p) for p in products], 
+                           products=products_list, 
+                           categories=categories,
                            config=config, 
                            links=[dict(l) for l in links],
                            financeiro={'dolar_hoje': round(dolar_rate, 4)},

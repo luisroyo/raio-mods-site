@@ -423,13 +423,13 @@ def create_payment():
         if not product_id or not email:
             return jsonify({'error': 'Dados incompletos'}), 400
 
-        if not customer_name or not customer_cpf or not terms_accepted:
-            return jsonify({'error': 'Preencha todos os campos obrigatórios e aceite os termos.'}), 400
+        if not customer_name or not terms_accepted:
+            return jsonify({'error': 'Preencha seu Nome e aceite os termos para continuar.'}), 400
 
         if not validate_email(email):
             return jsonify({'error': 'Por favor, insira um e-mail válido.'}), 400
 
-        if not validate_cpf(customer_cpf):
+        if customer_cpf and not validate_cpf(customer_cpf):
             return jsonify({'error': 'Por favor, insira um CPF válido.'}), 400
 
         terms_ts = datetime.now(timezone.utc).isoformat() if terms_accepted else None
@@ -476,9 +476,10 @@ def create_payment():
         payer_info = {
             "email": email,
             "first_name": first_name,
-            "last_name": last_name,
-            "identification": {"type": "CPF", "number": customer_cpf}
+            "last_name": last_name
         }
+        if customer_cpf:
+            payer_info["identification"] = {"type": "CPF", "number": customer_cpf}
         if customer_phone:
             payer_info["phone"] = {"number": customer_phone}
 
@@ -521,9 +522,10 @@ def create_payment():
             card_payer = {
                 "email": email,
                 "name": first_name,
-                "surname": last_name,
-                "identification": {"type": "CPF", "number": customer_cpf}
+                "surname": last_name
             }
+            if customer_cpf:
+                card_payer["identification"] = {"type": "CPF", "number": customer_cpf}
             if customer_phone:
                 card_payer["phone"] = {"area_code": "", "number": customer_phone}
 

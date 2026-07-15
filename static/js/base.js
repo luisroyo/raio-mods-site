@@ -51,8 +51,8 @@ function openCheckout(id, name, price) {
     document.getElementById('step-email').classList.remove('hidden');
     document.getElementById('step-payment').classList.add('hidden');
     document.getElementById('step-success').classList.add('hidden');
+    document.getElementById('step-success').classList.add('hidden');
     document.getElementById('customerName').value = '';
-    document.getElementById('customerCPF').value = '';
     document.getElementById('customerEmail').value = '';
     document.getElementById('customerPhone').value = '';
     document.getElementById('customerCoupon').value = '';
@@ -137,7 +137,7 @@ async function applyCouponFront() {
 // Inicia o pagamento (chama o backend)
 async function startPayment(type) {
     const name = document.getElementById('customerName').value.trim();
-    const cpf = document.getElementById('customerCPF').value.trim();
+    const cpf = ''; // Removed from UI
     const email = document.getElementById('customerEmail').value.trim();
     const phone = document.getElementById('customerPhone').value.trim();
     const termsChecked = document.getElementById('customerTerms').checked;
@@ -147,10 +147,6 @@ async function startPayment(type) {
     const nameParts = name.trim().split(/\s+/);
     if (!name || nameParts.length < 2 || nameParts[0].length < 2 || nameParts[1].length < 2) {
         alert('Por favor, digite seu NOME e SOBRENOME corretamente. Apelidos ou apenas o primeiro nome não são aceitos.');
-        return;
-    }
-    if (!cpf || cpf.replace(/\D/g, '').length < 11) {
-        alert('Por favor, digite um CPF válido.');
         return;
     }
     if (!email || !email.includes('@')) {
@@ -336,16 +332,4 @@ function showSuccess(key) {
     document.getElementById('finalKey').innerText = key;
 }
 
-// Máscara de CPF (###.###.###-##)
-document.addEventListener('DOMContentLoaded', () => {
-    const cpfInput = document.getElementById('customerCPF');
-    if (cpfInput) {
-        cpfInput.addEventListener('input', function(e) {
-            let v = e.target.value.replace(/\D/g, '').substring(0, 11);
-            if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-            else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-            else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
-            e.target.value = v;
-        });
-    }
-});
+// Máscara de CPF removida

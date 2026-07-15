@@ -189,6 +189,29 @@
     </div>
 </div>
 
+<!-- Valores em Estoque -->
+<div class="mb-8 mt-8 border border-emerald-500/30 rounded-lg p-6 bg-emerald-500/5">
+    <h2 class="text-xl font-bold text-emerald-400 mb-4">📦 Valor em Estoque (Chaves Disponíveis)</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 flex flex-col justify-between">
+            <p class="text-gray-400 text-xs mb-1">🔑 Chaves em Estoque</p>
+            <p class="text-2xl font-bold text-white">{{ estoque_stats.total_chaves }} <span class="text-sm font-normal text-gray-500">unid.</span></p>
+        </div>
+        <div class="bg-gray-800 rounded-lg p-4 border border-blue-500/30 flex flex-col justify-between">
+            <p class="text-gray-400 text-xs mb-1">📈 Valor Potencial (Venda)</p>
+            <p class="text-2xl font-bold text-blue-400">R$ {{ "%.2f"|format(estoque_stats.valor_venda)|replace('.', ',') }}</p>
+        </div>
+        <div class="bg-gray-800 rounded-lg p-4 border border-red-500/30 flex flex-col justify-between">
+            <p class="text-gray-400 text-xs mb-1">📉 Custo em Estoque</p>
+            <p class="text-2xl font-bold text-red-400">R$ {{ "%.2f"|format(estoque_stats.valor_custo)|replace('.', ',') }}</p>
+        </div>
+        <div class="bg-gray-800 rounded-lg p-4 border border-emerald-500/30 flex flex-col justify-between">
+            <p class="text-gray-400 text-xs mb-1">🎯 Lucro Potencial</p>
+            <p class="text-2xl font-bold text-emerald-400">R$ {{ "%.2f"|format(estoque_stats.lucro_potencial)|replace('.', ',') }}</p>
+        </div>
+    </div>
+</div>
+
 <!-- Gráficos de Análise -->
 <div id="mainChartsGrid" class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
     <!-- Faturamento vs Custos vs Lucro -->

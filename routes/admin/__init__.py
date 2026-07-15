@@ -113,12 +113,54 @@ def _get_admin_data():
             financeiro['dolar_updated'] = '---'
     except Exception:
         financeiro['dolar_updated'] = '---'
+        
+    estoque_stats = {
+        'total_chaves': sum(stock_map.values()),
+        'valor_venda': 0.0,
+        'valor_custo': 0.0,
+        'lucro_potencial': 0.0
+    }
+    
+    import re
     
     catalogs, simple_products, subproducts_by_parent, subproducts_by_category, parent_products = [], [], {}, {}, []
     
     for p in all_products:
         p_dict = dict(p)
-        p_dict['stock'] = stock_map.get(p['id'], 0)
+        stock = stock_map.get(p['id'], 0)
+        p_dict['stock'] = stock
+        
+        if stock > 0:
+            price_str = str(p['price'] if p['price'] else '0')
+            match = re.search(r'[\d\.,]+', price_str)
+            price_val = 0.0
+            if match:
+                num_str = match.group()
+                if ',' in num_str and '.' in num_str:
+                    num_str = num_str.replace('.', '').replace(',', '.')
+                elif ',' in num_str:
+                    num_str = num_str.replace(',', '.')
+                try:
+                    price_val = float(num_str)
+                except:
+                    pass
+            
+            cost_brl = float(p['cost_brl'] if 'cost_brl' in p.keys() and p['cost_brl'] else 0.0)
+            cost_usd = float(p['cost_usd'] if 'cost_usd' in p.keys() and p['cost_usd'] else 0.0)
+            apply_iof = p['apply_iof'] if 'apply_iof' in p.keys() else 1
+            
+            cost_val = 0.0
+            if cost_brl > 0:
+                cost_val = cost_brl
+            elif cost_usd > 0:
+                if apply_iof:
+                    cost_val = cost_usd * dolar_hoje * IOF
+                else:
+                    cost_val = cost_usd * dolar_hoje
+                    
+            estoque_stats['valor_venda'] += price_val * stock
+            estoque_stats['valor_custo'] += cost_val * stock
+            estoque_stats['lucro_potencial'] += (price_val - cost_val) * stock
         
         keys = p.keys()
         pid = p['parent_id'] if 'parent_id' in keys else None
@@ -209,6 +251,7 @@ def _get_admin_data():
         'config': config,
         'stats': stats,
         'financeiro': financeiro,
+        'estoque_stats': estoque_stats,
         'security_warnings': security_warnings,
         'pending_feedbacks_count': pending_feedbacks_count
     }

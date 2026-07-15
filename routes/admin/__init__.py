@@ -311,6 +311,20 @@ def admin_vendas():
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
+@admin_bp.route('/admin/pendentes')
+def admin_pendentes():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    try:
+        data = _get_admin_data()
+        if data is None:
+            return redirect(url_for('admin.admin'))
+        return render_template('admin/pendentes.html', **data)
+    except Exception as e:
+        print(f"Erro ao carregar pendentes: {e}")
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
+
 # --- ROTA DE LINKS ---
 
 @admin_bp.route('/admin/links')

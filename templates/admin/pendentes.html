@@ -1,0 +1,124 @@
+{% extends 'admin/_base_admin.html' %}
+
+{% block title %}Vendas Pendentes{% endblock %}
+{% block page_title %}⏳ Vendas Pendentes{% endblock %}
+{% block page_subtitle %}Lista de tentativas de compra online não pagas{% endblock %}
+
+{% block content %}
+<div class="bg-gray-900 border border-gray-700 rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-orange-400">⏳ Tentativas de Compra (Online)</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-400">
+            <thead class="text-xs text-gray-500 uppercase bg-gray-800 border-b border-gray-700">
+                <tr>
+                    <th class="px-4 py-3">Data</th>
+                    <th class="px-4 py-3">Ref</th>
+                    <th class="px-4 py-3">Produto</th>
+                    <th class="px-4 py-3">Cliente</th>
+                    <th class="px-4 py-3">WhatsApp</th>
+                    <th class="px-4 py-3 text-right">Valor (R$)</th>
+                    <th class="px-4 py-3 text-center">Status</th>
+                    <th class="px-4 py-3 text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="pendingSalesTableBody">
+                <tr><td colspan="8" class="text-center py-4">Carregando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Paginação -->
+    <div class="flex justify-between items-center mt-4 text-sm" id="pendingPagination">
+        <span class="text-gray-500">Mostrando página 1</span>
+        <div class="flex gap-2">
+            <button class="px-3 py-1 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700 disabled:opacity-50" disabled>Anterior</button>
+            <button class="px-3 py-1 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700 disabled:opacity-50" disabled>Próxima</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+
+async function loadPendingSales(page = 1) {
+    try {
+        const res = await fetch(`/admin/sales/pending/list?page=${page}&limit=20`);
+        const data = await res.json();
+        
+        if (data.error) {
+            alert('Erro: ' + data.error);
+            return;
+        }
+        
+        const tbody = document.getElementById('pendingSalesTableBody');
+        tbody.innerHTML = '';
+        
+        if (data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Nenhuma venda pendente encontrada.</td></tr>';
+        } else {
+            data.data.forEach(sale => {
+                // Formatar Data
+                const dateObj = new Date(sale.created_at + 'Z'); // assumindo UTC do banco
+                const dateStr = dateObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+                
+                const clientName = sale.customer_name || 'Sem nome';
+                const clientEmail = sale.customer_email || 'Sem email';
+                const phone = sale.customer_phone || '';
+                
+                let phoneBadge = '-';
+                let waAction = '';
+                
+                if (phone) {
+                    // Limpar telefone (apenas números)
+                    const cleanPhone = phone.replace(/\D/g, '');
+                    const waLink = `https://wa.me/55${cleanPhone}?text=Olá%20${encodeURIComponent(clientName)}!%20Vi%20que%20você%20tentou%20comprar%20o%20${encodeURIComponent(sale.product_name)}.%20Posso%20ajudar?`;
+                    
+                    phoneBadge = `<span class="text-green-400 font-mono text-xs">${phone}</span>`;
+                    waAction = `<a href="${waLink}" target="_blank" class="px-2 py-1 bg-green-900/50 text-green-400 border border-green-500/50 rounded hover:bg-green-600 hover:text-white transition text-xs">💬 Chamar</a>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                        <td class="px-4 py-3 whitespace-nowrap text-xs">${dateStr}</td>
+                        <td class="px-4 py-3 font-mono text-xs text-gray-500">${sale.external_reference}</td>
+                        <td class="px-4 py-3 font-bold text-cyan-400">${sale.product_name}</td>
+                        <td class="px-4 py-3">
+                            <div class="font-bold text-gray-300">${clientName}</div>
+                            <div class="text-xs text-gray-500">${clientEmail}</div>
+                        </td>
+                        <td class="px-4 py-3">${phoneBadge}</td>
+                        <td class="px-4 py-3 text-right font-bold text-white">R$ ${sale.total_price.toFixed(2)}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-orange-900/50 text-orange-400 border border-orange-500/50">Pendente</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">${waAction}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        // Paginação
+        currentPage = data.page;
+        const totalPages = data.pages;
+        
+        let paginationHtml = `<span class="text-gray-500">Página ${currentPage} de ${totalPages || 1} (Total: ${data.total})</span><div class="flex gap-2">`;
+        
+        paginationHtml += `<button onclick="loadPendingSales(${currentPage - 1})" class="px-3 py-1 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700 disabled:opacity-50" ${currentPage <= 1 ? 'disabled' : ''}>Anterior</button>`;
+        paginationHtml += `<button onclick="loadPendingSales(${currentPage + 1})" class="px-3 py-1 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700 disabled:opacity-50" ${currentPage >= totalPages ? 'disabled' : ''}>Próxima</button>`;
+        
+        paginationHtml += `</div>`;
+        document.getElementById('pendingPagination').innerHTML = paginationHtml;
+        
+    } catch (e) {
+        alert('Erro de conexão ao carregar pendentes.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadPendingSales(1);
+});
+</script>
+{% endblock %}

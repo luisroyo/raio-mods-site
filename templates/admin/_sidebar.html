@@ -46,6 +46,12 @@
             ⚡ PDV Rápido
         </a>
 
+        <a href="{{ url_for('admin.admin_pendentes') }}" 
+           class="flex items-center gap-3 px-3 py-3 rounded-lg transition text-sm
+                  {% if request.endpoint == 'admin.admin_pendentes' %}bg-orange-500/20 text-orange-400 border border-orange-500{% else %}text-gray-300 hover:bg-gray-800{% endif %}">
+            ⏳ Pendentes
+        </a>
+
         <a href="{{ url_for('admin.admin_cupons') }}" 
            class="flex items-center gap-3 px-3 py-3 rounded-lg transition text-sm
                   {% if request.endpoint == 'admin.admin_cupons' %}bg-amber-500/20 text-amber-400 border border-amber-500{% else %}text-gray-300 hover:bg-gray-800{% endif %}">

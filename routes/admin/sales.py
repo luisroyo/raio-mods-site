@@ -929,6 +929,54 @@ def pay_manual_sale(sale_id):
         return jsonify({'error': f'Erro: {str(e)}'}), 500
 
 
+def list_pending_orders():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        offset = (page - 1) * limit
+        
+        conn = get_db_connection()
+        query = '''
+            SELECT 
+                o.id, 
+                o.external_reference,
+                o.product_id,
+                p.name as product_name,
+                o.amount as total_price,
+                o.customer_name,
+                o.customer_email,
+                o.customer_phone,
+                o.status,
+                o.created_at
+            FROM orders o
+            JOIN products p ON o.product_id = p.id
+            WHERE o.status NOT IN ('approved', 'paid_no_key')
+            ORDER BY o.created_at DESC
+        '''
+        
+        # Count total
+        count_query = "SELECT COUNT(*) FROM orders WHERE status NOT IN ('approved', 'paid_no_key')"
+        total_items = conn.execute(count_query).fetchone()[0]
+        
+        # Paginate
+        query += ' LIMIT ? OFFSET ?'
+        orders = conn.execute(query, (limit, offset)).fetchall()
+        conn.close()
+        
+        return jsonify({
+            'data': [dict(o) for o in orders],
+            'total': total_items,
+            'page': page,
+            'limit': limit,
+            'pages': (total_items + limit - 1) // limit if limit > 0 else 0
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 def register_sales_routes(bp):
     bp.route('/admin/sales/manual/add', methods=['POST'])(add_manual_sale)
     bp.route('/admin/sales/manual/list', methods=['GET'])(list_manual_sales)
@@ -938,4 +986,5 @@ def register_sales_routes(bp):
     bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])(get_order_proof)
     bp.route('/admin/sales/insights', methods=['GET'])(sales_insights)
     bp.route('/admin/sales/manual/pay/<int:sale_id>', methods=['POST'])(pay_manual_sale)
+    bp.route('/admin/sales/pending/list', methods=['GET'])(list_pending_orders)
 

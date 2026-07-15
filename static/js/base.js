@@ -203,10 +203,10 @@ async function startPayment(type) {
             startPolling(data.order_ref);
         }
         
-        // SE FOR CARTÃO (ABRE NOVA ABA E ESPERA PAGAMENTO)
+        // SE FOR CARTÃO (REDIRECIONA NA MESMA ABA)
         else if (data.type === 'card') {
-            // Abre o checkout do Mercado Pago em outra aba
-            window.open(data.checkout_url, '_blank');
+            // Redireciona na mesma aba para evitar o bloqueador de popups do navegador
+            window.location.href = data.checkout_url;
             
             // Muda a tela do modal para "Aguardando Pagamento"
             document.getElementById('step-email').classList.add('hidden');

@@ -309,6 +309,43 @@
                                 class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                         </div>
 
+                        <!-- Promoção Global -->
+                        <div class="mt-4 pt-4 border-t border-gray-800 space-y-3">
+                            <p class="text-sm text-yellow-500 font-bold">✨ Promoção Geral (Todos os Produtos)</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Tipo de Desconto</label>
+                                    <select name="global_discount_type" class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
+                                        <option value="percent" {% if config and 'global_discount_type' in config.keys() and config.global_discount_type == 'percent' %}selected{% endif %}>Porcentagem (%)</option>
+                                        <option value="fixed" {% if config and 'global_discount_type' in config.keys() and config.global_discount_type == 'fixed' %}selected{% endif %}>Valor Fixo (R$)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Valor do Desconto</label>
+                                    <input type="number" step="0.01" name="global_discount_value" 
+                                        value="{{ config.global_discount_value if config and 'global_discount_value' in config.keys() else 0.0 }}"
+                                        placeholder="Ex: 10 ou 5.50"
+                                        class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Data/Hora Expiração</label>
+                                    <input type="datetime-local" name="global_discount_expiry" 
+                                        value="{{ config.global_discount_expiry if config and 'global_discount_expiry' in config.keys() else '' }}"
+                                        class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Etiqueta da Promo</label>
+                                    <input type="text" name="global_discount_label" 
+                                        value="{{ config.global_discount_label if config and 'global_discount_label' in config.keys() else 'PROMO' }}"
+                                        placeholder="Ex: BLACK FRIDAY"
+                                        class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-500">Defina o valor como 0 para desativar a promoção global. A promoção será ignorada em produtos com promoção individual ativa.</p>
+                        </div>
+
                         <div class="mt-4 pt-4 border-t border-gray-800 space-y-3">
                             <p class="text-sm text-neon-green font-bold">📧 E-mail (SMTP - Carrinho Abandonado)</p>
                             <div>

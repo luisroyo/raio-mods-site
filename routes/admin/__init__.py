@@ -599,7 +599,9 @@ def admin_pdv():
             ORDER BY p.sort_order ASC, p.id ASC
         ''').fetchall()
         
-        products_list = [dict(p) for p in products]
+        from utils.promo import get_active_global_promo, apply_global_promo
+        promo = get_active_global_promo(conn)
+        products_list = [apply_global_promo(p, promo) for p in products]
         categories = sorted(list(set(p.get('category') for p in products_list if p.get('category'))))
         
         # Obter links para o autocomplete

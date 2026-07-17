@@ -471,6 +471,23 @@ def init_db():
                 cursor.execute(f'ALTER TABLE config ADD COLUMN {col_name} {col_type}')
             except: pass
 
+    # --- MIGRAÇÃO: Colunas de Promoção Global (config) ---
+    promo_columns = [
+        ('global_discount_type', "TEXT DEFAULT 'percent'"),
+        ('global_discount_value', 'REAL DEFAULT 0.0'),
+        ('global_discount_expiry', "TEXT DEFAULT ''"),
+        ('global_discount_label', "TEXT DEFAULT 'PROMO'")
+    ]
+    for col_name, col_type in promo_columns:
+        try:
+            cursor.execute(f'SELECT {col_name} FROM config LIMIT 1')
+        except sqlite3.OperationalError:
+            try:
+                print(f"--> Adicionando coluna {col_name} em config...")
+                cursor.execute(f'ALTER TABLE config ADD COLUMN {col_name} {col_type}')
+            except: pass
+
+
     # --- MIGRAÇÃO: Renomear notes para client_name na tabela manual_sales ---
     try:
         cursor.execute('SELECT client_name FROM manual_sales LIMIT 1')

@@ -21,15 +21,22 @@ def update_config():
     smtp_user = request.form.get('smtp_user') or ''
     smtp_password = (request.form.get('smtp_password') or '').strip()
 
+    global_discount_type = request.form.get('global_discount_type') or 'percent'
+    global_discount_value = float(request.form.get('global_discount_value') or 0.0)
+    global_discount_expiry = request.form.get('global_discount_expiry') or ''
+    global_discount_label = request.form.get('global_discount_label') or 'PROMO'
+
     conn = get_db_connection()
     config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
     try:
         if not config:
             conn.execute(
                 '''INSERT INTO config 
-                   (id, pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, smtp_port, smtp_user, smtp_password) 
-                   VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password)
+                   (id, pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, smtp_port, smtp_user, smtp_password,
+                    global_discount_type, global_discount_value, global_discount_expiry, global_discount_label) 
+                   VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password,
+                 global_discount_type, global_discount_value, global_discount_expiry, global_discount_label)
             )
         else:
             if not mercado_pago_token and 'mercado_pago_token' in config.keys():
@@ -41,9 +48,11 @@ def update_config():
             conn.execute(
                 '''UPDATE config SET 
                    pix_key = ?, pix_copia_cola = ?, contact_whatsapp = ?, mercado_pago_token = ?,
-                   smtp_server = ?, smtp_port = ?, smtp_user = ?, smtp_password = ?
+                   smtp_server = ?, smtp_port = ?, smtp_user = ?, smtp_password = ?,
+                   global_discount_type = ?, global_discount_value = ?, global_discount_expiry = ?, global_discount_label = ?
                    WHERE id = 1''',
-                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password)
+                (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password,
+                 global_discount_type, global_discount_value, global_discount_expiry, global_discount_label)
             )
         conn.commit()
     except Exception as e:
@@ -51,6 +60,7 @@ def update_config():
         return jsonify({'error': str(e)}), 500
     conn.close()
     return jsonify({'success': True})
+
 
 
 def backup_database():

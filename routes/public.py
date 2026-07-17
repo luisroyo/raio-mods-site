@@ -1,6 +1,7 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app
 from database.models import get_db_connection
+from utils.promo import get_active_global_promo, apply_global_promo
 
 public_bp = Blueprint('public', __name__)
 
@@ -88,8 +89,11 @@ def index():
             (per_page, offset)
         ).fetchall()
 
+    promo = get_active_global_promo(conn)
+    products_list = [apply_global_promo(p, promo) for p in products]
+
     catalog_ids = set()
-    for p in products:
+    for p in products_list:
         is_cat = p['is_catalog'] if 'is_catalog' in p.keys() else 0
         if is_cat == 1: catalog_ids.add(p['id'])
 
@@ -97,7 +101,7 @@ def index():
     for r in legacy: catalog_ids.add(r[0])
 
     # Estoque só para produtos “soltos” (que têm botão Comprar)
-    standalone_ids = [p['id'] for p in products if p['id'] not in catalog_ids]
+    standalone_ids = [p['id'] for p in products_list if p['id'] not in catalog_ids]
     stock_map = _get_stock_map(conn, standalone_ids)
     whatsapp_contact = _get_whatsapp_from_config(conn)
 
@@ -115,7 +119,7 @@ def index():
 
     total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
     conn.close()
-    return render_template('index.html', products=products, catalog_ids=catalog_ids,
+    return render_template('index.html', products=products_list, catalog_ids=catalog_ids,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
                           page=page, total_pages=total_pages, total=total,
                           suppliers=suppliers, supplier=supplier, feedbacks=feedbacks)
@@ -132,18 +136,21 @@ def busca():
         'SELECT * FROM products WHERE (name LIKE ? OR description LIKE ? OR category LIKE ?) AND is_active = 1 ORDER BY sort_order ASC, name ASC',
         (term, term, term)
     ).fetchall()
+    promo = get_active_global_promo(conn)
+    results_list = [apply_global_promo(p, promo) for p in results]
+
     # Buscar nomes das capas para produtos que têm parent_id
-    parent_ids = set(p['parent_id'] for p in results if p['parent_id'] is not None)
+    parent_ids = set(p['parent_id'] for p in results_list if p['parent_id'] is not None)
     parents = {}
     if parent_ids:
         for pid in parent_ids:
             row = conn.execute('SELECT id, name FROM products WHERE id = ?', (pid,)).fetchone()
             if row: parents[pid] = row['name']
-    result_ids = [p['id'] for p in results]
+    result_ids = [p['id'] for p in results_list]
     stock_map = _get_stock_map(conn, result_ids)
     whatsapp_contact = _get_whatsapp_from_config(conn)
     conn.close()
-    return render_template('busca.html', q=q, results=results, parents=parents,
+    return render_template('busca.html', q=q, results=results_list, parents=parents,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact)
 
 @public_bp.route('/catalogo/<int:parent_id>')
@@ -180,19 +187,22 @@ def catalogo(parent_id):
             (parent_id, per_page, offset)
         ).fetchall()
 
+    promo = get_active_global_promo(conn)
+    children_list = [apply_global_promo(p, promo) for p in children]
+
     catalog_ids = set()
-    for p in children:
+    for p in children_list:
         is_cat = p['is_catalog'] if 'is_catalog' in p.keys() else 0
         if is_cat == 1: catalog_ids.add(p['id'])
         
-    child_ids = [p['id'] for p in children if p['id'] not in catalog_ids]
+    child_ids = [p['id'] for p in children_list if p['id'] not in catalog_ids]
     stock_map = _get_stock_map(conn, child_ids)
     whatsapp_contact = _get_whatsapp_from_config(conn)
     total_pages = max(1, (total + per_page - 1) // per_page) if total else 1
     
     # Agrupar produtos por categoria
     products_by_category = {}
-    for product in children:
+    for product in children_list:
         product_dict = dict(product)
         category = product_dict.get('category', 'Sem categoria') or 'Sem categoria'
         if category not in products_by_category:
@@ -212,7 +222,7 @@ def catalogo(parent_id):
     seo_description = parent['description'] or f"Confira os produtos de {parent['name']} na RAIO MODS."
     seo_image = parent['image'] if parent['image'] else None
     
-    return render_template('catalogo.html', parent=parent, products=children,
+    return render_template('catalogo.html', parent=parent, products=children_list,
                           products_by_category=products_by_category,
                           stock_map=stock_map, whatsapp_contact=whatsapp_contact,
                           page=page, total_pages=total_pages, total=total,

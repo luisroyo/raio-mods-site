@@ -347,7 +347,11 @@ def check_coupon():
             if not product:
                 return jsonify({'error': 'Produto não encontrado.'}), 404
                 
-            raw_price = product['promo_price'] or product['price']
+            from utils.promo import get_active_global_promo, apply_global_promo
+            promo = get_active_global_promo(conn)
+            product_dict = apply_global_promo(product, promo)
+            
+            raw_price = product_dict.get('promo_price') or product_dict.get('price')
             base_price = parse_price(raw_price)
             
             discount_amount, error_msg, coupon = get_coupon_discount(code, base_price, conn)
@@ -444,7 +448,9 @@ def create_payment():
             if not product:
                 return jsonify({'error': 'Produto não encontrado'}), 404
             
-            product_dict = dict(product)
+            from utils.promo import get_active_global_promo, apply_global_promo
+            promo = get_active_global_promo(conn)
+            product_dict = apply_global_promo(product, promo)
 
             # Regra de negócio de exibição de preço (promoção ou fixo)
             raw_price = product_dict.get('promo_price') or product_dict.get('price')

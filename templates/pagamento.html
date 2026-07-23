@@ -45,15 +45,13 @@
                 {% endif %}
             </div>
             
-            {% if product.payment_url %}
-            <div class="mercadopago-box">
-                <h3 class="text-xl font-bold text-blue-400 mb-4">Pagamento Automático (Pix/Cartão)</h3>
-                <a href="{{ product.payment_url }}" target="_blank" class="btn-mercadopago">
-                    💳 PAGAR AGORA (MERCADO PAGO)
-                </a>
-                <p class="text-gray-400 text-sm mt-2">Ambiente 100% seguro do Mercado Pago</p>
+            {% set display_price = product.promo_price or product.price %}
+            <div class="mt-6">
+                <button onclick="openCheckout({{ product.id }}, '{{ product.name | replace("'", "\\'") }}', '{{ display_price }}')" class="btn-gradient w-full max-w-sm mx-auto flex items-center justify-center gap-2 py-4 text-lg font-bold">
+                    🛒 PROSSEGUIR PARA O PAGAMENTO
+                </button>
             </div>
-            {% endif %}
+
             {% endif %}
             {% endif %}
         </div>

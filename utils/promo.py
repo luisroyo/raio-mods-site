@@ -68,10 +68,9 @@ def apply_global_promo(product, promo):
     Aplica a promoção global a um produto se ele não tiver uma promoção individual ativa.
     Recebe um dicionário (ou objeto tipo Row convertido em dict) e retorna o produto modificado ou o próprio produto.
     """
-    if not promo:
-        return product
-        
     p_dict = dict(product)
+    if not promo:
+        return p_dict
     
     # Se o produto já possui uma promoção individual (promo_price configurado e diferente de vazio), não aplica a global
     if p_dict.get('promo_price') and str(p_dict['promo_price']).strip() != '':

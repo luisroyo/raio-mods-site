@@ -595,7 +595,7 @@ def admin_pdv():
             LEFT JOIN product_keys k ON k.product_id = p.id AND k.is_used = 0
             WHERE p.is_active = 1 AND p.is_catalog = 0
             GROUP BY p.id
-            HAVING stock > 0
+            HAVING COUNT(k.id) > 0
             ORDER BY p.sort_order ASC, p.id ASC
         ''').fetchall()
         

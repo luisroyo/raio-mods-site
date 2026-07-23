@@ -331,5 +331,14 @@ function showSuccess(key) {
     document.getElementById('step-success').classList.remove('hidden');
     document.getElementById('finalKey').innerText = key;
 }
-
 // Máscara de CPF removida
+
+function copyProductLink(productId) {
+    const link = window.location.origin + '/pagamento?product_id=' + productId;
+    navigator.clipboard.writeText(link).then(() => {
+        alert("Link do produto copiado! Você pode colar no seu catálogo do WhatsApp.");
+    }).catch(err => {
+        console.error('Erro ao copiar: ', err);
+        alert("Erro ao copiar o link. Tente copiar manualmente: " + link);
+    });
+}

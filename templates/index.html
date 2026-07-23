@@ -123,8 +123,11 @@
                 {% set display_price = product.promo_price or product.price %}
                 {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
                 <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')"
-                    class="btn-gradient w-full flex items-center justify-center gap-2 py-2 text-sm">
+                    class="btn-gradient w-full flex items-center justify-center gap-2 py-2 text-sm mb-2">
                     🛒 Comprar Agora
+                </button>
+                <button onclick="copyProductLink({{ product.id }})" class="w-full flex items-center justify-center gap-2 py-2 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded transition-colors">
+                    🔗 Copiar Link Direto
                 </button>
                 {% else %}
                 <div class="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-center">

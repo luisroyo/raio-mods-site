@@ -28,10 +28,14 @@ class ProductService:
             
         text = f"🎱 *{product['name']}*\n\n"
         text += f"_{product['description']}_\n\n"
-        text += "💰 *Planos Disponíveis:*\n"
         
-        for plan in product['plans']:
-            price_str = format_price(plan['price'])
-            text += f"• {plan['duration']} - {price_str}\n"
+        # Filtra apenas planos de compra reais (is_catalog == 0)
+        purchase_plans = [p for p in product.get('plans', []) if p.get('is_catalog') == 0]
+        
+        if purchase_plans:
+            text += "💰 *Planos Disponíveis:*\n"
+            for plan in purchase_plans:
+                price_str = format_price(plan['price'])
+                text += f"• {plan['duration']} - {price_str}\n"
             
         return text

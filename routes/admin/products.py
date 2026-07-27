@@ -7,6 +7,7 @@ from database.orm import db
 from database.models_orm import Product
 from .helpers import handle_image_upload, IOF, get_dolar_hoje
 import sqlite3
+from telegram_app.repositories.product_repository import ProductRepository
 
 def add_product():
     if not session.get('admin_logged_in'):
@@ -91,6 +92,7 @@ def add_product():
         return jsonify({'error': 'Erro no banco de dados: ' + str(e)}), 500
         
     conn.close()
+    ProductRepository.clear_cache()
     return jsonify({'success': True, 'message': 'Adicionado!'})
 
 
@@ -108,6 +110,7 @@ def delete_product(pid):
             db.session.delete(prod)
             db.session.commit()
             
+        ProductRepository.clear_cache()
         return jsonify({'success': True, 'message': 'Removido!'})
     except Exception as e:
         db.session.rollback()
@@ -240,6 +243,7 @@ def edit_product(pid):
         )
         conn.commit()
         conn.close()
+        ProductRepository.clear_cache()
         return jsonify({'success': True, 'message': 'Atualizado!'})
         
     except sqlite3.OperationalError as e:

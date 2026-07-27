@@ -36,12 +36,36 @@ def get_products_keyboard(products: list) -> InlineKeyboardMarkup:
 
 def get_product_details_keyboard(product: dict) -> InlineKeyboardMarkup:
     """
-    Retorna o teclado de detalhes do produto, com o botão de compra apontando para a URL.
+    Retorna o teclado de detalhes do produto.
+    Se for catálogo, cria botões para navegar nos sub-produtos ou comprar planos diretamente.
     """
-    keyboard = [
-        [InlineKeyboardButton("🛒 Comprar Agora", url=product['url'])],
-        [InlineKeyboardButton("🔙 Voltar aos Produtos", callback_data=CB_PRODUCTS)]
-    ]
+    keyboard = []
+    
+    # Se o produto atual for um catálogo, mostramos botões para cada plano/subproduto
+    if product.get('is_catalog') == 1:
+        for plan in product.get('plans', []):
+            # Se o plano for também um catálogo, é um subproduto (botão de navegação)
+            if plan.get('is_catalog') == 1:
+                keyboard.append([InlineKeyboardButton(f"🎱 {plan['duration']}", callback_data=f"{CB_PREFIX_PRODUCT}{plan['id']}")])
+            else:
+                # Se for um plano de compra simples, mostra o botão com preço que leva ao pagamento
+                from telegram_app.utils.formatters import format_price
+                price_str = format_price(plan['price'])
+                pay_url = f"https://raiomodsgames.pythonanywhere.com/pagamento?product_id={plan['id']}"
+                keyboard.append([InlineKeyboardButton(f"🛒 {plan['duration']} - {price_str}", url=pay_url)])
+    else:
+        # Se for um produto único, mostra o botão de compra direta
+        keyboard.append([InlineKeyboardButton("🛒 Comprar Agora", url=product['url'])])
+        
+    # Botão de voltar inteligente: se tiver pai (parent_id), volta para o catálogo pai; caso contrário, volta para a lista
+    parent_id = product.get('parent_id')
+    if parent_id:
+        back_callback = f"{CB_PREFIX_PRODUCT}{parent_id}"
+    else:
+        back_callback = CB_PRODUCTS
+        
+    keyboard.append([InlineKeyboardButton("🔙 Voltar", callback_data=back_callback)])
+    
     return InlineKeyboardMarkup(keyboard)
 
 def get_back_button_keyboard() -> InlineKeyboardMarkup:

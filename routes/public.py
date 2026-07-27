@@ -40,6 +40,88 @@ def _safe_page_param():
         return 1
 
 
+from flask import session
+from utils.i18n import get_current_language, get_current_currency
+
+@public_bp.route('/set_locale')
+def set_locale():
+    lang = request.args.get('lang')
+    currency = request.args.get('currency')
+    next_url = request.args.get('next') or url_for('public.index')
+    
+    if lang in ['pt', 'en', 'es']:
+        session['lang'] = lang
+        if not currency:
+            session['currency'] = 'BRL' if lang == 'pt' else 'USD'
+            
+    if currency in ['BRL', 'USD']:
+        session['currency'] = currency
+        
+    response = redirect(next_url)
+    
+    if lang:
+        response.set_cookie('lang', lang, max_age=30*24*60*60)
+    if currency:
+        response.set_cookie('currency', currency, max_age=30*24*60*60)
+        
+    return response
+
+def localize_product(p_row):
+    if not p_row:
+        return p_row
+    lang = get_current_language()
+    currency = get_current_currency()
+    
+    p = dict(p_row)
+    
+    # 1. Name Translation
+    name_field = f"name_{lang}"
+    name_val = p.get(name_field)
+    if not name_val or name_val.strip() == "":
+        name_val = p.get("name_pt") or p.get("name")
+    p["name"] = name_val
+    
+    # 2. Description Translation
+    desc_field = f"description_{lang}"
+    desc_val = p.get(desc_field)
+    if not desc_val or desc_val.strip() == "":
+        desc_val = p.get("description_pt") or p.get("description")
+    p["description"] = desc_val
+    
+    # 3. Price Translation
+    if currency == "BRL":
+        p_brl = p.get("price_brl")
+        if p_brl and float(p_brl) > 0:
+            p["price"] = f"R$ {float(p_brl):.2f}".replace('.', ',')
+        else:
+            p["price"] = p.get("price")
+    else:
+        # Currency is USD
+        p_usd = p.get("price_usd")
+        if p_usd and float(p_usd) > 0:
+            p["price"] = f"$ {float(p_usd):.2f}"
+        else:
+            # Fallback BRL -> USD conversion using awesomeapi / local rates
+            from routes.admin.helpers import get_dolar_hoje
+            rate = get_dolar_hoje()
+            p_brl = p.get("price_brl")
+            if not p_brl or float(p_brl) == 0.0:
+                price_str = p.get("price", "")
+                cleaned = price_str.replace('R$', '').replace('$', '').strip()
+                if ',' in cleaned and '.' not in cleaned:
+                    cleaned = cleaned.replace(',', '.')
+                elif ',' in cleaned and '.' in cleaned:
+                    cleaned = cleaned.replace('.', '').replace(',', '.')
+                try:
+                    p_brl = float(cleaned)
+                except:
+                    p_brl = 0.0
+            p_usd_calc = round(float(p_brl) / rate, 2) if rate > 0 else 0.0
+            p["price"] = f"$ {p_usd_calc:.2f}"
+            
+    return p
+
+
 @public_bp.route('/')
 def index():
     page = _safe_page_param()
@@ -90,7 +172,7 @@ def index():
         ).fetchall()
 
     promo = get_active_global_promo(conn)
-    products_list = [apply_global_promo(p, promo) for p in products]
+    products_list = [localize_product(apply_global_promo(p, promo)) for p in products]
 
     catalog_ids = set()
     for p in products_list:
@@ -133,19 +215,25 @@ def busca():
     term = f'%{q}%'
     conn = get_db_connection()
     results = conn.execute(
-        'SELECT * FROM products WHERE (name LIKE ? OR description LIKE ? OR category LIKE ?) AND is_active = 1 ORDER BY sort_order ASC, name ASC',
-        (term, term, term)
+        '''SELECT * FROM products WHERE (
+            name LIKE ? OR description LIKE ? OR category LIKE ? OR
+            name_pt LIKE ? OR name_en LIKE ? OR name_es LIKE ? OR
+            description_pt LIKE ? OR description_en LIKE ? OR description_es LIKE ?
+        ) AND is_active = 1 ORDER BY sort_order ASC, name ASC''',
+        (term, term, term, term, term, term, term, term, term)
     ).fetchall()
     promo = get_active_global_promo(conn)
-    results_list = [apply_global_promo(p, promo) for p in results]
+    results_list = [localize_product(apply_global_promo(p, promo)) for p in results]
 
     # Buscar nomes das capas para produtos que têm parent_id
     parent_ids = set(p['parent_id'] for p in results_list if p['parent_id'] is not None)
     parents = {}
     if parent_ids:
         for pid in parent_ids:
-            row = conn.execute('SELECT id, name FROM products WHERE id = ?', (pid,)).fetchone()
-            if row: parents[pid] = row['name']
+            row = conn.execute('SELECT * FROM products WHERE id = ?', (pid,)).fetchone()
+            if row: 
+                loc_p = localize_product(row)
+                parents[pid] = loc_p['name']
     result_ids = [p['id'] for p in results_list]
     stock_map = _get_stock_map(conn, result_ids)
     whatsapp_contact = _get_whatsapp_from_config(conn)
@@ -165,6 +253,7 @@ def catalogo(parent_id):
     if not parent:
         conn.close()
         return redirect(url_for('public.index'))
+    parent = localize_product(parent)
 
     # Busca fornecedores ativos deste catálogo específico
     suppliers_query = conn.execute('''
@@ -188,7 +277,7 @@ def catalogo(parent_id):
         ).fetchall()
 
     promo = get_active_global_promo(conn)
-    children_list = [apply_global_promo(p, promo) for p in children]
+    children_list = [localize_product(apply_global_promo(p, promo)) for p in children]
 
     catalog_ids = set()
     for p in children_list:
@@ -283,6 +372,7 @@ def pagamento():
         ).fetchone()
 
     if product_data:
+        product_data = localize_product(product_data)
         row = conn.execute(
             'SELECT COUNT(*) as total FROM product_keys WHERE product_id = ? AND is_used = 0',
             (product_data['id'],)

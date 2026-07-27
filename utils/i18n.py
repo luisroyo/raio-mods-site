@@ -61,6 +61,34 @@ def get_current_language():
     # 5. Default fallback
     return 'pt'
 
+def get_current_currency():
+    try:
+        # Check if inside request context
+        if not request:
+            return 'BRL'
+        # 1. Manually selected currency (URL parameter)
+        curr = request.args.get('currency')
+        if curr in ['BRL', 'USD']:
+            session['currency'] = curr
+            return curr
+            
+        # 2. Manual currency in session
+        curr = session.get('currency')
+        if curr in ['BRL', 'USD']:
+            return curr
+            
+        # 3. Manual currency in cookie
+        curr = request.cookies.get('currency')
+        if curr in ['BRL', 'USD']:
+            session['currency'] = curr
+            return curr
+            
+        # 4. Default currency based on active language
+        lang = get_current_language()
+        return 'BRL' if lang == 'pt' else 'USD'
+    except RuntimeError:
+        return 'BRL'
+
 def translate(key, default=None):
     # Load if not loaded yet
     if not _translations:

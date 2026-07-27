@@ -92,6 +92,22 @@
                         <a href="{{ url_for('client.login_page') }}"
                             class="text-xs md:text-sm transition-colors font-bold {% if request.endpoint in ('client.login_page', 'client.dashboard_page') %}neon-cyan{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Portal do Cliente</a>
                     </div>
+                    <!-- Seletores de Idioma e Moeda -->
+                    <div class="flex items-center gap-1.5 border-l border-white/10 pl-2 md:pl-3">
+                        <select onchange="window.location.href='{{ url_for('public.set_locale') }}?lang=' + this.value + '&next=' + encodeURIComponent(window.location.pathname + window.location.search)" 
+                            class="bg-black/60 border border-neon-cyan/30 text-white text-[10px] rounded px-1.5 py-1 focus:outline-none cursor-pointer focus:border-neon-cyan select-none"
+                            title="Idioma / Language">
+                            <option value="pt" {% if get_current_language() == 'pt' %}selected{% endif %}>🇧🇷 PT</option>
+                            <option value="en" {% if get_current_language() == 'en' %}selected{% endif %}>🇺🇸 EN</option>
+                            <option value="es" {% if get_current_language() == 'es' %}selected{% endif %}>🇪🇸 ES</option>
+                        </select>
+                        <select onchange="window.location.href='{{ url_for('public.set_locale') }}?currency=' + this.value + '&next=' + encodeURIComponent(window.location.pathname + window.location.search)" 
+                            class="bg-black/60 border border-neon-cyan/30 text-white text-[10px] rounded px-1.5 py-1 focus:outline-none cursor-pointer focus:border-neon-cyan select-none"
+                            title="Moeda / Currency">
+                            <option value="BRL" {% if get_current_currency() == 'BRL' %}selected{% endif %}>R$ BRL</option>
+                            <option value="USD" {% if get_current_currency() == 'USD' %}selected{% endif %}>$ USD</option>
+                        </select>
+                    </div>
                     <a href="{{ url_for('admin.admin') }}"
                         class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1.5">Admin</a>
                     <button type="button" id="btn-menu-mobile"

@@ -60,5 +60,6 @@
 
 {% block extra_js %}
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="{{ url_for('static', filename='js/telegram_webapp.js') }}"></script>
     <script src="{{ url_for('static', filename='js/pagamento.js') }}"></script>
 {% endblock %}

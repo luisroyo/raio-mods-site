@@ -423,6 +423,27 @@ def create_payment():
         if is_rate_limited(client_ip):
             return jsonify({'error': 'Muitas tentativas de compra em pouco tempo. Aguarde um minuto.'}), 429
             
+        # Validação do initData do Telegram
+        init_data = data.get('init_data')
+        telegram_id = ""
+        telegram_chat_id = ""
+        telegram_username = ""
+        telegram_first_name = ""
+        
+        if init_data:
+            from telegram_app.utils.auth import validate_telegram_webapp_data
+            from telegram_app.config import TelegramConfig
+            
+            tg_user = validate_telegram_webapp_data(init_data, TelegramConfig.TELEGRAM_TOKEN)
+            if not tg_user:
+                logger.warning(f"Rejeitando checkout. init_data fornecido mas inválido para IP: {client_ip}")
+                return jsonify({'error': 'Assinatura de autenticação do Telegram inválida.'}), 400
+                
+            telegram_id = tg_user['telegram_id']
+            telegram_chat_id = tg_user['telegram_chat_id']
+            telegram_username = tg_user['telegram_username']
+            telegram_first_name = tg_user['telegram_first_name']
+            
         # 2. Validações primárias de payload
         if not product_id or not email:
             return jsonify({'error': 'Dados incompletos'}), 400
@@ -569,12 +590,14 @@ def create_payment():
                 INSERT INTO orders (
                     external_reference, product_id, customer_email, amount, status, 
                     qr_code, qr_code_base64, customer_name, customer_cpf, 
-                    customer_phone, ip_purchase, terms_accepted_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    customer_phone, ip_purchase, terms_accepted_at,
+                    telegram_id, telegram_chat_id, telegram_username, telegram_first_name
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 order_ref, product_id, email, final_price, 'pending', 
                 qr_code, qr_base64, customer_name, customer_cpf, 
-                customer_phone, client_ip, terms_ts
+                customer_phone, client_ip, terms_ts,
+                telegram_id, telegram_chat_id, telegram_username, telegram_first_name
             ))
             conn.commit()
 

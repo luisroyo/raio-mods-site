@@ -444,7 +444,11 @@ def init_db():
         ('delivered_at', 'TIMESTAMP'),
         ('user_agent_delivery', 'TEXT DEFAULT ""'),
         ('key_hash', 'TEXT DEFAULT ""'),
-        ('recovery_email_sent', 'INTEGER DEFAULT 0')
+        ('recovery_email_sent', 'INTEGER DEFAULT 0'),
+        ('telegram_id', 'TEXT DEFAULT ""'),
+        ('telegram_chat_id', 'TEXT DEFAULT ""'),
+        ('telegram_username', 'TEXT DEFAULT ""'),
+        ('telegram_first_name', 'TEXT DEFAULT ""')
     ]
     for col_name, col_type in chargeback_columns:
         try:

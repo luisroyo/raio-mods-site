@@ -4,7 +4,7 @@ Responsável pela montagem dos botões Inline (InlineKeyboardMarkup).
 Recebe os dados já formatados dos Services e transforma em interface do Telegram.
 """
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.constants import CB_PRODUCTS, CB_HOW_TO_BUY, CB_SUPPORT, CB_WEBSITE, CB_PREFIX_PRODUCT
+from telegram_app.constants import CB_PRODUCTS, CB_HOW_TO_BUY, CB_SUPPORT, CB_WEBSITE, CB_PREFIX_PRODUCT
 
 def get_main_menu_keyboard() -> InlineKeyboardMarkup:
     """Retorna o teclado do menu principal"""

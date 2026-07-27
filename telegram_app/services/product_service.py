@@ -3,8 +3,8 @@ Product Service
 Responsável pela regra de negócios de produtos.
 Conecta a camada de handlers com o repositório.
 """
-from telegram.repositories.product_repository import ProductRepository
-from telegram.utils.formatters import format_price
+from telegram_app.repositories.product_repository import ProductRepository
+from telegram_app.utils.formatters import format_price
 
 class ProductService:
     

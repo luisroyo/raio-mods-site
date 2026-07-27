@@ -48,7 +48,7 @@ with app.app_context():
     init_db()
 
 # 3. Registra as Rotas (Blueprints)
-from telegram import telegram_bp
+from telegram_app import telegram_bp
 
 app.register_blueprint(public_bp)
 app.register_blueprint(admin_bp)

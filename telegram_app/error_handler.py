@@ -5,8 +5,8 @@ Captura e trata exceções globais que ocorrem durante o processamento de atuali
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.messages import MSG_ERROR
-from telegram.services.telegram_service import TelegramService
+from telegram_app.messages import MSG_ERROR
+from telegram_app.services.telegram_service import TelegramService
 
 logger = logging.getLogger("telegram_bot")
 

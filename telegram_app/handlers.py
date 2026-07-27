@@ -7,11 +7,11 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram.constants import CB_PRODUCTS, CB_HOW_TO_BUY, CB_SUPPORT, CB_WEBSITE, CB_PREFIX_PRODUCT
-from telegram.messages import MSG_WELCOME, MSG_HOW_TO_BUY, MSG_SUPPORT
-from telegram.keyboards import get_main_menu_keyboard, get_products_keyboard, get_product_details_keyboard, get_back_button_keyboard
-from telegram.services.product_service import ProductService
-from telegram.services.telegram_service import TelegramService
+from telegram_app.constants import CB_PRODUCTS, CB_HOW_TO_BUY, CB_SUPPORT, CB_WEBSITE, CB_PREFIX_PRODUCT
+from telegram_app.messages import MSG_WELCOME, MSG_HOW_TO_BUY, MSG_SUPPORT
+from telegram_app.keyboards import get_main_menu_keyboard, get_products_keyboard, get_product_details_keyboard, get_back_button_keyboard
+from telegram_app.services.product_service import ProductService
+from telegram_app.services.telegram_service import TelegramService
 
 logger = logging.getLogger("telegram_bot")
 

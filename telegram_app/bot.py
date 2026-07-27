@@ -4,9 +4,9 @@ Isola a criação da instância do python-telegram-bot (Application),
 registro dos Handlers e do ErrorHandler.
 """
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
-from telegram.config import TelegramConfig
+from telegram_app.config import TelegramConfig
 from telegram.handlers import start_command, main_menu_callback, product_selection_callback
-from telegram.constants import CB_PREFIX_PRODUCT
+from telegram_app.constants import CB_PREFIX_PRODUCT
 from telegram.error_handler import global_error_handler
 import logging
 

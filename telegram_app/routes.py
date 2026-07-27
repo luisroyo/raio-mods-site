@@ -5,8 +5,8 @@ Endpoint do Flask para recebimento seguro do Webhook.
 import asyncio
 from flask import Blueprint, request, jsonify
 from telegram import Update
-from telegram.config import TelegramConfig
-from telegram.bot import bot_app
+from telegram_app.config import TelegramConfig
+from telegram_app.bot import bot_app
 import logging
 
 logger = logging.getLogger("telegram_bot")

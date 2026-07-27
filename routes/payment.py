@@ -179,6 +179,36 @@ def process_approved_payment(order_ref: str, p_id: str):
 
         # Envia e-mails de notificação (Admin e Cliente) de forma assíncrona
         product = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+        
+        # Enviar chave via Telegram (se o cliente comprou pelo bot)
+        telegram_id = order.get('telegram_id')
+        if telegram_id:
+            try:
+                from telegram_app.services.telegram_service import TelegramService
+                product_name = product['name'] if product else 'Produto Desconhecido'
+                download_link = product['download_link'] if (product and 'download_link' in product.keys()) else ''
+                
+                if key:
+                    key_value = key['key_value']
+                    TelegramService.send_key_delivery(
+                        chat_id=telegram_id,
+                        product_name=product_name,
+                        key_value=key_value,
+                        download_link=download_link
+                    )
+                    logger.info(f"Entrega de chave via Telegram agendada para o chat_id: {telegram_id}")
+                else:
+                    from telegram_app.routes import send_telegram_message_safe
+                    warn_msg = (
+                        f"⚠️ *PAGAMENTO APROVADO!* ⚠️\n\n"
+                        f"Seu pagamento para o produto *{product_name}* foi confirmado, mas nosso estoque de chaves para este item esgotou temporariamente.\n\n"
+                        f"O administrador já foi notificado e enviará sua licença manualmente no seu e-mail ou aqui no privado o mais rápido possível!"
+                    )
+                    send_telegram_message_safe(telegram_id, warn_msg)
+                    logger.warning(f"Aviso de sem estoque enviado via Telegram para o chat_id: {telegram_id}")
+            except Exception as e:
+                logger.error(f"Erro ao disparar entrega via Telegram: {e}")
+                
         config = conn.execute('SELECT smtp_server, smtp_port, smtp_user, smtp_password FROM config WHERE id = 1').fetchone()
 
         if config and config['smtp_server'] and config['smtp_user']:

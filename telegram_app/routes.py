@@ -41,6 +41,27 @@ def shutdown_bot():
 
 atexit.register(shutdown_bot)
 
+def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markdown') -> None:
+    """Envia mensagem de forma assíncrona e segura de qualquer thread."""
+    global _bot_initialized
+    loop = get_persistent_loop()
+    
+    async def _send():
+        global _bot_initialized
+        if not _bot_initialized:
+            try:
+                await bot_app.initialize()
+                await bot_app.start()
+                _bot_initialized = True
+            except Exception as e:
+                logger.error(f"Erro ao inicializar o bot no envio seguro de mensagem: {e}")
+        try:
+            await bot_app.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode)
+        except Exception as e:
+            logger.error(f"Erro ao enviar mensagem para chat_id {chat_id}: {e}")
+            
+    asyncio.run_coroutine_threadsafe(_send(), loop)
+
 @telegram_bp.route('/telegram/webhook', methods=['POST'])
 def telegram_webhook():
     """

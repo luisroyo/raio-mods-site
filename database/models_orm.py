@@ -23,6 +23,18 @@ class Product(db.Model):
     apply_iof = db.Column(db.Integer, default=1)
     supplier = db.Column(db.String, default="")
     download_link = db.Column(db.String, default="")
+    
+    # Colunas de Internacionalizacao e Multi-Moeda
+    name_pt = db.Column(db.String, default="")
+    name_en = db.Column(db.String, default="")
+    name_es = db.Column(db.String, default="")
+    description_pt = db.Column(db.Text, default="")
+    description_en = db.Column(db.Text, default="")
+    description_es = db.Column(db.Text, default="")
+    price_brl = db.Column(db.Numeric(10, 2), default=0.0)
+    price_usd = db.Column(db.Numeric(10, 2), default=0.0)
+    default_currency = db.Column(db.String, default="BRL")
+    translation_status = db.Column(db.String, default="draft")
 
 class Order(db.Model):
     __tablename__ = 'orders'

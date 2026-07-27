@@ -35,7 +35,8 @@ function openAddSubproductModal(pid, name, isCategory) {
 function openEditModal(
     id, name, desc, price, cat, img,
     tagline, sort, pid, isCat,
-    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice, downloadLink
+    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice, downloadLink,
+    namePt, nameEn, nameEs, descPt, descEn, descEs, priceBrl, priceUsd, defaultCurrency, translationStatus
 ) {
     setVal('edit_id', id);
     setVal('edit_name', name);
@@ -58,6 +59,18 @@ function openEditModal(
     setVal('edit_is_active', isActive !== undefined ? isActive : 1);
     setVal('edit_supplier', supplier || '');
     setVal('edit_image_url', '');
+
+    // i18n & multi-currency fields
+    setVal('edit_name_pt', namePt || '');
+    setVal('edit_name_en', nameEn || '');
+    setVal('edit_name_es', nameEs || '');
+    setVal('edit_description_pt', descPt || '');
+    setVal('edit_description_en', descEn || '');
+    setVal('edit_description_es', descEs || '');
+    setVal('edit_price_brl', priceBrl || 0.0);
+    setVal('edit_price_usd', priceUsd || 0.0);
+    setVal('edit_default_currency', defaultCurrency || 'BRL');
+    setVal('edit_translation_status', translationStatus || 'draft');
 
     const preview = document.getElementById('edit_preview');
     if (preview) preview.src = img || '';

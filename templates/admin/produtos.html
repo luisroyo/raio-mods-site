@@ -26,20 +26,78 @@
         <form id="addCatalogForm" class="space-y-4" data-url="{{ url_for('admin.add_product') }}"
             enctype="multipart/form-data">
             <input type="hidden" name="is_catalog" value="1">
+            <!-- Traduções de Nome -->
+            <div class="border border-purple-500/30 p-3 rounded space-y-2 bg-purple-950/5 mb-3">
+                <p class="text-xs text-purple-400 font-bold">📝 Nomes do Jogo (Traduções)</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" name="name_pt" placeholder="Nome PT (ex: 8 Ball Pool)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white text-sm">
+                    <input type="text" name="name_en" placeholder="Nome EN (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500/50 rounded text-white text-sm">
+                    <input type="text" name="name_es" placeholder="Nome ES (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500/50 rounded text-white text-sm">
+                </div>
+            </div>
+
+            <!-- Traduções de Descrição -->
+            <div class="border border-purple-500/30 p-3 rounded space-y-2 bg-purple-950/5 mb-3">
+                <p class="text-xs text-purple-400 font-bold">📄 Descrições (Traduções)</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <textarea name="description_pt" rows="1" placeholder="Descrição PT"
+                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white text-sm"></textarea>
+                    <textarea name="description_en" rows="1" placeholder="Descrição EN (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500/50 rounded text-white text-sm"></textarea>
+                    <textarea name="description_es" rows="1" placeholder="Descrição ES (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-purple-500/50 rounded text-white text-sm"></textarea>
+                </div>
+            </div>
+
+            <!-- Preços e Moedas -->
+            <div class="border border-purple-500/30 p-3 rounded space-y-2 bg-purple-950/5 mb-3">
+                <p class="text-xs text-purple-400 font-bold">💵 Preços e Configurações de Câmbio</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Preço BRL (R$)</label>
+                        <input type="number" step="0.01" name="price_brl" placeholder="0.00"
+                            class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Preço USD ($)</label>
+                        <input type="number" step="0.01" name="price_usd" placeholder="0.00"
+                            class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Moeda Padrão</label>
+                        <select name="default_currency" class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white text-sm">
+                            <option value="BRL">BRL</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Tradução</label>
+                        <select name="translation_status" class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white text-sm">
+                            <option value="draft">Draft</option>
+                            <option value="partial">Partial</option>
+                            <option value="complete">Complete</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" name="name" required placeholder="Nome do Jogo"
+                <input type="text" name="name" required placeholder="Nome do Jogo - Legado"
                     class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
                 <input type="text" name="category" required placeholder="Categoria"
                     class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
                 <input type="text" name="supplier" placeholder="Fornecedor (Fornecimento)"
                     class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
             </div>
-            <textarea name="description" rows="2" placeholder="Descrição da Capa"
+            <textarea name="description" rows="2" placeholder="Descrição da Capa - Legado"
                 class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white"></textarea>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input type="number" name="sort_order" value="0" placeholder="Ordem"
                     class="w-full px-4 py-2 bg-gray-800 border border-purple-500 rounded text-white">
-                <input type="text" name="price" required placeholder="Chamada (Ex: A partir de R$ 10)"
+                <input type="text" name="price" required placeholder="Chamada - Legada (Ex: A partir de R$ 10)"
                     class="w-full bg-gray-900 border border-gray-700 text-white rounded p-2 focus:border-cyan-500">
             </div>
             
@@ -81,10 +139,18 @@
                     </span>
                     {% endif %}
                     <p class="text-gray-500 text-sm">{{ subproducts|length }} produtos</p>
+                    <div class="mt-2 flex flex-col gap-1 items-center justify-center">
+                        <span class="text-[9px] px-1.5 py-0.5 rounded {% if catalog.translation_status == 'complete' %}bg-green-950/50 border border-green-800 text-green-400{% elif catalog.translation_status == 'partial' %}bg-yellow-950/50 border border-yellow-800 text-yellow-400{% else %}bg-red-950/50 border border-red-800 text-red-400{% endif %}">
+                            {% if catalog.translation_status == 'complete' %}🟢 Complete{% elif catalog.translation_status == 'partial' %}🟡 Partial{% else %}🔴 Draft{% endif %}
+                        </span>
+                        <span class="text-[9px] text-gray-400">
+                            R$: {{ "%.2f"|format(catalog.price_brl|default(0.0)|float) }} | $: {{ "%.2f"|format(catalog.price_usd|default(0.0)|float) }}
+                        </span>
+                    </div>
                     <div class="flex flex-col gap-2 mt-3">
                         <div class="flex gap-2 justify-center">
                             <button type="button"
-                                onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.cost_brl|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }}, {{ (catalog.is_active if catalog.is_active is defined else 1)|tojson|forceescape }}, {{ (catalog.supplier|default(""))|tojson|forceescape }}, {{ (catalog.reseller_price|default(0))|tojson|forceescape }}, {{ (catalog.download_link|default(""))|tojson|forceescape }})'
+                                onclick='openEditModal({{ catalog.id }}, {{ catalog.name|tojson|forceescape }}, {{ catalog.description|tojson|forceescape }}, {{ catalog.price|tojson|forceescape }}, {{ catalog.category|tojson|forceescape }}, {{ catalog.image|tojson|forceescape }}, "", {{ catalog.sort_order|default(0) }}, null, 1, "", {{ (catalog.promo_price|default(""))|tojson|forceescape }}, {{ (catalog.promo_label|default(""))|tojson|forceescape }}, {{ (catalog.cost_usd|default(0))|tojson|forceescape }}, {{ (catalog.cost_brl|default(0))|tojson|forceescape }}, {{ (catalog.apply_iof|default(1))|tojson|forceescape }}, {{ (catalog.is_active if catalog.is_active is defined else 1)|tojson|forceescape }}, {{ (catalog.supplier|default(""))|tojson|forceescape }}, {{ (catalog.reseller_price|default(0))|tojson|forceescape }}, {{ (catalog.download_link|default(""))|tojson|forceescape }}, {{ (catalog.name_pt|default(""))|tojson|forceescape }}, {{ (catalog.name_en|default(""))|tojson|forceescape }}, {{ (catalog.name_es|default(""))|tojson|forceescape }}, {{ (catalog.description_pt|default(""))|tojson|forceescape }}, {{ (catalog.description_en|default(""))|tojson|forceescape }}, {{ (catalog.description_es|default(""))|tojson|forceescape }}, {{ catalog.price_brl|default(0.0) }}, {{ catalog.price_usd|default(0.0) }}, {{ (catalog.default_currency|default("BRL"))|tojson|forceescape }}, {{ (catalog.translation_status|default("draft"))|tojson|forceescape }})'
                                 class="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-500">✏️</button>
                             {% if catalog.is_active is defined and catalog.is_active == 0 %}
                             <span class="px-2 py-1 bg-gray-600 text-white text-xs rounded"
@@ -136,15 +202,25 @@
                                                 {% endif %}
                                             </span>
                                         </div>
-                                        {% if sub.is_catalog != 1 %}
-                                        <div class="mt-1 text-xs">
-                                            {% if sub.stock > 0 %}
-                                            <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
-                                            {% else %}
-                                            <span class="text-red-500">🔴 Sem estoque</span>
+                                        <div class="mt-1 flex flex-col gap-1">
+                                            {% if sub.is_catalog != 1 %}
+                                            <div class="text-xs">
+                                                {% if sub.stock > 0 %}
+                                                <span class="text-green-500">🟢 {{ sub.stock }} chaves</span>
+                                                {% else %}
+                                                <span class="text-red-500">🔴 Sem estoque</span>
+                                                {% endif %}
+                                            </div>
                                             {% endif %}
+                                            <div class="flex items-center gap-1 flex-wrap">
+                                                <span class="text-[9px] px-1 py-0.2 rounded {% if sub.translation_status == 'complete' %}bg-green-950/50 border border-green-800 text-green-400{% elif sub.translation_status == 'partial' %}bg-yellow-950/50 border border-yellow-800 text-yellow-400{% else %}bg-red-950/50 border border-red-800 text-red-400{% endif %}" title="Status da Tradução">
+                                                    {% if sub.translation_status == 'complete' %}🟢 Complete{% elif sub.translation_status == 'partial' %}🟡 Partial{% else %}🔴 Draft{% endif %}
+                                                </span>
+                                                <span class="text-[9px] bg-gray-800 border border-gray-700 text-gray-400 px-1 py-0.2 rounded" title="Preço BRL / USD (Default)">
+                                                    R$: {{ "%.2f"|format(sub.price_brl|default(0.0)|float) }} | $: {{ "%.2f"|format(sub.price_usd|default(0.0)|float) }} ({{ sub.default_currency|default('BRL') }})
+                                                </span>
+                                            </div>
                                         </div>
-                                        {% endif %}
                                     </div>
                                     <div class="flex flex-wrap gap-1 w-full sm:w-auto justify-end mt-2 sm:mt-0">
                                         {% if sub.is_catalog == 1 %}
@@ -158,7 +234,7 @@
                                         {% endif %}
                                         
                                         <button type="button"
-                                            onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, {{ sub.is_catalog|default(0) }}, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }}, {{ (sub.cost_usd|default(0))|tojson|forceescape }}, {{ (sub.cost_brl|default(0))|tojson|forceescape }}, {{ (sub.apply_iof|default(1))|tojson|forceescape }}, {{ (sub.is_active if sub.is_active is defined else 1)|tojson|forceescape }}, {{ (sub.supplier|default(""))|tojson|forceescape }}, {{ (sub.reseller_price|default(0))|tojson|forceescape }}, {{ (sub.download_link|default(""))|tojson|forceescape }})'
+                                            onclick='openEditModal({{ sub.id }}, {{ sub.name|tojson|forceescape }}, {{ sub.description|tojson|forceescape }}, {{ sub.price|tojson|forceescape }}, {{ sub.category|tojson|forceescape }}, {{ sub.image|tojson|forceescape }}, {{ (sub.tagline|default(""))|tojson|forceescape }}, {{ sub.sort_order|default(0) }}, {{ sub.parent_id or "null" }}, {{ sub.is_catalog|default(0) }}, {{ (sub.payment_url|default(""))|tojson|forceescape }}, {{ (sub.promo_price|default(""))|tojson|forceescape }}, {{ (sub.promo_label|default(""))|tojson|forceescape }}, {{ (sub.cost_usd|default(0))|tojson|forceescape }}, {{ (sub.cost_brl|default(0))|tojson|forceescape }}, {{ (sub.apply_iof|default(1))|tojson|forceescape }}, {{ (sub.is_active if sub.is_active is defined else 1)|tojson|forceescape }}, {{ (sub.supplier|default(""))|tojson|forceescape }}, {{ (sub.reseller_price|default(0))|tojson|forceescape }}, {{ (sub.download_link|default(""))|tojson|forceescape }}, {{ (sub.name_pt|default(""))|tojson|forceescape }}, {{ (sub.name_en|default(""))|tojson|forceescape }}, {{ (sub.name_es|default(""))|tojson|forceescape }}, {{ (sub.description_pt|default(""))|tojson|forceescape }}, {{ (sub.description_en|default(""))|tojson|forceescape }}, {{ (sub.description_es|default(""))|tojson|forceescape }}, {{ sub.price_brl|default(0.0) }}, {{ sub.price_usd|default(0.0) }}, {{ (sub.default_currency|default("BRL"))|tojson|forceescape }}, {{ (sub.translation_status|default("draft"))|tojson|forceescape }})'
                                             class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
                                             
                                         {% if sub.is_catalog != 1 %}
@@ -199,18 +275,28 @@
                                                         👤 {{ np.supplier }}
                                                     </span>
                                                     {% endif %}
-                                                    <div class="flex gap-2 text-xs">
-                                                        <span class="text-green-400">{{ np.price }}</span>
-                                                        {% if np.stock > 0 %}
-                                                        <span class="text-green-500">🟢 {{ np.stock }} cx</span>
-                                                        {% else %}
-                                                        <span class="text-red-500">🔴 S/est</span>
-                                                        {% endif %}
+                                                    <div class="flex flex-col gap-1 mt-1 text-xs">
+                                                        <div class="flex gap-2">
+                                                            <span class="text-green-400 font-bold">{{ np.price }}</span>
+                                                            {% if np.stock > 0 %}
+                                                            <span class="text-green-500">🟢 {{ np.stock }} cx</span>
+                                                            {% else %}
+                                                            <span class="text-red-500">🔴 S/est</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="flex items-center gap-1 flex-wrap">
+                                                            <span class="text-[9px] px-1 py-0.2 rounded {% if np.translation_status == 'complete' %}bg-green-950/50 border border-green-800 text-green-400{% elif np.translation_status == 'partial' %}bg-yellow-950/50 border border-yellow-800 text-yellow-400{% else %}bg-red-950/50 border border-red-800 text-red-400{% endif %}">
+                                                                {% if np.translation_status == 'complete' %}🟢 C{% elif np.translation_status == 'partial' %}🟡 P{% else %}🔴 D{% endif %}
+                                                            </span>
+                                                            <span class="text-[8px] bg-gray-800 border border-gray-700 text-gray-400 px-1 py-0.2 rounded">
+                                                                R$: {{ "%.2f"|format(np.price_brl|default(0.0)|float) }} | $: {{ "%.2f"|format(np.price_usd|default(0.0)|float) }} ({{ np.default_currency|default('BRL') }})
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="flex gap-1 flex-wrap justify-end mt-1 sm:mt-0">
                                                     <button type="button" onclick="openKeyModal({{ np.id }}, {{ np.name|tojson|forceescape }})" class="text-xs bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500">🔑</button>
-                                                    <button type="button" onclick='openEditModal({{ np.id }}, {{ np.name|tojson|forceescape }}, {{ np.description|tojson|forceescape }}, {{ np.price|tojson|forceescape }}, {{ np.category|tojson|forceescape }}, {{ np.image|tojson|forceescape }}, {{ (np.tagline|default(""))|tojson|forceescape }}, {{ np.sort_order|default(0) }}, {{ np.parent_id or "null" }}, {{ np.is_catalog|default(0) }}, {{ (np.payment_url|default(""))|tojson|forceescape }}, {{ (np.promo_price|default(""))|tojson|forceescape }}, {{ (np.promo_label|default(""))|tojson|forceescape }}, {{ (np.cost_usd|default(0))|tojson|forceescape }}, {{ (np.cost_brl|default(0))|tojson|forceescape }}, {{ (np.apply_iof|default(1))|tojson|forceescape }}, {{ (np.is_active if np.is_active is defined else 1)|tojson|forceescape }}, {{ (np.supplier|default(""))|tojson|forceescape }}, {{ (np.reseller_price|default(0))|tojson|forceescape }}, {{ (np.download_link|default(""))|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
+                                                    <button type="button" onclick='openEditModal({{ np.id }}, {{ np.name|tojson|forceescape }}, {{ np.description|tojson|forceescape }}, {{ np.price|tojson|forceescape }}, {{ np.category|tojson|forceescape }}, {{ np.image|tojson|forceescape }}, {{ (np.tagline|default(""))|tojson|forceescape }}, {{ np.sort_order|default(0) }}, {{ np.parent_id or "null" }}, {{ np.is_catalog|default(0) }}, {{ (np.payment_url|default(""))|tojson|forceescape }}, {{ (np.promo_price|default(""))|tojson|forceescape }}, {{ (np.promo_label|default(""))|tojson|forceescape }}, {{ (np.cost_usd|default(0))|tojson|forceescape }}, {{ (np.cost_brl|default(0))|tojson|forceescape }}, {{ (np.apply_iof|default(1))|tojson|forceescape }}, {{ (np.is_active if np.is_active is defined else 1)|tojson|forceescape }}, {{ (np.supplier|default(""))|tojson|forceescape }}, {{ (np.reseller_price|default(0))|tojson|forceescape }}, {{ (np.download_link|default(""))|tojson|forceescape }}, {{ (np.name_pt|default(""))|tojson|forceescape }}, {{ (np.name_en|default(""))|tojson|forceescape }}, {{ (np.name_es|default(""))|tojson|forceescape }}, {{ (np.description_pt|default(""))|tojson|forceescape }}, {{ (np.description_en|default(""))|tojson|forceescape }}, {{ (np.description_es|default(""))|tojson|forceescape }}, {{ np.price_brl|default(0.0) }}, {{ np.price_usd|default(0.0) }}, {{ (np.default_currency|default("BRL"))|tojson|forceescape }}, {{ (np.translation_status|default("draft"))|tojson|forceescape }})' class="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">✏️</button>
                                                     {% if np.payment_url %}
                                                     <button type="button" onclick="copyPaymentLink({{ np.id }}, {{ np.payment_url|tojson|forceescape }})" class="text-xs bg-cyan-600 px-2 py-1 rounded hover:bg-cyan-500" title="Copiar link direto do Mercado Pago">🔗 MP</button>
                                                     {% else %}
@@ -254,20 +340,78 @@
         <form id="addProductForm" class="space-y-4" data-url="{{ url_for('admin.add_product') }}"
             enctype="multipart/form-data">
             <input type="hidden" name="is_catalog" value="0">
+            <!-- Traduções de Nome -->
+            <div class="border border-cyan-500/30 p-3 rounded space-y-2 bg-cyan-950/5 mb-3">
+                <p class="text-xs text-cyan-400 font-bold">📝 Nomes do Produto (Traduções)</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" name="name_pt" placeholder="Nome PT (ex: VIP 30 Dias)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white text-sm">
+                    <input type="text" name="name_en" placeholder="Nome EN (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-cyan-500/50 rounded text-white text-sm">
+                    <input type="text" name="name_es" placeholder="Nome ES (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-cyan-500/50 rounded text-white text-sm">
+                </div>
+            </div>
+
+            <!-- Traduções de Descrição -->
+            <div class="border border-cyan-500/30 p-3 rounded space-y-2 bg-cyan-950/5 mb-3">
+                <p class="text-xs text-cyan-400 font-bold">📄 Descrições (Traduções)</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <textarea name="description_pt" rows="1" placeholder="Descrição PT"
+                        class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white text-sm"></textarea>
+                    <textarea name="description_en" rows="1" placeholder="Descrição EN (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-cyan-500/50 rounded text-white text-sm"></textarea>
+                    <textarea name="description_es" rows="1" placeholder="Descrição ES (opcional)"
+                        class="w-full px-4 py-2 bg-gray-800 border border-cyan-500/50 rounded text-white text-sm"></textarea>
+                </div>
+            </div>
+
+            <!-- Preços e Moedas -->
+            <div class="border border-cyan-500/30 p-3 rounded space-y-2 bg-cyan-950/5 mb-3">
+                <p class="text-xs text-cyan-400 font-bold">💵 Preços e Configurações de Câmbio</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Preço BRL (R$)</label>
+                        <input type="number" step="0.01" name="price_brl" placeholder="0.00"
+                            class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Preço USD ($)</label>
+                        <input type="number" step="0.01" name="price_usd" placeholder="0.00"
+                            class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Moeda Padrão</label>
+                        <select name="default_currency" class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white text-sm">
+                            <option value="BRL">BRL</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Tradução</label>
+                        <select name="translation_status" class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white text-sm">
+                            <option value="draft">Draft</option>
+                            <option value="partial">Partial</option>
+                            <option value="complete">Complete</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" name="name" required placeholder="Nome"
+                <input type="text" name="name" required placeholder="Nome - Legado"
                     class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white">
                 <input type="text" name="category" required placeholder="Categoria"
                     class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white">
                 <input type="text" name="supplier" placeholder="Fornecedor (Fornecimento)"
                     class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white">
             </div>
-            <textarea name="description" placeholder="Descrição"
+            <textarea name="description" placeholder="Descrição - Legado"
                 class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white"></textarea>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <input type="number" name="sort_order" value="0" placeholder="Ordem"
                     class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 rounded text-white">
-                <input type="text" name="price" required placeholder="Preço"
+                <input type="text" name="price" required placeholder="Preço - Legado (Ex: R$ 29,90)"
                     class="w-full bg-gray-900 border border-gray-700 text-white rounded p-2 focus:border-cyan-500">
             </div>
             
@@ -329,24 +473,32 @@
                         <p class="text-green-400 font-bold sm:hidden">{{ prod.price }}</p>
                     </div>
                     <p class="text-green-400 font-bold hidden sm:block">{{ prod.price }}</p>
-                    <div class="mt-2 text-sm">
-                        {% if prod.stock > 0 %}
-                        <span class="text-green-400">🟢 {{ prod.stock }} chaves</span>
-                        {% else %}
-                        <span class="text-red-400">🔴 Sem estoque</span>
-                        {% endif %}
+                <div class="mt-2 text-sm flex flex-col gap-1">
+                    {% if prod.stock > 0 %}
+                    <span class="text-green-400">🟢 {{ prod.stock }} chaves</span>
+                    {% else %}
+                    <span class="text-red-400">🔴 Sem estoque</span>
+                    {% endif %}
+                    <div class="flex items-center gap-1 flex-wrap mt-1">
+                        <span class="text-[9px] px-1.5 py-0.5 rounded {% if prod.translation_status == 'complete' %}bg-green-950/50 border border-green-800 text-green-400{% elif prod.translation_status == 'partial' %}bg-yellow-950/50 border border-yellow-800 text-yellow-400{% else %}bg-red-950/50 border border-red-800 text-red-400{% endif %}">
+                            {% if prod.translation_status == 'complete' %}🟢 Complete{% elif prod.translation_status == 'partial' %}🟡 Partial{% else %}🔴 Draft{% endif %}
+                        </span>
+                        <span class="text-[9px] bg-gray-800 border border-gray-700 text-gray-400 px-1.5 py-0.5 rounded">
+                            R$: {{ "%.2f"|format(prod.price_brl|default(0.0)|float) }} | $: {{ "%.2f"|format(prod.price_usd|default(0.0)|float) }} ({{ prod.default_currency|default('BRL') }})
+                        </span>
                     </div>
                 </div>
-                {% if prod.image %}
-                <img src="{{ prod.image }}" class="w-12 h-12 object-contain rounded self-end sm:self-start">
-                {% endif %}
             </div>
-            <div class="flex flex-wrap gap-2 mt-4">
-                <button type="button" onclick="openKeyModal({{ prod.id }}, {{ prod.name|tojson|forceescape }})"
-                    class="flex-1 bg-yellow-600 text-white text-xs py-2 rounded hover:bg-yellow-500">🔑 Chaves</button>
-                <button type="button"
-                    onclick='openEditModal({{ prod.id }}, {{ prod.name|tojson|forceescape }}, {{ prod.description|tojson|forceescape }}, {{ prod.price|tojson|forceescape }}, {{ prod.category|tojson|forceescape }}, {{ prod.image|tojson|forceescape }}, {{ (prod.tagline|default(""))|tojson|forceescape }}, {{ prod.sort_order|default(0) }}, null, {{ prod.is_catalog|default(0) }}, {{ (prod.payment_url|default(""))|tojson|forceescape }}, {{ (prod.promo_price|default(""))|tojson|forceescape }}, {{ (prod.promo_label|default(""))|tojson|forceescape }}, {{ (prod.cost_usd|default(0))|tojson|forceescape }}, {{ (prod.cost_brl|default(0))|tojson|forceescape }}, {{ (prod.apply_iof|default(1))|tojson|forceescape }}, {{ (prod.is_active if prod.is_active is defined else 1)|tojson|forceescape }}, {{ (prod.supplier|default(""))|tojson|forceescape }}, {{ (prod.reseller_price|default(0))|tojson|forceescape }}, {{ (prod.download_link|default(""))|tojson|forceescape }})'
-                    class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-500">✏️ Editar</button>
+            {% if prod.image %}
+            <img src="{{ prod.image }}" class="w-12 h-12 object-contain rounded self-end sm:self-start">
+            {% endif %}
+        </div>
+        <div class="flex flex-wrap gap-2 mt-4">
+            <button type="button" onclick="openKeyModal({{ prod.id }}, {{ prod.name|tojson|forceescape }})"
+                class="flex-1 bg-yellow-600 text-white text-xs py-2 rounded hover:bg-yellow-500">🔑 Chaves</button>
+            <button type="button"
+                onclick='openEditModal({{ prod.id }}, {{ prod.name|tojson|forceescape }}, {{ prod.description|tojson|forceescape }}, {{ prod.price|tojson|forceescape }}, {{ prod.category|tojson|forceescape }}, {{ prod.image|tojson|forceescape }}, {{ (prod.tagline|default(""))|tojson|forceescape }}, {{ prod.sort_order|default(0) }}, null, {{ prod.is_catalog|default(0) }}, {{ (prod.payment_url|default(""))|tojson|forceescape }}, {{ (prod.promo_price|default(""))|tojson|forceescape }}, {{ (prod.promo_label|default(""))|tojson|forceescape }}, {{ (prod.cost_usd|default(0))|tojson|forceescape }}, {{ (prod.cost_brl|default(0))|tojson|forceescape }}, {{ (prod.apply_iof|default(1))|tojson|forceescape }}, {{ (prod.is_active if prod.is_active is defined else 1)|tojson|forceescape }}, {{ (prod.supplier|default(""))|tojson|forceescape }}, {{ (prod.reseller_price|default(0))|tojson|forceescape }}, {{ (prod.download_link|default(""))|tojson|forceescape }}, {{ (prod.name_pt|default(""))|tojson|forceescape }}, {{ (prod.name_en|default(""))|tojson|forceescape }}, {{ (prod.name_es|default(""))|tojson|forceescape }}, {{ (prod.description_pt|default(""))|tojson|forceescape }}, {{ (prod.description_en|default(""))|tojson|forceescape }}, {{ (prod.description_es|default(""))|tojson|forceescape }}, {{ prod.price_brl|default(0.0) }}, {{ prod.price_usd|default(0.0) }}, {{ (prod.default_currency|default("BRL"))|tojson|forceescape }}, {{ (prod.translation_status|default("draft"))|tojson|forceescape }})'
+                class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-500">✏️ Editar</button>
                 {% if prod.payment_url %}
                 <button type="button"
                     onclick="copyPaymentLink({{ prod.id }}, {{ prod.payment_url|tojson|forceescape }})"

@@ -77,14 +77,65 @@ def add_product():
     supplier = (request.form.get('supplier') or '').strip()
     image = handle_image_upload(request) or ''
     
+    # Novas propriedades de i18n e multi-moeda
+    name_pt = (request.form.get('name_pt') or name or '').strip()
+    name_en = (request.form.get('name_en') or '').strip()
+    name_es = (request.form.get('name_es') or '').strip()
+    
+    description_pt = (request.form.get('description_pt') or desc or '').strip()
+    description_en = (request.form.get('description_en') or '').strip()
+    description_es = (request.form.get('description_es') or '').strip()
+    
+    try:
+        p_brl = request.form.get('price_brl')
+        price_brl = float(str(p_brl).replace(',', '.') if p_brl else 0.0)
+    except:
+        price_brl = 0.0
+        
+    try:
+        p_usd = request.form.get('price_usd')
+        price_usd = float(str(p_usd).replace(',', '.') if p_usd else 0.0)
+    except:
+        price_usd = 0.0
+        
+    # Se price_brl nao foi enviado mas price sim, tenta fazer parse de price
+    if not price_brl and price:
+        cleaned = price.replace('R$', '').replace('$', '').strip()
+        if ',' in cleaned and '.' not in cleaned:
+            cleaned = cleaned.replace(',', '.')
+        elif ',' in cleaned and '.' in cleaned:
+            cleaned = cleaned.replace('.', '').replace(',', '.')
+        try:
+            price_brl = float(cleaned)
+        except:
+            price_brl = 0.0
+            
+    default_currency = (request.form.get('default_currency') or 'BRL').strip().upper()
+    if default_currency not in ['BRL', 'USD']:
+        default_currency = 'BRL'
+        
+    translation_status = (request.form.get('translation_status') or 'draft').strip().lower()
+    if translation_status not in ['draft', 'partial', 'complete']:
+        translation_status = 'draft'
+
     if not all([name, price, cat]):
         return jsonify({'error': 'Faltam dados'}), 400
     
     conn = get_db_connection()
     try:
         conn.execute(
-            'INSERT INTO products (name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, download_link) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-            (name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, download_link)
+            '''INSERT INTO products (
+                name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, 
+                payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
+                reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
+                description_es, price_brl, price_usd, default_currency, translation_status
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+            (
+                name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, 
+                payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
+                reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
+                description_es, price_brl, price_usd, default_currency, translation_status
+            )
         )
         conn.commit()
     except sqlite3.OperationalError as e:
@@ -237,9 +288,85 @@ def edit_product(pid):
         
         img = handle_image_upload(request, existing.get('image', '')) or ''
 
+        # Novas propriedades de i18n e multi-moeda
+        name_pt = request.form.get('name_pt')
+        if name_pt is None:
+            name_pt = existing.get('name_pt', '')
+        name_pt = name_pt.strip()
+
+        name_en = request.form.get('name_en')
+        if name_en is None:
+            name_en = existing.get('name_en', '')
+        name_en = name_en.strip()
+
+        name_es = request.form.get('name_es')
+        if name_es is None:
+            name_es = existing.get('name_es', '')
+        name_es = name_es.strip()
+
+        description_pt = request.form.get('description_pt')
+        if description_pt is None:
+            description_pt = existing.get('description_pt', '')
+        description_pt = description_pt.strip()
+
+        description_en = request.form.get('description_en')
+        if description_en is None:
+            description_en = existing.get('description_en', '')
+        description_en = description_en.strip()
+
+        description_es = request.form.get('description_es')
+        if description_es is None:
+            description_es = existing.get('description_es', '')
+        description_es = description_es.strip()
+
+        try:
+            p_brl = request.form.get('price_brl')
+            if p_brl is not None:
+                price_brl = float(str(p_brl).replace(',', '.'))
+            else:
+                price_brl = float(existing.get('price_brl', 0) or 0)
+        except:
+            price_brl = float(existing.get('price_brl', 0) or 0)
+
+        try:
+            p_usd = request.form.get('price_usd')
+            if p_usd is not None:
+                price_usd = float(str(p_usd).replace(',', '.'))
+            else:
+                price_usd = float(existing.get('price_usd', 0) or 0)
+        except:
+            price_usd = float(existing.get('price_usd', 0) or 0)
+
+        default_currency = request.form.get('default_currency')
+        if default_currency is None:
+            default_currency = existing.get('default_currency', 'BRL')
+        default_currency = default_currency.strip().upper()
+        if default_currency not in ['BRL', 'USD']:
+            default_currency = 'BRL'
+
+        translation_status = request.form.get('translation_status')
+        if translation_status is None:
+            translation_status = existing.get('translation_status', 'draft')
+        translation_status = translation_status.strip().lower()
+        if translation_status not in ['draft', 'partial', 'complete']:
+            translation_status = 'draft'
+
         conn.execute(
-            'UPDATE products SET name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, is_active=?, supplier=?, reseller_price=?, download_link=? WHERE id=?',
-            (name, desc, price, img, cat, tagline, sort, pid_val, is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, reseller_price, download_link, pid)
+            '''UPDATE products SET 
+                name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, 
+                is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, 
+                is_active=?, supplier=?, reseller_price=?, download_link=?,
+                name_pt=?, name_en=?, name_es=?, description_pt=?, description_en=?, description_es=?,
+                price_brl=?, price_usd=?, default_currency=?, translation_status=?
+            WHERE id=?''',
+            (
+                name, desc, price, img, cat, tagline, sort, pid_val, 
+                is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, 
+                is_active, supplier, reseller_price, download_link,
+                name_pt, name_en, name_es, description_pt, description_en, description_es,
+                price_brl, price_usd, default_currency, translation_status,
+                pid
+            )
         )
         conn.commit()
         conn.close()
@@ -297,7 +424,17 @@ def product_info(pid):
             'dolar_rate': round(dolar_rate, 4),
             'calculated_cost_brl': calculated_cost_brl,
             'stock': stock_count,
-            'download_link': prod.download_link or ''
+            'download_link': prod.download_link or '',
+            'name_pt': prod.name_pt or '',
+            'name_en': prod.name_en or '',
+            'name_es': prod.name_es or '',
+            'description_pt': prod.description_pt or '',
+            'description_en': prod.description_en or '',
+            'description_es': prod.description_es or '',
+            'price_brl': float(prod.price_brl or 0.0),
+            'price_usd': float(prod.price_usd or 0.0),
+            'default_currency': prod.default_currency or 'BRL',
+            'translation_status': prod.translation_status or 'draft'
         })
     except Exception as e:
         print(f"Erro product_info: {e}")

@@ -128,7 +128,19 @@ def init_db():
             price TEXT NOT NULL,
             image TEXT NOT NULL,
             category TEXT NOT NULL,
-            is_active INTEGER DEFAULT 1
+            is_active INTEGER DEFAULT 1,
+            is_catalog INTEGER DEFAULT 0,
+            parent_id INTEGER,
+            name_pt TEXT DEFAULT "",
+            name_en TEXT DEFAULT "",
+            name_es TEXT DEFAULT "",
+            description_pt TEXT DEFAULT "",
+            description_en TEXT DEFAULT "",
+            description_es TEXT DEFAULT "",
+            price_brl DECIMAL(10,2) DEFAULT 0.0,
+            price_usd DECIMAL(10,2) DEFAULT 0.0,
+            default_currency TEXT DEFAULT "BRL",
+            translation_status TEXT DEFAULT "draft"
         )
     ''')
     
@@ -549,6 +561,88 @@ def init_db():
                 cursor.execute(f'ALTER TABLE manual_sales ADD COLUMN {col_name} {col_type}')
             except Exception as e:
                 print(f"Erro ao adicionar coluna {col_name}: {e}")
+
+    # --- MIGRAÇÃO: Colunas de Internacionalização/Multi-Moeda (products) ---
+    product_i18n_columns = [
+        ('name_pt', 'TEXT DEFAULT ""'),
+        ('name_en', 'TEXT DEFAULT ""'),
+        ('name_es', 'TEXT DEFAULT ""'),
+        ('description_pt', 'TEXT DEFAULT ""'),
+        ('description_en', 'TEXT DEFAULT ""'),
+        ('description_es', 'TEXT DEFAULT ""'),
+        ('price_brl', 'DECIMAL(10,2) DEFAULT 0.0'),
+        ('price_usd', 'DECIMAL(10,2) DEFAULT 0.0'),
+        ('default_currency', "TEXT DEFAULT 'BRL'"),
+        ('translation_status', "TEXT DEFAULT 'draft'")
+    ]
+    
+    # Obter colunas existentes de produtos de forma segura
+    existing_prod_columns = []
+    if is_real_postgres:
+        try:
+            for col_name, _ in product_i18n_columns:
+                try:
+                    cursor.execute(f'SELECT {col_name} FROM products LIMIT 1')
+                    existing_prod_columns.append(col_name.lower())
+                except:
+                    pass
+        except:
+            pass
+    else:
+        try:
+            pragma_rows = cursor.execute('PRAGMA table_info(products)').fetchall()
+            existing_prod_columns = [row['name'].lower() for row in pragma_rows]
+        except Exception as e:
+            print(f"[BD] Erro ao carregar PRAGMA table_info(products): {e}")
+
+    for col_name, col_type in product_i18n_columns:
+        if col_name.lower() not in existing_prod_columns:
+            try:
+                print(f"--> Adicionando coluna {col_name} em products...")
+                cursor.execute(f'ALTER TABLE products ADD COLUMN {col_name} {col_type}')
+            except Exception as e:
+                print(f"[BD] Erro ao adicionar coluna {col_name} em products: {e}")
+
+    # Executar migração de dados de produtos legados de forma idempotente e segura
+    def clean_and_parse_price(price_str):
+        if not price_str:
+            return 0.0
+        cleaned = price_str.replace('R$', '').replace('$', '').strip()
+        if ',' in cleaned and '.' not in cleaned:
+            cleaned = cleaned.replace(',', '.')
+        elif ',' in cleaned and '.' in cleaned:
+            cleaned = cleaned.replace('.', '').replace(',', '.')
+        try:
+            return float(cleaned)
+        except ValueError:
+            return 0.0
+
+    try:
+        rows = cursor.execute('SELECT id, name, description, price, name_pt, description_pt, price_brl FROM products').fetchall()
+        for row in rows:
+            prod_id = row['id']
+            name_pt = row['name_pt']
+            desc_pt = row['description_pt']
+            price_brl = row['price_brl']
+            
+            updates = {}
+            if not name_pt or name_pt.strip() == "":
+                updates['name_pt'] = row['name']
+            if not desc_pt or desc_pt.strip() == "":
+                updates['description_pt'] = row['description']
+            if not price_brl or float(price_brl) == 0.0:
+                legacy_price_str = row['price']
+                updates['price_brl'] = clean_and_parse_price(legacy_price_str)
+                
+            if updates:
+                set_clause = ", ".join(f"{k} = ?" for k in updates.keys())
+                values = list(updates.values())
+                values.append(prod_id)
+                query = f"UPDATE products SET {set_clause} WHERE id = ?"
+                cursor.execute(query, values)
+                print(f"--> [MIGRAÇÃO] Produto ID {prod_id} migrado: {updates}")
+    except Exception as mig_err:
+        print(f"[BD] Erro na migração de dados legados de produtos: {mig_err}")
 
     # --- MIGRAÇÃO: Adicionar coluna used_by_email na tabela product_keys ---
     try:

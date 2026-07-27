@@ -41,7 +41,7 @@ def shutdown_bot():
 
 atexit.register(shutdown_bot)
 
-def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markdown') -> None:
+def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markdown', order_ref: str = None) -> None:
     """Envia mensagem de forma assíncrona e segura de qualquer thread."""
     global _bot_initialized
     loop = get_persistent_loop()
@@ -56,9 +56,41 @@ def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markd
             except Exception as e:
                 logger.error(f"Erro ao inicializar o bot no envio seguro de mensagem: {e}")
         try:
-            await bot_app.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode)
+            msg = await bot_app.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode)
+            if order_ref:
+                try:
+                    from database.models import get_db_connection
+                    from contextlib import closing
+                    import time
+                    
+                    now_iso = time.strftime('%Y-%m-%d %H:%M:%S')
+                    with closing(get_db_connection()) as conn:
+                        conn.execute('''
+                            UPDATE orders 
+                            SET telegram_delivery_status = 'delivered',
+                                telegram_delivered_at = ?,
+                                telegram_message_id = ?
+                            WHERE external_reference = ?
+                        ''', (now_iso, str(msg.message_id), order_ref))
+                        conn.commit()
+                except Exception as db_err:
+                    logger.error(f"Erro ao atualizar status de entrega de auditoria no banco: {db_err}")
         except Exception as e:
             logger.error(f"Erro ao enviar mensagem para chat_id {chat_id}: {e}")
+            if order_ref:
+                try:
+                    from database.models import get_db_connection
+                    from contextlib import closing
+                    with closing(get_db_connection()) as conn:
+                        conn.execute('''
+                            UPDATE orders 
+                            SET telegram_delivery_status = 'failed',
+                                telegram_message_id = ?
+                            WHERE external_reference = ?
+                        ''', (str(e)[:200], order_ref))
+                        conn.commit()
+                except Exception as db_err:
+                    logger.error(f"Erro ao atualizar status de falha de auditoria no banco: {db_err}")
             
     asyncio.run_coroutine_threadsafe(_send(), loop)
 

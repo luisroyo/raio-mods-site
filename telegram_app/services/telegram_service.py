@@ -25,7 +25,7 @@ class TelegramService:
         )
 
     @staticmethod
-    def send_key_delivery(chat_id: str, product_name: str, key_value: str, download_link: str = None) -> None:
+    def send_key_delivery(chat_id: str, product_name: str, key_value: str, download_link: str = None, order_ref: str = None) -> None:
         """Formata e envia a chave do produto para o usuário do Telegram de forma assíncrona."""
         from telegram_app.routes import send_telegram_message_safe
         
@@ -38,4 +38,4 @@ class TelegramService:
         if download_link and download_link.strip():
             text += f"\n📥 *Link para Download/Instruções:*\n{download_link}"
             
-        send_telegram_message_safe(chat_id, text)
+        send_telegram_message_safe(chat_id, text, order_ref=order_ref)

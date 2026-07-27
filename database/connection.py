@@ -447,16 +447,38 @@ def init_db():
         ('recovery_email_sent', 'INTEGER DEFAULT 0'),
         ('telegram_id', 'TEXT DEFAULT ""'),
         ('telegram_username', 'TEXT DEFAULT ""'),
-        ('telegram_first_name', 'TEXT DEFAULT ""')
+        ('telegram_first_name', 'TEXT DEFAULT ""'),
+        ('telegram_delivery_status', 'TEXT DEFAULT ""'),
+        ('telegram_delivered_at', 'TIMESTAMP'),
+        ('telegram_message_id', 'TEXT DEFAULT ""')
     ]
-    for col_name, col_type in chargeback_columns:
+    
+    # Obter colunas existentes de forma segura e idempotente
+    existing_columns = []
+    if is_real_postgres:
         try:
-            cursor.execute(f'SELECT {col_name} FROM orders LIMIT 1')
-        except sqlite3.OperationalError:
+            for col_name, _ in chargeback_columns:
+                try:
+                    cursor.execute(f'SELECT {col_name} FROM orders LIMIT 1')
+                    existing_columns.append(col_name.lower())
+                except:
+                    pass
+        except:
+            pass
+    else:
+        try:
+            pragma_rows = cursor.execute('PRAGMA table_info(orders)').fetchall()
+            existing_columns = [row['name'].lower() for row in pragma_rows]
+        except Exception as e:
+            print(f"[BD] Erro ao carregar PRAGMA table_info: {e}")
+
+    for col_name, col_type in chargeback_columns:
+        if col_name.lower() not in existing_columns:
             try:
                 print(f"--> Adicionando coluna {col_name} em orders...")
                 cursor.execute(f'ALTER TABLE orders ADD COLUMN {col_name} {col_type}')
-            except: pass
+            except Exception as e:
+                print(f"[BD] Erro ao adicionar coluna {col_name} em orders: {e}")
 
     # --- MIGRAÇÃO: Colunas de SMTP (config) ---
     smtp_columns = [

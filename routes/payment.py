@@ -194,7 +194,8 @@ def process_approved_payment(order_ref: str, p_id: str):
                         chat_id=telegram_id,
                         product_name=product_name,
                         key_value=key_value,
-                        download_link=download_link
+                        download_link=download_link,
+                        order_ref=order['external_reference']
                     )
                     logger.info(f"Entrega de chave via Telegram agendada para o chat_id: {telegram_id}")
                 else:
@@ -204,7 +205,7 @@ def process_approved_payment(order_ref: str, p_id: str):
                         f"Seu pagamento para o produto *{product_name}* foi confirmado, mas nosso estoque de chaves para este item esgotou temporariamente.\n\n"
                         f"O administrador já foi notificado e enviará sua licença manualmente no seu e-mail ou aqui no privado o mais rápido possível!"
                     )
-                    send_telegram_message_safe(telegram_id, warn_msg)
+                    send_telegram_message_safe(telegram_id, warn_msg, order_ref=order['external_reference'])
                     logger.warning(f"Aviso de sem estoque enviado via Telegram para o chat_id: {telegram_id}")
             except Exception as e:
                 logger.error(f"Erro ao disparar entrega via Telegram: {e}")

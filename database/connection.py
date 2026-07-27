@@ -450,7 +450,8 @@ def init_db():
         ('telegram_first_name', 'TEXT DEFAULT ""'),
         ('telegram_delivery_status', 'TEXT DEFAULT ""'),
         ('telegram_delivered_at', 'TIMESTAMP'),
-        ('telegram_message_id', 'TEXT DEFAULT ""')
+        ('telegram_message_id', 'TEXT DEFAULT ""'),
+        ('telegram_delivery_error', 'TEXT DEFAULT ""')
     ]
     
     # Obter colunas existentes de forma segura e idempotente

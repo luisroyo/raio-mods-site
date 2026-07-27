@@ -61,17 +61,15 @@ def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markd
                 try:
                     from database.models import get_db_connection
                     from contextlib import closing
-                    import time
                     
-                    now_iso = time.strftime('%Y-%m-%d %H:%M:%S')
                     with closing(get_db_connection()) as conn:
                         conn.execute('''
                             UPDATE orders 
                             SET telegram_delivery_status = 'delivered',
-                                telegram_delivered_at = ?,
+                                telegram_delivered_at = CURRENT_TIMESTAMP,
                                 telegram_message_id = ?
                             WHERE external_reference = ?
-                        ''', (now_iso, str(msg.message_id), order_ref))
+                        ''', (str(msg.message_id), order_ref))
                         conn.commit()
                 except Exception as db_err:
                     logger.error(f"Erro ao atualizar status de entrega de auditoria no banco: {db_err}")
@@ -85,9 +83,9 @@ def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markd
                         conn.execute('''
                             UPDATE orders 
                             SET telegram_delivery_status = 'failed',
-                                telegram_message_id = ?
+                                telegram_delivery_error = ?
                             WHERE external_reference = ?
-                        ''', (str(e)[:200], order_ref))
+                        ''', (str(e)[:500], order_ref))
                         conn.commit()
                 except Exception as db_err:
                     logger.error(f"Erro ao atualizar status de falha de auditoria no banco: {db_err}")

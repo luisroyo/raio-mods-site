@@ -39,3 +39,34 @@ class TelegramService:
             text += f"\n📥 *Link para Download/Instruções:*\n{download_link}"
             
         send_telegram_message_safe(chat_id, text, order_ref=order_ref)
+
+    @staticmethod
+    def resend_key_delivery(order_ref: str) -> bool:
+        """
+        Recupera um pedido e reenvia a licença associada ao chat do Telegram do cliente.
+        Útil para painéis administrativos ou reenvios automáticos em caso de falha.
+        """
+        from database.models import get_db_connection
+        from contextlib import closing
+        
+        with closing(get_db_connection()) as conn:
+            order = conn.execute('''
+                SELECT o.telegram_id, o.external_reference, p.name as product_name, k.key_value, p.download_link
+                FROM orders o
+                JOIN products p ON o.product_id = p.id
+                LEFT JOIN product_keys k ON o.key_assigned_id = k.id
+                WHERE o.external_reference = ?
+            ''', (order_ref,)).fetchone()
+            
+            if not order or not order['telegram_id']:
+                return False
+                
+            key_value = order['key_value'] if order['key_value'] else "Nenhuma chave associada"
+            TelegramService.send_key_delivery(
+                chat_id=order['telegram_id'],
+                product_name=order['product_name'],
+                key_value=key_value,
+                download_link=order['download_link'],
+                order_ref=order['external_reference']
+            )
+            return True

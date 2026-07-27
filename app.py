@@ -48,11 +48,14 @@ with app.app_context():
     init_db()
 
 # 3. Registra as Rotas (Blueprints)
+from telegram import telegram_bp
+
 app.register_blueprint(public_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(payment_bp)
 app.register_blueprint(client_bp)
 app.register_blueprint(reseller_bp)
+app.register_blueprint(telegram_bp)
 
 if __name__ == '__main__':
     # 4. Roda a aplicação

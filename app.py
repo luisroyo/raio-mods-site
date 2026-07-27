@@ -42,6 +42,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
+# Registrar helper de traducao global no Jinja2
+from utils.i18n import _
+app.jinja_env.globals.update(_=_)
+
 # 2. Inicializa o Banco de Dados (Executa Migrações)
 # Isso garante que tabelas e colunas novas sejam criadas mesmo em produção (WSGI)
 with app.app_context():

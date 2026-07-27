@@ -91,9 +91,8 @@ async def product_selection_callback(update: Update, context: ContextTypes.DEFAU
         return
         
     # Gera texto formatado e teclado
-    user_id = str(update.effective_user.id) if update.effective_user else None
     text = ProductService.get_product_details_text(product)
-    keyboard = get_product_details_keyboard(product, user_id)
+    keyboard = get_product_details_keyboard(product)
     
     # Futuro: Se tivermos envio de imagem aqui (assets/images), chamaremos uma variante do TelegramService.send_photo
     await TelegramService.send_message(

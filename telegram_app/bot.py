@@ -5,9 +5,9 @@ registro dos Handlers e do ErrorHandler.
 """
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 from telegram_app.config import TelegramConfig
-from telegram.handlers import start_command, main_menu_callback, product_selection_callback
+from telegram_app.handlers import start_command, main_menu_callback, product_selection_callback
 from telegram_app.constants import CB_PREFIX_PRODUCT
-from telegram.error_handler import global_error_handler
+from telegram_app.error_handler import global_error_handler
 import logging
 
 logger = logging.getLogger("telegram_bot")

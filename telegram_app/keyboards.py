@@ -34,12 +34,13 @@ def get_products_keyboard(products: list) -> InlineKeyboardMarkup:
     
     return InlineKeyboardMarkup(keyboard)
 
-def get_product_details_keyboard(product: dict) -> InlineKeyboardMarkup:
+def get_product_details_keyboard(product: dict, user_id: str = None) -> InlineKeyboardMarkup:
     """
     Retorna o teclado de detalhes do produto.
     Se for catálogo, cria botões para navegar nos sub-produtos ou comprar planos diretamente.
     """
     keyboard = []
+    from telegram import WebAppInfo
     
     # Se o produto atual for um catálogo, mostramos botões para cada plano/subproduto
     if product.get('is_catalog') == 1:
@@ -52,10 +53,20 @@ def get_product_details_keyboard(product: dict) -> InlineKeyboardMarkup:
                 from telegram_app.utils.formatters import format_price
                 price_str = format_price(plan['price'])
                 pay_url = f"https://raiomodsgames.pythonanywhere.com/pagamento?product_id={plan['id']}"
-                keyboard.append([InlineKeyboardButton(f"🛒 {plan['duration']} - {price_str}", url=pay_url)])
+                if user_id:
+                    pay_url += f"&telegram_id={user_id}"
+                    keyboard.append([InlineKeyboardButton(f"🛒 {plan['duration']} - {price_str}", web_app=WebAppInfo(url=pay_url))])
+                else:
+                    keyboard.append([InlineKeyboardButton(f"🛒 {plan['duration']} - {price_str}", url=pay_url)])
     else:
         # Se for um produto único, mostra o botão de compra direta
-        keyboard.append([InlineKeyboardButton("🛒 Comprar Agora", url=product['url'])])
+        pay_url = product['url']
+        if user_id:
+            connector = "&" if "?" in pay_url else "?"
+            pay_url += f"{connector}telegram_id={user_id}"
+            keyboard.append([InlineKeyboardButton("🛒 Comprar Agora", web_app=WebAppInfo(url=pay_url))])
+        else:
+            keyboard.append([InlineKeyboardButton("🛒 Comprar Agora", url=pay_url)])
         
     # Botão de voltar inteligente: se tiver pai (parent_id), volta para o catálogo pai; caso contrário, volta para a lista
     parent_id = product.get('parent_id')

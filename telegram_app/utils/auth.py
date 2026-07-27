@@ -1,12 +1,20 @@
+from dataclasses import dataclass
 import hmac
 import hashlib
 import urllib.parse
 import json
+import time
 import logging
 
 logger = logging.getLogger("telegram_bot")
 
-def validate_telegram_webapp_data(init_data: str, bot_token: str) -> dict:
+@dataclass
+class TelegramWebAppUser:
+    telegram_id: str
+    username: str
+    first_name: str
+
+def validate_telegram_webapp_data(init_data: str, bot_token: str) -> TelegramWebAppUser:
     """
     Valida criptograficamente o initData enviado pelo Telegram WebApp.
     Retorna as informações do usuário se for válido, ou None se for inválido/falsificado.
@@ -35,8 +43,20 @@ def validate_telegram_webapp_data(init_data: str, bot_token: str) -> dict:
         
         # Comparação segura contra ataques de tempo
         if not hmac.compare_digest(expected_hash, received_hash):
-            logger.warning("Falha na validação de assinatura do initData do Telegram WebApp.")
+            logger.warning("Telegram WebApp authentication failed. Reason: Invalid hash.")
             return None
+            
+        # Validar expiração (auth_date) - máximo 5 minutos (300 segundos)
+        auth_date_str = params_dict.get("auth_date")
+        if auth_date_str:
+            try:
+                auth_date = int(auth_date_str)
+                if abs(time.time() - auth_date) > 300:
+                    logger.warning("Telegram WebApp authentication failed. Reason: Signature expired.")
+                    return None
+            except ValueError:
+                logger.warning("Telegram WebApp authentication failed. Reason: Invalid auth_date format.")
+                return None
             
         # Decodificar informações do usuário
         user_json = params_dict.get("user")
@@ -45,12 +65,11 @@ def validate_telegram_webapp_data(init_data: str, bot_token: str) -> dict:
             
         user_data = json.loads(user_json)
         
-        return {
-            "telegram_id": str(user_data.get("id")),
-            "telegram_chat_id": str(user_data.get("id")), # O ID privado do chat coincide com o ID do usuário
-            "telegram_username": user_data.get("username", ""),
-            "telegram_first_name": user_data.get("first_name", "")
-        }
+        return TelegramWebAppUser(
+            telegram_id=str(user_data.get("id")),
+            username=user_data.get("username", ""),
+            first_name=user_data.get("first_name", "")
+        )
     except Exception as e:
         logger.error(f"Erro ao processar initData do Telegram: {e}")
         return None

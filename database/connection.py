@@ -446,7 +446,6 @@ def init_db():
         ('key_hash', 'TEXT DEFAULT ""'),
         ('recovery_email_sent', 'INTEGER DEFAULT 0'),
         ('telegram_id', 'TEXT DEFAULT ""'),
-        ('telegram_chat_id', 'TEXT DEFAULT ""'),
         ('telegram_username', 'TEXT DEFAULT ""'),
         ('telegram_first_name', 'TEXT DEFAULT ""')
     ]

@@ -1,30 +1,39 @@
 """
 Handlers
 Camada de Apresentação. Liga as interações do Telegram (Comandos e Cliques) aos Serviços.
-Não contém regras de negócio de produtos ou formatações textuais (apenas delegação).
+Detecta o idioma do usuário via update.effective_user.language_code e propaga para
+mensagens, teclados e serviços de produto.
 """
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
 from telegram_app.constants import CB_PRODUCTS, CB_HOW_TO_BUY, CB_SUPPORT, CB_WEBSITE, CB_PREFIX_PRODUCT
-from telegram_app.messages import MSG_WELCOME, MSG_HOW_TO_BUY, MSG_SUPPORT
+from telegram_app.messages import get_welcome, get_how_to_buy, get_support, get_product_unavailable, get_products_menu, get_error
 from telegram_app.keyboards import get_main_menu_keyboard, get_products_keyboard, get_product_details_keyboard, get_back_button_keyboard
 from telegram_app.services.product_service import ProductService
 from telegram_app.services.telegram_service import TelegramService
+from utils.i18n import get_user_lang_from_telegram
 
 logger = logging.getLogger("telegram_bot")
 
+
+def _lang(update: Update) -> str:
+    """Extrai e normaliza o código de idioma do usuário Telegram."""
+    user = update.effective_user
+    lang_code = user.language_code if user else None
+    return get_user_lang_from_telegram(lang_code)
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Trata o comando /start e exibe o menu inicial."""
-    logger.info(f"Usuário {update.effective_user.id} acionou /start.")
-    
-    # Futuro: Aqui chamaríamos UserService.register_or_update_user(...)
-    
+    """Trata o comando /start e exibe o menu inicial no idioma do usuário."""
+    lang = _lang(update)
+    logger.info(f"Usuário {update.effective_user.id} acionou /start (lang={lang}).")
+
     await TelegramService.send_message(
         update=update,
-        text=MSG_WELCOME,
-        reply_markup=get_main_menu_keyboard()
+        text=get_welcome(lang),
+        reply_markup=get_main_menu_keyboard(lang)
     )
 
 
@@ -32,24 +41,25 @@ async def main_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """Processa todos os cliques do Menu Principal e navegação geral."""
     query = update.callback_query
     data = query.data
-    logger.info(f"Usuário clicou no callback: {data}")
+    lang = _lang(update)
+    logger.info(f"Usuário {update.effective_user.id} clicou: {data} (lang={lang})")
 
     # Retorno ao Menu Inicial
     if data == "menu_main":
         await TelegramService.send_message(
             update=update,
-            text=MSG_WELCOME,
-            reply_markup=get_main_menu_keyboard()
+            text=get_welcome(lang),
+            reply_markup=get_main_menu_keyboard(lang)
         )
-        
+
     # Navegação: Produtos
     elif data == CB_PRODUCTS:
         products_list = ProductService.get_all_products()
-        keyboard = get_products_keyboard(products_list)
-        
+        keyboard = get_products_keyboard(products_list, lang)
+
         await TelegramService.send_message(
             update=update,
-            text="🎱 *Escolha um produto para ver os detalhes:*",
+            text=get_products_menu(lang),
             reply_markup=keyboard
         )
 
@@ -57,16 +67,16 @@ async def main_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     elif data == CB_HOW_TO_BUY:
         await TelegramService.send_message(
             update=update,
-            text=MSG_HOW_TO_BUY,
-            reply_markup=get_back_button_keyboard()
+            text=get_how_to_buy(lang),
+            reply_markup=get_back_button_keyboard(lang)
         )
 
     # Navegação: Suporte
     elif data == CB_SUPPORT:
         await TelegramService.send_message(
             update=update,
-            text=MSG_SUPPORT,
-            reply_markup=get_back_button_keyboard()
+            text=get_support(lang),
+            reply_markup=get_back_button_keyboard(lang)
         )
 
 
@@ -74,27 +84,27 @@ async def product_selection_callback(update: Update, context: ContextTypes.DEFAU
     """Processa o clique em um produto específico."""
     query = update.callback_query
     data = query.data
-    
+    lang = _lang(update)
+
     # Extrai o ID do produto removendo o prefixo
     product_id = data.replace(CB_PREFIX_PRODUCT, "")
-    logger.info(f"Usuário solicitou visualização do produto: {product_id}")
-    
+    logger.info(f"Usuário {update.effective_user.id} solicitou produto: {product_id} (lang={lang})")
+
     # Busca informações do produto
     product = ProductService.get_product(product_id)
-    
+
     if not product:
         await TelegramService.send_message(
             update=update,
-            text="Desculpe, este produto não está mais disponível.",
-            reply_markup=get_back_button_keyboard()
+            text=get_product_unavailable(lang),
+            reply_markup=get_back_button_keyboard(lang)
         )
         return
-        
-    # Gera texto formatado e teclado
-    text = ProductService.get_product_details_text(product)
-    keyboard = get_product_details_keyboard(product)
-    
-    # Futuro: Se tivermos envio de imagem aqui (assets/images), chamaremos uma variante do TelegramService.send_photo
+
+    # Gera texto formatado e teclado no idioma correto
+    text = ProductService.get_product_details_text(product, lang)
+    keyboard = get_product_details_keyboard(product, lang)
+
     await TelegramService.send_message(
         update=update,
         text=text,

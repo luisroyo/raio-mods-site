@@ -53,5 +53,21 @@
     "view_in": "View in",
     "no_stock_description_short": "Contact the administrator via WhatsApp.",
     "no_products_found_for": "No products found for",
-    "try_other_terms": "Try other search terms or browse the shop"
+    "try_other_terms": "Try other search terms or browse the shop",
+
+    "bot_welcome": "Hello! Welcome to *Raio Mods* ⚡\n\nI'm the official store assistant. How can I help you today?",
+    "bot_products_menu": "🎱 *Choose a product to see details:*",
+    "bot_how_to_buy": "🛒 *How to Buy*\n\n1️⃣ Choose the desired product in the 'Products' menu.\n2️⃣ Click 'Buy' on the plan you want.\n3️⃣ You'll be redirected to our official website to complete the secure payment.\n4️⃣ After purchase, the key is delivered automatically to your site account!",
+    "bot_support": "🛠 *Technical Support*\n\nOur support is available Monday to Friday, 09:00 to 18:00.\nYou can reach our team on our Discord server, or send your question here (AI support coming soon!).",
+    "bot_error": "Sorry, a temporary error occurred. Please try again in a few moments.",
+    "bot_product_unavailable": "Sorry, this product is no longer available.",
+    "bot_available_plans": "💰 *Available Plans:*",
+    "bot_no_description": "No description",
+
+    "btn_products": "🎱 Products",
+    "btn_how_to_buy": "🛒 How to Buy",
+    "btn_support": "🛠 Support",
+    "btn_official_site": "🌐 Official Website",
+    "btn_back": "🔙 Back",
+    "btn_buy_now": "🛒 Buy Now"
 }

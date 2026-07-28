@@ -124,3 +124,49 @@ def _(key, default=None):
         if val_pt is not None:
             return val_pt
         return default if default is not None else key
+
+
+def translate_for_lang(key, lang, default=None):
+    """
+    Context-free translation function for use outside Flask request context
+    (e.g. Telegram bot handlers). Accepts the target language directly.
+    Falls back to 'pt' if the key is missing in the requested language.
+    """
+    if not _translations:
+        load_translations()
+
+    # Normalize to supported lang
+    supported = {'pt', 'en', 'es'}
+    if lang not in supported:
+        lang = 'pt'
+
+    trans = _translations.get(lang, {})
+    val = trans.get(key)
+    if val is not None:
+        return val
+
+    # Fallback: try Portuguese
+    if lang != 'pt':
+        val_pt = _translations.get('pt', {}).get(key)
+        if val_pt is not None:
+            return val_pt
+
+    return default if default is not None else key
+
+
+def get_user_lang_from_telegram(telegram_lang_code: str) -> str:
+    """
+    Maps a Telegram user language_code (e.g. 'pt-BR', 'en', 'es-MX')
+    to one of our supported site languages: 'pt', 'en', 'es'.
+    Defaults to 'pt' if unknown.
+    """
+    if not telegram_lang_code:
+        return 'pt'
+    prefix = telegram_lang_code.split('-')[0].lower()
+    mapping = {'pt': 'pt', 'en': 'en', 'es': 'es'}
+    return mapping.get(prefix, 'pt')
+
+
+def get_currency_for_lang(lang: str) -> str:
+    """Returns the default currency for a given language code."""
+    return 'BRL' if lang == 'pt' else 'USD'

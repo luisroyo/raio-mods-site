@@ -1,27 +1,37 @@
 """
 Messages
-Centraliza os textos estáticos enviados pelo bot.
+Centraliza os textos do bot. Todos os textos são gerados via função,
+aceitando um código de idioma para retornar a tradução correta.
 """
+from utils.i18n import translate_for_lang
 
-MSG_WELCOME = (
-    "Olá! Bem-vindo à *Raio Mods* ⚡\n\n"
-    "Sou o assistente oficial da loja. Como posso ajudar você hoje?"
-)
 
-MSG_HOW_TO_BUY = (
-    "🛒 *Como Comprar*\n\n"
-    "1️⃣ Escolha o produto desejado no menu 'Produtos'.\n"
-    "2️⃣ Clique em 'Comprar' no plano que deseja.\n"
-    "3️⃣ Você será redirecionado para o nosso site oficial para finalizar o pagamento seguro.\n"
-    "4️⃣ Após a compra, a chave é entregue automaticamente na sua conta do site!"
-)
+def get_welcome(lang: str = 'pt') -> str:
+    return translate_for_lang('bot_welcome', lang)
 
-MSG_SUPPORT = (
-    "🛠 *Suporte Técnico*\n\n"
-    "Nosso suporte atende de segunda a sexta, das 09:00 às 18:00.\n"
-    "Você pode chamar nossa equipe no nosso servidor do Discord, ou enviar sua dúvida aqui mesmo (Em breve, suporte com IA!)."
-)
 
-MSG_ERROR = (
-    "Desculpe, ocorreu um erro temporário. Tente novamente em alguns instantes."
-)
+def get_how_to_buy(lang: str = 'pt') -> str:
+    return translate_for_lang('bot_how_to_buy', lang)
+
+
+def get_support(lang: str = 'pt') -> str:
+    return translate_for_lang('bot_support', lang)
+
+
+def get_error(lang: str = 'pt') -> str:
+    return translate_for_lang('bot_error', lang)
+
+
+def get_product_unavailable(lang: str = 'pt') -> str:
+    return translate_for_lang('bot_product_unavailable', lang)
+
+
+def get_products_menu(lang: str = 'pt') -> str:
+    return translate_for_lang('bot_products_menu', lang)
+
+
+# ─── Backwards-compatible aliases (kept for any code importing the old constants) ───
+MSG_WELCOME = get_welcome('pt')
+MSG_HOW_TO_BUY = get_how_to_buy('pt')
+MSG_SUPPORT = get_support('pt')
+MSG_ERROR = get_error('pt')

@@ -16,11 +16,13 @@ def add_product():
     name = request.form.get('name')
     desc = request.form.get('description') or ''
     price = request.form.get('price')
-    cat = request.form.get('category')
+    cat = request.form.get('category', '').strip()
     tagline = (request.form.get('tagline') or '').strip()
     payment_url = (request.form.get('payment_url') or '').strip()
     promo_price = (request.form.get('promo_price') or '').strip()
     promo_label = (request.form.get('promo_label') or '').strip()
+    link_id_val = request.form.get('link_id', '').strip()
+    link_id = int(link_id_val) if link_id_val and link_id_val.isdigit() else None
     download_link = (request.form.get('download_link') or '').strip()
     
     try:
@@ -128,13 +130,13 @@ def add_product():
                 name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (
                 name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id
             )
         )
         conn.commit()
@@ -218,6 +220,13 @@ def edit_product(pid):
             download_link = download_link.strip()
         else:
             download_link = existing.get('download_link', '')
+            
+        link_id_val = request.form.get('link_id')
+        if link_id_val is not None:
+            link_id_val = link_id_val.strip()
+            link_id = int(link_id_val) if link_id_val.isdigit() else None
+        else:
+            link_id = existing.get('link_id')
 
         # Se o preço da promoção for vazio, limpa a promoção inteira
         if not promo_price:
@@ -357,14 +366,14 @@ def edit_product(pid):
                 is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, 
                 is_active=?, supplier=?, reseller_price=?, download_link=?,
                 name_pt=?, name_en=?, name_es=?, description_pt=?, description_en=?, description_es=?,
-                price_brl=?, price_usd=?, default_currency=?, translation_status=?
+                price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?
             WHERE id=?''',
             (
                 name, desc, price, img, cat, tagline, sort, pid_val, 
                 is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, 
                 is_active, supplier, reseller_price, download_link,
                 name_pt, name_en, name_es, description_pt, description_en, description_es,
-                price_brl, price_usd, default_currency, translation_status,
+                price_brl, price_usd, default_currency, translation_status, link_id,
                 pid
             )
         )
@@ -434,7 +443,8 @@ def product_info(pid):
             'price_brl': float(prod.price_brl or 0.0),
             'price_usd': float(prod.price_usd or 0.0),
             'default_currency': prod.default_currency or 'BRL',
-            'translation_status': prod.translation_status or 'draft'
+            'translation_status': prod.translation_status or 'draft',
+            'link_id': prod.link_id
         })
     except Exception as e:
         print(f"Erro product_info: {e}")

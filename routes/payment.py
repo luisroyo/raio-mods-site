@@ -726,9 +726,11 @@ def check_status(order_ref):
         row = conn.execute('''
             SELECT o.status, o.key_assigned_id,
                    p.name AS product_name,
-                   p.download_link
+                   p.download_link,
+                   l.download_link AS linked_download_url
             FROM orders o
             LEFT JOIN products p ON o.product_id = p.id
+            LEFT JOIN links l ON p.link_id = l.id
             WHERE o.external_reference = ?
         ''', (order_ref,)).fetchone()
     
@@ -737,7 +739,13 @@ def check_status(order_ref):
     
     def _build_approved_response(row):
         """Monta o payload completo quando o pedido está aprovado."""
-        download_link = row.get('download_link') or ''
+        # Prioriza a URL da tabela de links, com fallback para o link manual antigo
+        download_link = row.get('linked_download_url')
+        if not download_link or not download_link.strip():
+            download_link = row.get('download_link') or ''
+        else:
+            download_link = download_link.strip()
+            
         return jsonify({
             'status': 'ready_to_reveal',
             'product_name': row.get('product_name') or '',
@@ -764,9 +772,11 @@ def check_status(order_ref):
                             updated = conn2.execute('''
                                 SELECT o.status, o.key_assigned_id,
                                        p.name AS product_name,
-                                       p.download_link
+                                       p.download_link,
+                                       l.download_link AS linked_download_url
                                 FROM orders o
                                 LEFT JOIN products p ON o.product_id = p.id
+                                LEFT JOIN links l ON p.link_id = l.id
                                 WHERE o.external_reference = ?
                             ''', (order_ref,)).fetchone()
                         if updated:

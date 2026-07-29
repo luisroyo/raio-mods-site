@@ -140,7 +140,8 @@ def init_db():
             price_brl DECIMAL(10,2) DEFAULT 0.0,
             price_usd DECIMAL(10,2) DEFAULT 0.0,
             default_currency TEXT DEFAULT "BRL",
-            translation_status TEXT DEFAULT "draft"
+            translation_status TEXT DEFAULT "draft",
+            link_id INTEGER REFERENCES links(id)
         )
     ''')
     
@@ -602,6 +603,51 @@ def init_db():
                 cursor.execute(f'ALTER TABLE products ADD COLUMN {col_name} {col_type}')
             except Exception as e:
                 print(f"[BD] Erro ao adicionar coluna {col_name} em products: {e}")
+
+    # --- MIGRAÇÃO: Vínculo Relacional de Links de Download (products.link_id) ---
+    if 'link_id' not in existing_prod_columns:
+        try:
+            print("--> Adicionando coluna link_id em products...")
+            cursor.execute('ALTER TABLE products ADD COLUMN link_id INTEGER REFERENCES links(id)')
+        except Exception as e:
+            print(f"[BD] Erro ao adicionar coluna link_id: {e}")
+            
+    # Cria o índice de link_id
+    try:
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_products_link_id ON products(link_id)')
+    except Exception as e:
+        print(f"[BD] Erro ao criar índice idx_products_link_id: {e}")
+        
+    # Auto-migração: Move download_link textuais legados para a tabela links e atualiza link_id
+    if 'download_link' in existing_prod_columns:
+        try:
+            # Seleciona produtos que têm download_link mas não têm link_id
+            prods_to_migrate = cursor.execute('''
+                SELECT id, name, download_link 
+                FROM products 
+                WHERE download_link IS NOT NULL 
+                AND download_link != '' 
+                AND link_id IS NULL
+            ''').fetchall()
+            
+            if prods_to_migrate:
+                print(f"--> Migrando {len(prods_to_migrate)} produtos legados para vínculos de links...")
+                for prod in prods_to_migrate:
+                    dlink = prod['download_link'].strip()
+                    # Verifica se esse link já existe na tabela links
+                    existing_link = cursor.execute('SELECT id FROM links WHERE download_link = ?', (dlink,)).fetchone()
+                    if existing_link:
+                        new_link_id = existing_link['id']
+                    else:
+                        # Cria um novo link para essa URL
+                        cursor.execute('INSERT INTO links (title, download_link) VALUES (?, ?)', 
+                                    (f"Link gerado: {prod['name']}", dlink))
+                        new_link_id = cursor.lastrowid
+                    
+                    # Atualiza o produto com o novo link_id
+                    cursor.execute('UPDATE products SET link_id = ? WHERE id = ?', (new_link_id, prod['id']))
+        except Exception as e:
+            print(f"[BD] Erro na auto-migração de links: {e}")
 
     # Executar migração de dados de produtos legados de forma idempotente e segura
     def clean_and_parse_price(price_str):

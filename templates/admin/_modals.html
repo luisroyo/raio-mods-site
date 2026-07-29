@@ -321,9 +321,15 @@
                     class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
             </div>
             <div>
-                <input type="text" name="download_link" placeholder="Link de Download (Opcional)"
-                    list="download-links-list"
-                    class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white">
+                <label class="text-[10px] text-gray-400 block mb-1">🔗 Vínculo de Link (Download)</label>
+                <select name="link_id" class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white text-sm" onchange="updateLinkPreview(this)">
+                    <option value="">-- Nenhum Link Vinculado --</option>
+                    {% for lk in links %}
+                    <option value="{{ lk.id }}" data-url="{{ lk.download_link }}">{{ lk.title }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-[10px] text-gray-500 mt-1 link-preview-text">Nenhum link selecionado</p>
+                <input type="hidden" name="download_link" value="">
             </div>
             <input type="text" name="promo_price" placeholder="Preço promocional (opcional)"
                 class="w-full p-2 bg-gray-900 border border-amber-500/50 rounded text-white">
@@ -643,11 +649,15 @@
             </div>
 
             <div>
-                <label class="text-xs text-gray-400 block mb-1">⬇️ Link de Download</label>
-                <input type="text" id="edit_download_link" name="download_link"
-                    list="download-links-list"
-                    class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white"
-                    placeholder="Link para envio junto com a compra (opcional)">
+                <label class="text-xs text-gray-400 block mb-1">🔗 Vínculo de Link (Download)</label>
+                <select id="edit_link_id" name="link_id" class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white text-sm" onchange="updateLinkPreview(this)">
+                    <option value="">-- Nenhum Link Vinculado --</option>
+                    {% for lk in links %}
+                    <option value="{{ lk.id }}" data-url="{{ lk.download_link }}">{{ lk.title }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-[10px] text-gray-500 mt-1 link-preview-text">Nenhum link selecionado</p>
+                <input type="hidden" id="edit_download_link" name="download_link" value="">
             </div>
 
             <div class="border border-amber-500/50 rounded p-3 bg-amber-500/5">
@@ -798,4 +808,19 @@
     </div>
 </div>
 
-<!-- Inline Scripts -->
+<!-- Inline Scripts -->< s c r i p t > 
+ f u n c t i o n   u p d a t e L i n k P r e v i e w ( s e l e c t E l e m e n t )   { 
+         c o n s t   p r e v i e w E l   =   s e l e c t E l e m e n t . n e x t E l e m e n t S i b l i n g ; 
+         i f   ( ! p r e v i e w E l   | |   ! p r e v i e w E l . c l a s s L i s t . c o n t a i n s ( " l i n k - p r e v i e w - t e x t " ) )   r e t u r n ; 
+         
+         c o n s t   s e l e c t e d O p t i o n   =   s e l e c t E l e m e n t . o p t i o n s [ s e l e c t E l e m e n t . s e l e c t e d I n d e x ] ; 
+         c o n s t   u r l   =   s e l e c t e d O p t i o n . g e t A t t r i b u t e ( " d a t a - u r l " ) ; 
+         
+         i f   ( u r l   & &   u r l . t r i m ( )   ! = =   " " )   { 
+                 p r e v i e w E l . i n n e r H T M L   =   ` < s p a n   c l a s s = " t e x t - b l u e - 4 0 0 " > U R L : < / s p a n >   $ { u r l } ` ; 
+         }   e l s e   { 
+                 p r e v i e w E l . i n n e r T e x t   =   " N e n h u m   l i n k   s e l e c i o n a d o   o u   l i n k   n � o   p o s s u i   U R L " ; 
+         } 
+ } 
+ < / s c r i p t >  
+ 

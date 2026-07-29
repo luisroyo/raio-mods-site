@@ -36,6 +36,16 @@ def delete_link(lid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
     conn = get_db_connection()
+    
+    # Verifica se o link está sendo usado em algum produto
+    try:
+        usage = conn.execute('SELECT COUNT(*) FROM products WHERE link_id = ?', (lid,)).fetchone()[0]
+        if usage > 0:
+            conn.close()
+            return jsonify({'error': f'Não é possível excluir. Este link está vinculado a {usage} produto(s).' }), 400
+    except sqlite3.OperationalError:
+        pass # A coluna link_id pode não existir ainda se a migration não rodou
+
     conn.execute('DELETE FROM links WHERE id = ?', (lid,))
     conn.commit()
     conn.close()

@@ -35,7 +35,7 @@ function openAddSubproductModal(pid, name, isCategory) {
 function openEditModal(
     id, name, desc, price, cat, img,
     tagline, sort, pid, isCat,
-    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice, downloadLink,
+    payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice, downloadLink, linkId,
     namePt, nameEn, nameEs, descPt, descEn, descEs, priceBrl, priceUsd, defaultCurrency, translationStatus
 ) {
     setVal('edit_id', id);
@@ -48,6 +48,16 @@ function openEditModal(
     setVal('edit_is_catalog', isCat);
     setVal('edit_payment_url', payUrl);
     setVal('edit_download_link', downloadLink || '');
+    
+    // Set link_id and update preview
+    const linkSelect = document.getElementById('edit_link_id');
+    if (linkSelect) {
+        linkSelect.value = linkId || '';
+        // trigger preview update if function exists
+        if (typeof updateLinkPreview === 'function') {
+            updateLinkPreview(linkSelect);
+        }
+    }
     setVal('edit_promo_price', promoPrice);
     setVal('edit_promo_label', promoLabel);
     setVal('edit_cost_usd', costUsd || 0);

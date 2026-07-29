@@ -25,6 +25,38 @@ class TelegramService:
         )
 
     @staticmethod
+    async def send_photo_with_fallback(update: Update, photo_url: str, caption: str, reply_markup=None, parse_mode='Markdown'):
+        """
+        Tenta enviar uma foto com legenda. Se falhar (URL inválida, por exemplo), envia apenas o texto.
+        """
+        import logging
+        if update.callback_query:
+            await update.callback_query.answer()
+            
+        try:
+            if not photo_url or photo_url == 'placeholder.jpg':
+                raise ValueError("No valid image URL provided")
+                
+            # Trata URLs relativas caso a imagem tenha sido upada direto no site
+            if photo_url.startswith('/'):
+                photo_url = f"https://raiomodsgames.pythonanywhere.com{photo_url}"
+                
+            await update.effective_chat.send_photo(
+                photo=photo_url,
+                caption=caption,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode
+            )
+        except Exception as e:
+            logging.getLogger("telegram_bot").warning(f"Falha ao enviar foto ({photo_url}): {e}. Enviando texto...")
+            # Fallback para envio apenas de texto
+            await update.effective_chat.send_message(
+                text=caption,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode
+            )
+
+    @staticmethod
     def send_key_delivery(chat_id: str, product_name: str, key_value: str, download_link: str = None, order_ref: str = None) -> None:
         """Formata e envia a chave do produto para o usuário do Telegram de forma assíncrona."""
         from telegram_app.routes import send_telegram_message_safe

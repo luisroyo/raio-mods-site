@@ -229,6 +229,12 @@ def _get_admin_data():
     # Extract unique suppliers
     suppliers = sorted(list(set(p['supplier'] for p in all_products if 'supplier' in p.keys() and p['supplier'] and p['supplier'].strip() != '')))
 
+    # Extract unique download_links já cadastrados (para autocomplete nos modais)
+    download_links = sorted(list(set(
+        p['download_link'] for p in all_products
+        if 'download_link' in p.keys() and p['download_link'] and p['download_link'].strip() != ''
+    )))
+
     # Security Audit
     security_warnings = []
     if current_app.config.get('SECRET_KEY') == 'dev-secret-key-change-me':
@@ -247,6 +253,7 @@ def _get_admin_data():
         'parent_products': parent_products,
         'categories': categories,
         'suppliers': suppliers,
+        'download_links': download_links,
         'links': all_links,
         'config': config,
         'stats': stats,

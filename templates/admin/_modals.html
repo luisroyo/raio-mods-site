@@ -1,3 +1,10 @@
+<!-- Datalist global: links de download já cadastrados nos produtos -->
+<datalist id="download-links-list">
+    {% for dl in download_links %}
+    <option value="{{ dl }}">{{ dl }}</option>
+    {% endfor %}
+</datalist>
+
 <!-- Edit Manual Sale Modal -->
 <div id="editManualSaleModal"
     class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
@@ -315,6 +322,7 @@
             </div>
             <div>
                 <input type="text" name="download_link" placeholder="Link de Download (Opcional)"
+                    list="download-links-list"
                     class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white">
             </div>
             <input type="text" name="promo_price" placeholder="Preço promocional (opcional)"
@@ -637,6 +645,7 @@
             <div>
                 <label class="text-xs text-gray-400 block mb-1">⬇️ Link de Download</label>
                 <input type="text" id="edit_download_link" name="download_link"
+                    list="download-links-list"
                     class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white"
                     placeholder="Link para envio junto com a compra (opcional)">
             </div>

@@ -105,11 +105,8 @@ async def product_selection_callback(update: Update, context: ContextTypes.DEFAU
     text = ProductService.get_product_details_text(product, lang)
     keyboard = get_product_details_keyboard(product, lang)
 
-    image_url = product.get('image')
-
-    await TelegramService.send_photo_with_fallback(
+    await TelegramService.send_message(
         update=update,
-        photo_url=image_url,
-        caption=text,
+        text=text,
         reply_markup=keyboard
     )

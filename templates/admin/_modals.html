@@ -808,19 +808,19 @@
     </div>
 </div>
 
-<!-- Inline Scripts -->< s c r i p t > 
- f u n c t i o n   u p d a t e L i n k P r e v i e w ( s e l e c t E l e m e n t )   { 
-         c o n s t   p r e v i e w E l   =   s e l e c t E l e m e n t . n e x t E l e m e n t S i b l i n g ; 
-         i f   ( ! p r e v i e w E l   | |   ! p r e v i e w E l . c l a s s L i s t . c o n t a i n s ( " l i n k - p r e v i e w - t e x t " ) )   r e t u r n ; 
-         
-         c o n s t   s e l e c t e d O p t i o n   =   s e l e c t E l e m e n t . o p t i o n s [ s e l e c t E l e m e n t . s e l e c t e d I n d e x ] ; 
-         c o n s t   u r l   =   s e l e c t e d O p t i o n . g e t A t t r i b u t e ( " d a t a - u r l " ) ; 
-         
-         i f   ( u r l   & &   u r l . t r i m ( )   ! = =   " " )   { 
-                 p r e v i e w E l . i n n e r H T M L   =   ` < s p a n   c l a s s = " t e x t - b l u e - 4 0 0 " > U R L : < / s p a n >   $ { u r l } ` ; 
-         }   e l s e   { 
-                 p r e v i e w E l . i n n e r T e x t   =   " N e n h u m   l i n k   s e l e c i o n a d o   o u   l i n k   n „ o   p o s s u i   U R L " ; 
-         } 
- } 
- < / s c r i p t >  
- 
+<!-- Inline Scripts -->
+<script>
+function updateLinkPreview(selectElement) {
+    const previewEl = selectElement.nextElementSibling;
+    if (!previewEl || !previewEl.classList.contains('link-preview-text')) return;
+    
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const url = selectedOption.getAttribute('data-url');
+    
+    if (url && url.trim() !== '') {
+        previewEl.innerHTML = '<span class="text-blue-400">URL:</span> ' + url;
+    } else {
+        previewEl.innerText = 'Nenhum link selecionado ou link n√£o possui URL';
+    }
+}
+</script>

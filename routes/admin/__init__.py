@@ -230,10 +230,18 @@ def _get_admin_data():
     suppliers = sorted(list(set(p['supplier'] for p in all_products if 'supplier' in p.keys() and p['supplier'] and p['supplier'].strip() != '')))
 
     # Extract unique download_links já cadastrados (para autocomplete nos modais)
-    download_links = sorted(list(set(
+    # Fonte 1: produtos que já têm download_link preenchido
+    dl_from_products = {
         p['download_link'] for p in all_products
-        if 'download_link' in p.keys() and p['download_link'] and p['download_link'].strip() != ''
-    )))
+        if 'download_link' in p.keys() and p['download_link'] and p['download_link'].strip()
+    }
+    # Fonte 2: tabela `links` (links de download/vídeo já cadastrados no sistema)
+    dl_from_links = {
+        lk['download_link'] for lk in all_links
+        if 'download_link' in lk.keys() and lk['download_link'] and lk['download_link'].strip()
+    }
+    download_links = sorted(dl_from_products | dl_from_links)
+
 
     # Security Audit
     security_warnings = []

@@ -175,6 +175,19 @@ def process_approved_payment(order_ref: str, p_id: str):
             except Exception as e:
                 logger.error(f"Erro ao creditar pontos de fidelidade para {customer_email}: {e}")
 
+        # Incrementar uso do cupom, se houver (somente após pagamento aprovado)
+        if 'coupon_id' in order.keys() and order['coupon_id']:
+            try:
+                c_id = order['coupon_id']
+                conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (c_id,))
+                
+                if 'coupon_code' in order.keys() and order['coupon_code']:
+                    if str(order['coupon_code']).upper().startswith('FID-'):
+                        conn.execute('UPDATE loyalty_coupons SET is_used = 1 WHERE coupon_code = ?', (order['coupon_code'],))
+                logger.info(f"Uso do cupom ID {c_id} incrementado.")
+            except Exception as e:
+                logger.error(f"Erro ao atualizar uso do cupom no pedido {order['id']}: {e}")
+
         conn.commit()
 
         # Envia e-mails de notificação (Admin e Cliente) de forma assíncrona
@@ -510,16 +523,16 @@ def create_payment():
             
             coupon_code = data.get('coupon')
             applied_coupon = None
+            coupon_data = None
+            discount_applied = 0.0
+            
             if coupon_code:
                 discount_amt, err, c_data = get_coupon_discount(coupon_code, base_price, conn)
                 if not err and c_data:
                     final_price = base_price - discount_amt
                     applied_coupon = c_data['id']
-                    # Opcional: já contabiliza "uso" aqui para impedir fraude de carrinho infinito
-                    conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (applied_coupon,))
-                    if c_data['code'].upper().startswith('FID-'):
-                        conn.execute('UPDATE loyalty_coupons SET is_used = 1 WHERE coupon_code = ?', (c_data['code'],))
-                    conn.commit()
+                    coupon_data = c_data
+                    discount_applied = discount_amt
 
         sdk = get_mp_sdk()
         if not sdk:
@@ -616,18 +629,34 @@ def create_payment():
 
         # Persistência do pedido unificada
         with closing(get_db_connection()) as conn:
+            from utils.i18n import get_current_language, get_current_currency
+            try:
+                lang = get_current_language()
+                curr = get_current_currency()
+            except:
+                lang = 'pt'
+                curr = 'BRL'
+                
+            c_code = coupon_data['code'] if coupon_data else ''
+            c_type = coupon_data['discount_type'] if coupon_data else ''
+            c_val = coupon_data['discount_value'] if coupon_data else 0.0
+
             conn.execute('''
                 INSERT INTO orders (
                     external_reference, product_id, customer_email, amount, status, 
                     qr_code, qr_code_base64, customer_name, customer_cpf, 
                     customer_phone, ip_purchase, terms_accepted_at,
-                    telegram_id, telegram_username, telegram_first_name
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    telegram_id, telegram_username, telegram_first_name,
+                    coupon_id, coupon_code, discount_type, discount_value, discount_applied,
+                    subtotal, total, language, currency
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 order_ref, product_id, email, final_price, 'pending', 
                 qr_code, qr_base64, customer_name, customer_cpf, 
                 customer_phone, client_ip, terms_ts,
-                telegram_id, telegram_username, telegram_first_name
+                telegram_id, telegram_username, telegram_first_name,
+                applied_coupon, c_code, c_type, c_val, discount_applied,
+                base_price, final_price, lang, curr
             ))
             conn.commit()
 

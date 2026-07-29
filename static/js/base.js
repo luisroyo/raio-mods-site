@@ -44,6 +44,12 @@ function openCheckout(id, name, price) {
     currentProductPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
     currentCouponCode = null;
     
+    if(typeof gtag === 'function') {
+        gtag('event', 'begin_checkout', { 
+            items: [{ item_id: id, item_name: name, price: currentProductPrice }] 
+        });
+    }
+    
     document.getElementById('modalProductName').innerText = name;
     document.getElementById('modalProductPrice').innerText = price;
     
@@ -120,6 +126,10 @@ async function applyCouponFront() {
             btn.innerText = '✓';
             currentCouponCode = code;
             
+            if(typeof gtag === 'function') {
+                gtag('event', 'coupon_applied', { coupon: code, discount: data.discount_amount });
+            }
+            
             const newPrice = Math.max(0, currentProductPrice - data.discount_amount);
             document.getElementById('modalProductPrice').innerHTML = `
                 <span class="line-through text-gray-500 text-sm font-normal">R$ ${currentProductPrice.toFixed(2).replace('.', ',')}</span> 
@@ -193,6 +203,9 @@ async function startPayment(type) {
 
         // SE FOR PIX (MOSTRA QR CODE NA TELA)
         if (data.type === 'pix') {
+            if(typeof gtag === 'function') {
+                gtag('event', 'payment_pix_created', { transaction_id: data.order_ref });
+            }
             document.getElementById('step-email').classList.add('hidden');
             document.getElementById('step-payment').classList.remove('hidden');
             
@@ -205,6 +218,9 @@ async function startPayment(type) {
         
         // SE FOR CARTÃO (REDIRECIONA NA MESMA ABA)
         else if (data.type === 'card') {
+            if(typeof gtag === 'function') {
+                gtag('event', 'payment_card_created', { transaction_id: data.order_ref });
+            }
             // Redireciona na mesma aba para evitar o bloqueador de popups do navegador
             window.location.href = data.checkout_url;
             

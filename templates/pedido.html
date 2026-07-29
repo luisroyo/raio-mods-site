@@ -166,6 +166,7 @@ function startOrderPolling() {
                 clearInterval(pollInterval);
                 document.getElementById('status-pending').classList.add('hidden');
                 document.getElementById('status-reveal').classList.remove('hidden');
+                if (typeof gtag === 'function') gtag('event', 'purchase', { transaction_id: ORDER_REF });
             } else if (data.status === 'not_found') {
                 clearInterval(pollInterval);
                 document.getElementById('status-pending').classList.add('hidden');
@@ -235,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.status === 'ready_to_reveal') {
                     document.getElementById('status-pending').classList.add('hidden');
                     document.getElementById('status-reveal').classList.remove('hidden');
+                    if (typeof gtag === 'function') gtag('event', 'purchase', { transaction_id: ORDER_REF });
                 } else if (data.status === 'not_found') {
                     document.getElementById('status-pending').classList.add('hidden');
                     document.getElementById('status-error').classList.remove('hidden');

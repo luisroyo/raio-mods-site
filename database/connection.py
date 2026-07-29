@@ -654,6 +654,54 @@ def init_db():
         except Exception as e:
             print(f"Erro ao adicionar coluna used_by_email: {e}")
 
+    # --- MIGRAÇÃO: Google Analytics (config) ---
+    try:
+        cursor.execute('SELECT google_analytics_id FROM config LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            print("--> Adicionando google_analytics_id na config...")
+            cursor.execute('ALTER TABLE config ADD COLUMN google_analytics_id TEXT DEFAULT ""')
+        except: pass
+
+    # --- MIGRAÇÃO: Colunas de Cupons e i18n (orders) ---
+    orders_new_cols = [
+        ('coupon_id', 'INTEGER'),
+        ('coupon_code', 'TEXT DEFAULT ""'),
+        ('discount_type', 'TEXT DEFAULT ""'),
+        ('discount_value', 'REAL DEFAULT 0.0'),
+        ('discount_applied', 'REAL DEFAULT 0.0'),
+        ('subtotal', 'REAL DEFAULT 0.0'),
+        ('total', 'REAL DEFAULT 0.0'),
+        ('language', "TEXT DEFAULT 'pt'"),
+        ('currency', "TEXT DEFAULT 'BRL'")
+    ]
+    
+    existing_ord_cols = []
+    if is_real_postgres:
+        try:
+            for col_name, _ in orders_new_cols:
+                try:
+                    cursor.execute(f'SELECT {col_name} FROM orders LIMIT 1')
+                    existing_ord_cols.append(col_name.lower())
+                except:
+                    pass
+        except:
+            pass
+    else:
+        try:
+            pragma_rows = cursor.execute('PRAGMA table_info(orders)').fetchall()
+            existing_ord_cols = [row['name'].lower() for row in pragma_rows]
+        except Exception as e:
+            print(f"[BD] Erro ao carregar PRAGMA table_info(orders): {e}")
+
+    for col_name, col_type in orders_new_cols:
+        if col_name.lower() not in existing_ord_cols:
+            try:
+                print(f"--> Adicionando coluna {col_name} em orders...")
+                cursor.execute(f'ALTER TABLE orders ADD COLUMN {col_name} {col_type}')
+            except Exception as e:
+                print(f"[BD] Erro ao adicionar coluna {col_name} em orders: {e}")
+
     conn.commit()
     conn.close()
     print("[OK] Banco de dados inicializado/atualizado com sucesso!")

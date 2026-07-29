@@ -38,7 +38,23 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/lucky_spin.css') }}?v=3">
 
-    {% block analytics %}{% endblock %}
+    {% block analytics %}
+    {% if global_config and global_config.google_analytics_id %}
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ global_config.google_analytics_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ global_config.google_analytics_id }}');
+    </script>
+    {% else %}
+    <script>
+      // Fallback silencioso para quando o GA4 não está ativo
+      function gtag(){}
+    </script>
+    {% endif %}
+    {% endblock %}
     {% block extra_css %}{% endblock %}
 
     <!-- PWA Manifest -->

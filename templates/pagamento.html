@@ -9,6 +9,22 @@
 {% block content %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="application/json" id="pix-qr-data">{{ pix_qr_data | tojson }}</script>
+    
+    {% if product %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof gtag === 'function') {
+                gtag('event', 'view_item', {
+                    items: [{
+                        item_id: '{{ product.id }}',
+                        item_name: '{{ product.name | replace("'", "\\'") }}',
+                        price: '{{ (product.promo_price or product.price) | replace("R$", "") | replace(",", ".") | trim }}'
+                    }]
+                });
+            }
+        });
+    </script>
+    {% endif %}
 
     <main class="container mx-auto px-4 md:px-6 pb-8 md:pb-16">
         <div class="mb-4 md:mb-6">

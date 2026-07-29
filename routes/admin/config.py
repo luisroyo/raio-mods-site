@@ -25,6 +25,7 @@ def update_config():
     global_discount_value = float(request.form.get('global_discount_value') or 0.0)
     global_discount_expiry = request.form.get('global_discount_expiry') or ''
     global_discount_label = request.form.get('global_discount_label') or 'PROMO'
+    google_analytics_id = request.form.get('google_analytics_id') or ''
 
     conn = get_db_connection()
     config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
@@ -33,10 +34,10 @@ def update_config():
             conn.execute(
                 '''INSERT INTO config 
                    (id, pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, smtp_port, smtp_user, smtp_password,
-                    global_discount_type, global_discount_value, global_discount_expiry, global_discount_label) 
-                   VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    global_discount_type, global_discount_value, global_discount_expiry, global_discount_label, google_analytics_id) 
+                   VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                 (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password,
-                 global_discount_type, global_discount_value, global_discount_expiry, global_discount_label)
+                 global_discount_type, global_discount_value, global_discount_expiry, global_discount_label, google_analytics_id)
             )
         else:
             if not mercado_pago_token and 'mercado_pago_token' in config.keys():
@@ -49,10 +50,11 @@ def update_config():
                 '''UPDATE config SET 
                    pix_key = ?, pix_copia_cola = ?, contact_whatsapp = ?, mercado_pago_token = ?,
                    smtp_server = ?, smtp_port = ?, smtp_user = ?, smtp_password = ?,
-                   global_discount_type = ?, global_discount_value = ?, global_discount_expiry = ?, global_discount_label = ?
+                   global_discount_type = ?, global_discount_value = ?, global_discount_expiry = ?, global_discount_label = ?,
+                   google_analytics_id = ?
                    WHERE id = 1''',
                 (pix_key, pix_copia_cola, contact_whatsapp, mercado_pago_token, smtp_server, int(smtp_port), smtp_user, smtp_password,
-                 global_discount_type, global_discount_value, global_discount_expiry, global_discount_label)
+                 global_discount_type, global_discount_value, global_discount_expiry, global_discount_label, google_analytics_id)
             )
         conn.commit()
     except Exception as e:

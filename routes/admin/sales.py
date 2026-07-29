@@ -157,7 +157,12 @@ def list_manual_sales():
                 (CASE WHEN ms.client_email IS NOT NULL AND ms.client_email != '' THEN ms.client_name || ' (' || ms.client_email || ')' ELSE ms.client_name END) as client_info,
                 ms.status,
                 ms.paid_amount,
-                ms.created_at
+                ms.created_at,
+                NULL as coupon_code,
+                0.0 as discount_applied,
+                ms.total_price as subtotal,
+                'pt' as language,
+                'BRL' as currency
             FROM manual_sales ms
             JOIN products p ON ms.product_id = p.id
         '''
@@ -188,7 +193,12 @@ def list_manual_sales():
                 (CASE WHEN o.customer_name IS NOT NULL AND o.customer_name != '' THEN o.customer_name || ' (' || o.customer_email || ')' ELSE o.customer_email END) as client_info,
                 'paid' as status,
                 {online_amount_clean} as paid_amount,
-                o.created_at
+                o.created_at,
+                o.coupon_code,
+                COALESCE(o.discount_applied, 0.0) as discount_applied,
+                COALESCE(o.subtotal, {online_amount_clean}) as subtotal,
+                o.language,
+                o.currency
             FROM orders o
             JOIN products p ON o.product_id = p.id
             WHERE o.status IN ('approved', 'paid_no_key')

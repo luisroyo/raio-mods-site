@@ -277,13 +277,18 @@ async function loadManualSales() {
                 `;
             }
 
+            let discountInfo = '';
+            if (sale.discount_applied > 0) {
+                discountInfo = `<br><span class="text-[10px] text-green-400" title="Cupom: ${sale.coupon_code || ''}">Cupom (-R$ ${sale.discount_applied.toFixed(2)})</span>`;
+            }
+
             return `<tr class="border-b border-purple-500/30 hover:bg-purple-900/20">
                 <td class="p-2 text-center">${typeBadge}</td>
                 <td class="p-2">${sale.product_name}</td>
                 <td class="p-2 text-center">${sale.quantity}</td>
                 <td class="p-2 text-right">R$ ${sale.unit_price.toFixed(2)}</td>
                 <td class="p-2 text-right text-gray-500">R$ ${sale.cost_per_unit_brl.toFixed(2)}</td>
-                <td class="p-2 text-right font-bold text-green-400">R$ ${totalVenda}</td>
+                <td class="p-2 text-right font-bold text-green-400">R$ ${totalVenda} ${discountInfo}</td>
                 <td class="p-2 text-right font-bold text-yellow-400">R$ ${lucro}</td>
                 <td class="p-2 text-center">${statusBadge}</td>
                 <td class="p-2 text-left">${clientInfo}</td>

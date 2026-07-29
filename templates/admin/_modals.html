@@ -366,6 +366,14 @@
                                 value="{{ config.contact_whatsapp if config and config.contact_whatsapp else '' }}"
                                 class="w-full p-2 bg-gray-900 border border-yellow-500 rounded text-white">
                         </div>
+                        <div class="mt-4">
+                            <label class="block text-sm text-gray-400">Google Analytics 4 (GA4) ID:</label>
+                            <input type="text" name="google_analytics_id"
+                                value="{{ config.google_analytics_id if config and 'google_analytics_id' in config.keys() and config.google_analytics_id else '' }}"
+                                placeholder="G-XXXXXXXXXX"
+                                class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white placeholder-gray-600">
+                            <p class="text-xs text-gray-500 mt-1">Ex: G-A1B2C3D4. Deixe vazio para desativar.</p>
+                        </div>
 
                         <!-- Promoção Global -->
                         <div class="mt-4 pt-4 border-t border-gray-800 space-y-3">

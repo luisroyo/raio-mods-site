@@ -50,6 +50,20 @@ app.jinja_env.globals.update(
     get_current_currency=get_current_currency
 )
 
+from database.models import get_db_connection
+from contextlib import closing
+
+@app.context_processor
+def inject_global_config():
+    try:
+        with closing(get_db_connection()) as conn:
+            config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
+            if config:
+                return dict(global_config=dict(config))
+    except Exception as e:
+        pass
+    return dict(global_config={})
+
 # 2. Inicializa o Banco de Dados (Executa Migrações)
 # Isso garante que tabelas e colunas novas sejam criadas mesmo em produção (WSGI)
 with app.app_context():

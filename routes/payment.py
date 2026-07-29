@@ -718,19 +718,38 @@ def webhook():
 @payment_bp.route('/api/check_status/<order_ref>', methods=['GET'])
 def check_status(order_ref):
     """Verifica e retorna o status em tempo real do pedido via poll do cliente.
+    Quando aprovado, retorna também os dados do produto (download_link, product_name)
+    para que o frontend possa montar a tela de pós-compra sem depender do template.
     Inclui fallback ativo: se o webhook falhar, consulta o MP diretamente.
     """
     with closing(get_db_connection()) as conn:
-        order = conn.execute('SELECT status, key_assigned_id FROM orders WHERE external_reference = ?', (order_ref,)).fetchone()
+        row = conn.execute('''
+            SELECT o.status, o.key_assigned_id,
+                   p.name AS product_name,
+                   p.download_link
+            FROM orders o
+            LEFT JOIN products p ON o.product_id = p.id
+            WHERE o.external_reference = ?
+        ''', (order_ref,)).fetchone()
     
-    if not order:
+    if not row:
         return jsonify({'status': 'not_found'})
-        
-    if order['status'] == 'approved' and order['key_assigned_id']:
-        return jsonify({'status': 'ready_to_reveal'})
+    
+    def _build_approved_response(row):
+        """Monta o payload completo quando o pedido está aprovado."""
+        download_link = row.get('download_link') or ''
+        return jsonify({
+            'status': 'ready_to_reveal',
+            'product_name': row.get('product_name') or '',
+            'download_link': download_link,
+            'has_download': bool(download_link.strip())
+        })
+
+    if row['status'] == 'approved' and row['key_assigned_id']:
+        return _build_approved_response(row)
     
     # Fallback: se ainda está pendente, consulta o MP diretamente
-    if order['status'] == 'pending':
+    if row['status'] == 'pending':
         try:
             sdk = get_mp_sdk()
             if sdk:
@@ -740,16 +759,31 @@ def check_status(order_ref):
                     if payment.get("status") == "approved":
                         logger.info(f"Fallback ativo: pagamento aprovado encontrado para {order_ref} (Payment ID: {payment.get('id')})")
                         process_approved_payment(order_ref, str(payment.get("id", "")))
-                        return jsonify({'status': 'ready_to_reveal'})
+                        # Re-busca para pegar os dados do produto após processar
+                        with closing(get_db_connection()) as conn2:
+                            updated = conn2.execute('''
+                                SELECT o.status, o.key_assigned_id,
+                                       p.name AS product_name,
+                                       p.download_link
+                                FROM orders o
+                                LEFT JOIN products p ON o.product_id = p.id
+                                WHERE o.external_reference = ?
+                            ''', (order_ref,)).fetchone()
+                        if updated:
+                            return _build_approved_response(updated)
+                        return jsonify({'status': 'ready_to_reveal', 'download_link': '', 'has_download': False})
         except Exception as e:
             logger.warning(f"Erro no fallback de verificação ativa: {e}")
         
-    return jsonify({'status': order['status']})
+    return jsonify({'status': row['status']})
 
 
 @payment_bp.route('/api/reveal_key/<order_ref>', methods=['POST'])
 def reveal_key(order_ref):
-    """Registra forte prova de consumo (anti-chargeback) e decifra a chave final ao cliente."""
+    """Registra forte prova de consumo (anti-chargeback) e retorna apenas a chave ao cliente.
+    Responsabilidade única: revelar a chave. Dados do pedido (download_link, produto)
+    são retornados por /api/check_status para manter a arquitetura limpa.
+    """
     with closing(get_db_connection()) as conn:
         order = conn.execute('''
             SELECT o.*, k.key_value
@@ -783,4 +817,5 @@ def reveal_key(order_ref):
             except Exception as e:
                 logger.error(f"Erro ao registrar consumo anti-chargeback (Order Ref: {order_ref}): {e}", exc_info=True)
 
+    # Retorna apenas a chave — dados do pedido já foram entregues pelo check_status
     return jsonify({'status': 'revealed', 'key': key_value})

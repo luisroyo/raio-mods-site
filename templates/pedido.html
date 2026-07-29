@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8 max-w-lg">
     <div class="bg-black border-2 border-neon-cyan rounded-xl overflow-hidden shadow-[0_0_30px_rgba(0,242,255,0.2)]">
-        
+
         <div class="bg-neon-cyan/10 p-4 border-b border-neon-cyan/30">
             <h2 class="text-xl font-bold text-neon-cyan flex items-center gap-2">
                 📦 Status do Pedido
@@ -24,69 +24,85 @@
             </div>
         </div>
 
-        <!-- STATUS: REVELAR CHAVE -->
-        <div id="status-reveal" class="p-8 text-center hidden">
-            <div class="w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(0,242,255,0.5)] animate-pulse">
-                <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-2">Pagamento Confirmado! ✅</h3>
-            <p class="text-gray-300 text-sm mb-2">Sua chave está pronta.</p>
-            <p class="text-gray-500 text-xs mb-6">Ao clicar no botão abaixo, você confirma o recebimento do produto digital.</p>
+        <!-- STATUS: APROVADO — Card de Pós-Compra Completo -->
+        <div id="status-approved" class="hidden">
 
-            <button id="btnRevealKeyPage" onclick="revealKeyPage()"
-                class="w-full bg-gradient-to-r from-cyan-500 to-green-500 text-black font-bold py-4 rounded-lg hover:from-cyan-400 hover:to-green-400 transition-all text-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)]">
-                🔓 Revelar Minha Chave
-            </button>
-
-            <p class="text-[10px] text-gray-600 mt-4">Ao revelar, você confirma que o produto foi entregue com sucesso.</p>
-        </div>
-
-        <!-- STATUS: CHAVE REVELADA -->
-        <div id="status-success" class="p-8 text-center hidden bg-green-900/20">
-            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(34,197,94,0.5)]">
-                <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-2">Pagamento Aprovado!</h3>
-            <p class="text-gray-300 text-sm mb-4">Aqui está sua chave de acesso:</p>
-
-            <div class="bg-black border-2 border-neon-green rounded-lg p-4 mb-4 relative group">
-                <code id="finalKeyPage" class="text-neon-green text-xl font-mono break-all font-bold">XXXX-XXXX-XXXX</code>
-                <button onclick="copyKeyPage()"
-                    class="absolute top-1/2 -translate-y-1/2 right-2 bg-gray-800 text-white p-2 rounded hover:bg-gray-700"
-                    title="Copiar">
-                    📋
-                </button>
-            </div>
-
-            <p class="text-xs text-gray-400">Salve essa chave agora! Tire um print.</p>
-            
-            {% if whatsapp_contact %}
-            <div class="mt-6 mb-4">
-                <a href="https://wa.me/{{ whatsapp_contact|replace(' ', '')|replace('+', '')|replace('-', '') }}?text=Ol%C3%A1%21+Meu+pedido+*{{ order_ref }}*+do+produto+*{{ product_name | urlencode }}*+foi+aprovado%21+Já+peguei+minha+chave." 
-                   target="_blank"
-                   class="inline-flex items-center gap-2 bg-[#25D366] text-white font-bold py-3 px-6 rounded-lg hover:bg-[#128C7E] transition-all shadow-[0_0_20px_rgba(37,211,102,0.3)] hover:shadow-[0_0_30px_rgba(37,211,102,0.5)]">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-                    Avisar no WhatsApp
-                </a>
-            </div>
-            {% endif %}
-
-            <div class="mt-4 mb-2">
-                <button onclick="document.getElementById('downloadModal').classList.remove('hidden')" class="w-full bg-neon-cyan text-black font-bold py-3 px-6 rounded-lg hover:bg-cyan-400 transition-all shadow-[0_0_15px_rgba(0,242,255,0.4)] flex items-center justify-center gap-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            <!-- Header de sucesso -->
+            <div class="p-6 text-center border-b border-gray-800">
+                <div class="w-14 h-14 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_20px_rgba(0,242,255,0.5)]">
+                    <svg class="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                     </svg>
-                    Baixar Aplicativo
-                </button>
+                </div>
+                <h3 class="text-xl font-bold text-white">Compra Concluída! 🎉</h3>
+                <p id="approved-product-name" class="text-gray-400 text-sm mt-1"></p>
             </div>
 
-            <a href="{{ url_for('public.index') }}" class="mt-4 inline-block text-neon-cyan hover:text-white text-sm underline">
-                ← Voltar para a loja
-            </a>
+            <!-- Seção de Download (aparece imediatamente se houver link) -->
+            <div id="section-download" class="hidden border-b border-gray-800">
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-lg">⬇️</span>
+                        <h4 class="text-white font-bold text-sm uppercase tracking-wider">Baixe o Aplicativo</h4>
+                    </div>
+                    <a id="btn-download" href="#" target="_blank" rel="noopener noreferrer"
+                       onclick="trackDownloadClick()"
+                       class="flex items-center justify-center gap-3 w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-bold py-4 px-6 rounded-lg transition-all shadow-[0_0_15px_rgba(0,242,255,0.3)] hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] text-base">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        BAIXAR AGORA
+                    </a>
+                    <p class="text-gray-500 text-xs text-center mt-2">A chave de acesso abaixo será solicitada ao abrir o aplicativo.</p>
+                </div>
+            </div>
+
+            <!-- Seção de Chave -->
+            <div class="p-5 border-b border-gray-800">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-lg">🔑</span>
+                    <h4 class="text-white font-bold text-sm uppercase tracking-wider">Sua Licença / Chave</h4>
+                </div>
+
+                <!-- Antes de revelar -->
+                <div id="key-unrevealed">
+                    <p class="text-gray-400 text-xs mb-3">Clique no botão para revelar sua chave de ativação. Ao revelar, você confirma o recebimento do produto.</p>
+                    <button id="btnRevealKeyPage" onclick="revealKeyPage()"
+                        class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)] text-sm">
+                        🔓 Revelar Minha Chave
+                    </button>
+                </div>
+
+                <!-- Depois de revelar -->
+                <div id="key-revealed" class="hidden">
+                    <div class="bg-black border-2 border-neon-green rounded-lg p-4 relative group">
+                        <code id="finalKeyPage" class="text-neon-green text-lg font-mono break-all font-bold block pr-10">XXXX-XXXX-XXXX</code>
+                        <button onclick="copyKeyPage()" title="Copiar chave"
+                            class="absolute top-1/2 -translate-y-1/2 right-2 bg-gray-800 hover:bg-gray-700 text-white p-2 rounded transition-colors">
+                            📋
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Salve essa chave agora! Tire um print.</p>
+                </div>
+            </div>
+
+            <!-- Seção de Suporte + Voltar -->
+            <div class="p-5">
+                <div class="flex flex-col gap-3">
+                    {% if whatsapp_contact %}
+                    <a href="https://wa.me/{{ whatsapp_contact|replace(' ', '')|replace('+', '')|replace('-', '') }}?text=Ol%C3%A1%21+Meu+pedido+*{{ order_ref }}*+foi+aprovado%21+Preciso+de+ajuda+com+a+instala%C3%A7%C3%A3o."
+                       target="_blank"
+                       class="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366]/20 text-[#25D366] font-bold py-3 px-6 rounded-lg transition-all text-sm">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                        💬 Suporte via WhatsApp
+                    </a>
+                    {% endif %}
+
+                    <a href="{{ url_for('public.index') }}" class="text-center text-gray-500 hover:text-neon-cyan text-sm transition-colors py-1">
+                        ← Voltar para a loja
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- STATUS: ERRO / NÃO ENCONTRADO -->
@@ -104,79 +120,83 @@
         </div>
 
     </div>
-
-<!-- Download Modal -->
-<div id="downloadModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/80 backdrop-blur-sm">
-    <div class="bg-gray-900 border-2 border-neon-cyan rounded-xl p-6 max-w-sm w-full mx-4 shadow-[0_0_30px_rgba(0,242,255,0.3)]">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-white">Downloads Disponíveis</h3>
-            <button onclick="document.getElementById('downloadModal').classList.add('hidden')" class="text-gray-400 hover:text-white transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        <p class="text-sm text-gray-300 mb-6">Escolha a versão do aplicativo que deseja baixar para o seu dispositivo.</p>
-        
-        <div class="space-y-4">
-            <!-- Opção Android -->
-            <a href="{{ download_link or '#' }}" id="androidLink" class="block w-full bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-700 hover:border-neon-cyan transition-all group flex items-center justify-between" target="_blank">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📱</span>
-                    <div class="text-left">
-                        <div class="text-white font-bold group-hover:text-neon-cyan transition-colors">Versão Android</div>
-                        <div class="text-xs text-gray-400">APK (.apk)</div>
-                    </div>
-                </div>
-                <svg class="w-5 h-5 text-gray-500 group-hover:text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            </a>
-            
-            <!-- Opção Windows -->
-            <a href="{{ download_link or '#' }}" id="windowsLink" class="block w-full bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-700 hover:border-neon-cyan transition-all group flex items-center justify-between" target="_blank">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">💻</span>
-                    <div class="text-left">
-                        <div class="text-white font-bold group-hover:text-neon-cyan transition-colors">Versão PC</div>
-                        <div class="text-xs text-gray-400">Windows (.exe)</div>
-                    </div>
-                </div>
-                <svg class="w-5 h-5 text-gray-500 group-hover:text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            </a>
-        </div>
-        
-        <div class="mt-6 p-3 bg-blue-900/30 border border-blue-500/30 rounded-lg">
-            <p class="text-xs text-blue-200 flex items-start gap-2">
-                <svg class="w-4 h-4 shrink-0 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>A chave de acesso acima será solicitada ao abrir o aplicativo.</span>
-            </p>
-        </div>
-    </div>
 </div>
 
 <script>
 const ORDER_REF = "{{ order_ref }}";
 const MP_STATUS = "{{ mp_status }}";
+
+// Estado local do pedido — a API é a fonte primária; template é fallback
+let orderData = {
+    downloadLink: "{{ download_link }}",
+    productName: "{{ product_name }}"
+};
+
 let pollInterval = null;
 
-function startOrderPolling() {
-    pollInterval = setInterval(async () => {
-        try {
-            const response = await fetch(`/api/check_status/${ORDER_REF}`);
-            const data = await response.json();
+// ─── Exibição do card de pós-compra ─────────────────────────────────────────
 
-            if (data.status === 'ready_to_reveal') {
-                clearInterval(pollInterval);
-                document.getElementById('status-pending').classList.add('hidden');
-                document.getElementById('status-reveal').classList.remove('hidden');
-                if (typeof gtag === 'function') gtag('event', 'purchase', { transaction_id: ORDER_REF });
-            } else if (data.status === 'not_found') {
-                clearInterval(pollInterval);
-                document.getElementById('status-pending').classList.add('hidden');
-                document.getElementById('status-error').classList.remove('hidden');
-            }
-        } catch (e) {
-            console.error("Erro no polling", e);
+function showApprovedCard(data) {
+    document.getElementById('status-pending').classList.add('hidden');
+    document.getElementById('status-approved').classList.remove('hidden');
+
+    // API é a fonte primária; template é fallback para pedidos antigos
+    const downloadLink = (data && data.download_link) ? data.download_link : orderData.downloadLink;
+    const productName  = (data && data.product_name)  ? data.product_name  : orderData.productName;
+    const hasDownload  = (data && typeof data.has_download !== 'undefined')
+        ? data.has_download
+        : Boolean(downloadLink && downloadLink.trim());
+
+    // Salva para uso posterior (analytics, etc.)
+    orderData.downloadLink = downloadLink;
+    orderData.productName  = productName;
+
+    // Preenche nome do produto no header
+    const nameEl = document.getElementById('approved-product-name');
+    if (nameEl && productName) nameEl.textContent = productName;
+
+    // Exibe o bloco de download IMEDIATAMENTE — sem precisar revelar a chave
+    if (hasDownload && downloadLink && downloadLink.trim()) {
+        document.getElementById('section-download').classList.remove('hidden');
+        document.getElementById('btn-download').href = downloadLink;
+
+        // GA4: download_link_shown
+        if (typeof gtag === 'function') {
+            gtag('event', 'download_link_shown', { order_ref: ORDER_REF, product: productName });
         }
-    }, 4000);
+    }
+
+    // GA4: purchase event
+    if (typeof gtag === 'function') {
+        gtag('event', 'purchase', { transaction_id: ORDER_REF });
+    }
 }
+
+// ─── Polling de status ───────────────────────────────────────────────────────
+
+function startOrderPolling() {
+    pollInterval = setInterval(checkOrderStatus, 4000);
+}
+
+async function checkOrderStatus() {
+    try {
+        const response = await fetch(`/api/check_status/${ORDER_REF}`);
+        const data = await response.json();
+
+        if (data.status === 'ready_to_reveal') {
+            clearInterval(pollInterval);
+            showApprovedCard(data);
+        } else if (data.status === 'not_found') {
+            clearInterval(pollInterval);
+            document.getElementById('status-pending').classList.add('hidden');
+            document.getElementById('status-error').classList.remove('hidden');
+        }
+    } catch (e) {
+        console.error("Erro no polling", e);
+    }
+}
+
+// ─── Revelar chave ───────────────────────────────────────────────────────────
 
 async function revealKeyPage() {
     const btn = document.getElementById('btnRevealKeyPage');
@@ -192,15 +212,12 @@ async function revealKeyPage() {
 
         if (data.status === 'revealed' && data.key) {
             document.getElementById('finalKeyPage').innerText = data.key;
-            document.getElementById('status-reveal').classList.add('hidden');
-            document.getElementById('status-success').classList.remove('hidden');
-            
-            // Popula os links do modal com o link retornado da API ou da página
-            const apiLink = data.download_link || "{{ download_link }}";
-            if(apiLink && apiLink.trim() !== '') {
-                 document.getElementById('androidLink').href = apiLink;
-                 document.getElementById('windowsLink').href = apiLink;
-                 document.getElementById('downloadModal').classList.remove('hidden');
+            document.getElementById('key-unrevealed').classList.add('hidden');
+            document.getElementById('key-revealed').classList.remove('hidden');
+
+            // GA4: key_revealed
+            if (typeof gtag === 'function') {
+                gtag('event', 'key_revealed', { order_ref: ORDER_REF });
             }
         } else {
             alert('Erro ao revelar a chave: ' + (data.error || 'Tente novamente.'));
@@ -215,6 +232,8 @@ async function revealKeyPage() {
     }
 }
 
+// ─── Copiar chave ────────────────────────────────────────────────────────────
+
 function copyKeyPage() {
     const keyText = document.getElementById("finalKeyPage").innerText;
     navigator.clipboard.writeText(keyText).then(() => {
@@ -222,32 +241,44 @@ function copyKeyPage() {
     });
 }
 
-// Inicializa ao carregar a página
+// ─── Analytics ───────────────────────────────────────────────────────────────
+
+function trackDownloadClick() {
+    if (typeof gtag === 'function') {
+        gtag('event', 'download_button_clicked', {
+            order_ref: ORDER_REF,
+            product: orderData.productName
+        });
+    }
+}
+
+// ─── Inicialização ───────────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
     if (MP_STATUS === 'failure') {
         document.getElementById('status-pending').classList.add('hidden');
         document.getElementById('status-error').classList.remove('hidden');
-    } else {
-        // Verifica imediatamente e depois faz polling
-        (async () => {
-            try {
-                const response = await fetch(`/api/check_status/${ORDER_REF}`);
-                const data = await response.json();
-                if (data.status === 'ready_to_reveal') {
-                    document.getElementById('status-pending').classList.add('hidden');
-                    document.getElementById('status-reveal').classList.remove('hidden');
-                    if (typeof gtag === 'function') gtag('event', 'purchase', { transaction_id: ORDER_REF });
-                } else if (data.status === 'not_found') {
-                    document.getElementById('status-pending').classList.add('hidden');
-                    document.getElementById('status-error').classList.remove('hidden');
-                } else {
-                    startOrderPolling();
-                }
-            } catch (e) {
+        return;
+    }
+
+    // Verifica imediatamente na carga da página e depois faz polling
+    (async () => {
+        try {
+            const response = await fetch(`/api/check_status/${ORDER_REF}`);
+            const data = await response.json();
+
+            if (data.status === 'ready_to_reveal') {
+                showApprovedCard(data);
+            } else if (data.status === 'not_found') {
+                document.getElementById('status-pending').classList.add('hidden');
+                document.getElementById('status-error').classList.remove('hidden');
+            } else {
                 startOrderPolling();
             }
-        })();
-    }
+        } catch (e) {
+            startOrderPolling();
+        }
+    })();
 });
 </script>
 {% endblock %}

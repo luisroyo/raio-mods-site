@@ -66,6 +66,8 @@ def add_manual_sale():
             # Se for apenas data (YYYY-MM-DD), adicionar meio-dia para evitar problemas de fuso no JS
             if len(created_at) == 10:
                 created_at += " 12:00:00"
+            elif len(created_at) == 16:
+                created_at += ":00"
             cursor = conn.execute(
                 'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount) VALUES (?,?,?,?,?,?,?,?,?,?)',
                 (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount)
@@ -333,6 +335,8 @@ def edit_manual_sale(sale_id):
             created_at = created_at.replace('T', ' ')
             if len(created_at) == 10:
                 created_at += " 12:00:00"
+            elif len(created_at) == 16:
+                created_at += ":00"
             conn.execute('''
                 UPDATE manual_sales 
                 SET product_id=?, quantity=?, unit_price=?, cost_per_unit_brl=?, total_price=?, client_name=?, client_email=?, created_at=?, status=?, paid_amount=?

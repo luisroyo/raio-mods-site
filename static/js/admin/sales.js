@@ -334,11 +334,11 @@ function openEditManualSale(id, pid, qty, price, cost, notes, createdAt, status,
     const clientEmailInput = document.getElementById('edit_sale_client_email');
     if (clientEmailInput) clientEmailInput.value = email;
     
-    // Formatar data para o input date (YYYY-MM-DD)
+    // Formatar data para o input datetime-local (YYYY-MM-DDTHH:MM:SS)
     if (createdAt) {
         const date = new Date(createdAt);
         const pad = (n) => n.toString().padStart(2, '0');
-        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
         document.getElementById('edit_sale_created_at').value = formatted;
     } else {
         document.getElementById('edit_sale_created_at').value = '';

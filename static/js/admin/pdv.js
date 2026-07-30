@@ -130,7 +130,7 @@ function searchPDVClients(query) {
 
     pdvClientSearchTimeout = setTimeout(async () => {
         try {
-            const res = await fetch(`/admin/api/pdv/clients/search?q=${encodeURIComponent(query)}`);
+            const res = await fetch(`/admin/api/clients/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
 
             if (data.clients && data.clients.length > 0) {

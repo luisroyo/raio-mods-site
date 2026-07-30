@@ -574,14 +574,96 @@ def admin_clients_search():
         
     conn = get_db_connection()
     try:
+        # 1. Buscar na tabela clients
         clients = conn.execute(
             '''SELECT id, client_id, name, email, phone 
                FROM clients 
-               WHERE client_id LIKE ? OR name LIKE ? OR email LIKE ?
+               WHERE name LIKE ? OR email LIKE ? OR client_id LIKE ? OR phone LIKE ?
                LIMIT 10''',
-            (f'%{query}%', f'%{query}%', f'%{query}%')
+            (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%')
         ).fetchall()
-        return jsonify({'clients': [dict(c) for c in clients]})
+        
+        results = []
+        emails_seen = set()
+        names_seen = set()
+        
+        for c in clients:
+            item = {
+                'id': c['id'],
+                'name': c['name'],
+                'email': c['email'] or '',
+                'phone': c['phone'] or '',
+                'client_id': c['client_id'] or '',
+                'source': 'cadastro'
+            }
+            results.append(item)
+            if c['email']:
+                emails_seen.add(c['email'].lower().strip())
+            names_seen.add(c['name'].lower().strip())
+            
+        # 2. Buscar na tabela manual_sales (nomes/emails distintos)
+        manual = conn.execute(
+            '''SELECT DISTINCT client_name, client_email 
+               FROM manual_sales 
+               WHERE (client_name LIKE ? OR client_email LIKE ?) 
+                 AND client_name IS NOT NULL AND client_name != ''
+               LIMIT 10''',
+            (f'%{query}%', f'%{query}%')
+        ).fetchall()
+        
+        for m in manual:
+            name = m['client_name'].strip()
+            email = (m['client_email'] or '').strip()
+            
+            if email and email.lower() in emails_seen:
+                continue
+            if name.lower() in names_seen:
+                continue
+                
+            item = {
+                'name': name,
+                'email': email,
+                'phone': '',
+                'client_id': 'Manual',
+                'source': 'histórico'
+            }
+            results.append(item)
+            if email:
+                emails_seen.add(email.lower())
+            names_seen.add(name.lower())
+
+        # 3. Buscar na tabela orders (vendas online)
+        orders = conn.execute(
+            '''SELECT DISTINCT customer_name, customer_email 
+               FROM orders 
+               WHERE (customer_name LIKE ? OR customer_email LIKE ?) 
+                 AND customer_name IS NOT NULL AND customer_name != ''
+               LIMIT 10''',
+            (f'%{query}%', f'%{query}%')
+        ).fetchall()
+        
+        for o in orders:
+            name = o['customer_name'].strip()
+            email = (o['customer_email'] or '').strip()
+            
+            if email and email.lower() in emails_seen:
+                continue
+            if name.lower() in names_seen:
+                continue
+                
+            item = {
+                'name': name,
+                'email': email,
+                'phone': '',
+                'client_id': 'Online',
+                'source': 'online'
+            }
+            results.append(item)
+            if email:
+                emails_seen.add(email.lower())
+            names_seen.add(name.lower())
+            
+        return jsonify({'clients': results[:15]})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
@@ -642,77 +724,4 @@ def admin_pdv():
                            pending_feedbacks_count=pending_feedbacks_count)
 
 
-@admin_bp.route('/admin/api/pdv/clients/search', methods=['GET'])
-def admin_pdv_clients_search():
-    if not session.get('admin_logged_in'):
-        return jsonify({'error': '401'}), 401
-        
-    query = request.args.get('q', '').strip()
-    if not query:
-        return jsonify({'clients': []})
-        
-    conn = get_db_connection()
-    try:
-        # 1. Buscar na tabela clients
-        clients = conn.execute(
-            '''SELECT client_id, name, email, phone 
-               FROM clients 
-               WHERE name LIKE ? OR email LIKE ? OR client_id LIKE ? OR phone LIKE ?
-               LIMIT 10''',
-            (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%')
-        ).fetchall()
-        
-        results = []
-        emails_seen = set()
-        names_seen = set()
-        
-        for c in clients:
-            item = {
-                'name': c['name'],
-                'email': c['email'] or '',
-                'phone': c['phone'] or '',
-                'client_id': c['client_id'] or '',
-                'source': 'cadastro'
-            }
-            results.append(item)
-            if c['email']:
-                emails_seen.add(c['email'].lower().strip())
-            names_seen.add(c['name'].lower().strip())
-            
-        # 2. Buscar na tabela manual_sales (nomes/emails distintos)
-        manual = conn.execute(
-            '''SELECT DISTINCT client_name, client_email 
-               FROM manual_sales 
-               WHERE (client_name LIKE ? OR client_email LIKE ?) 
-                 AND client_name IS NOT NULL AND client_name != ''
-               LIMIT 10''',
-            (f'%{query}%', f'%{query}%')
-        ).fetchall()
-        
-        for m in manual:
-            name = m['client_name'].strip()
-            email = (m['client_email'] or '').strip()
-            
-            # Se já vimos o e-mail ou o nome exato, pula
-            if email and email.lower() in emails_seen:
-                continue
-            if name.lower() in names_seen:
-                continue
-                
-            item = {
-                'name': name,
-                'email': email,
-                'phone': '',
-                'client_id': 'Manual',
-                'source': 'histórico'
-            }
-            results.append(item)
-            if email:
-                emails_seen.add(email.lower())
-            names_seen.add(name.lower())
-            
-        return jsonify({'clients': results[:15]})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
+

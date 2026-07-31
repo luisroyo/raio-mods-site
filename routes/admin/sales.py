@@ -2,6 +2,7 @@
 Sales - Vendas manuais e relatório de vendas
 """
 from flask import Blueprint, request, jsonify, session
+import math
 from database.models import get_db_connection
 from .helpers import get_dolar_hoje, IOF
 

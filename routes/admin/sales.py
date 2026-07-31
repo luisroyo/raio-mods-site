@@ -195,7 +195,7 @@ def list_manual_sales():
         cost_expr = f"(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END)"
         
         # Safe cleaning of online amount to prevent NaN and float coercion issues in SQL/JS
-        online_amount_clean = "CAST(REPLACE(REPLACE(o.amount, 'R$', ''), ',', '.') AS REAL)"
+        online_amount_clean = "CAST(REPLACE(REPLACE(CAST(o.amount AS TEXT), 'R$', ''), ',', '.') AS REAL)"
         
         query_online = f'''
             SELECT 

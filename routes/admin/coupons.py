@@ -23,6 +23,8 @@ def add_coupon():
         max_uses = int(request.form.get('max_uses', 0))
         valid_until = request.form.get('valid_until')
 
+        is_seller = True if request.form.get('is_seller') else False
+
         if not code or discount_value <= 0:
             return jsonify({'error': 'Dados inválidos'}), 400
             
@@ -41,9 +43,9 @@ def add_coupon():
             return jsonify({'error': 'Já existe um cupom com este código!'}), 400
 
         conn.execute('''
-            INSERT INTO coupons (code, discount_type, discount_value, max_uses, valid_until)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (code, discount_type, discount_value, max_uses, valid_until))
+            INSERT INTO coupons (code, discount_type, discount_value, max_uses, valid_until, is_seller)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (code, discount_type, discount_value, max_uses, valid_until, is_seller))
         
         conn.commit()
         conn.close()

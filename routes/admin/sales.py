@@ -50,6 +50,25 @@ def add_manual_sale():
             except Exception as e:
                 print(f"Erro ao calcular custo automático: {e}")
         
+        conn = get_db_connection()
+        seller_coupon = request.form.get('seller_coupon', '').strip().upper()
+        discount_applied = 0.0
+        applied_coupon = None
+
+        if seller_coupon:
+            coupon_data = conn.execute('SELECT * FROM coupons WHERE code = ? AND is_seller = TRUE', (seller_coupon,)).fetchone()
+            if not coupon_data:
+                conn.close()
+                return jsonify({'error': 'Cupom de vendedor inválido ou inexistente!'}), 400
+            
+            if coupon_data['discount_type'] == 'percent':
+                discount_applied = total_price * (coupon_data['discount_value'] / 100.0)
+            else:
+                discount_applied = coupon_data['discount_value']
+            
+            total_price = max(0, total_price - discount_applied)
+            applied_coupon = seller_coupon
+
         status = request.form.get('status', 'paid')
         raw_paid = request.form.get('paid_amount', '')
         if status == 'paid':
@@ -59,7 +78,6 @@ def add_manual_sale():
         else:
             paid_amount = float(str(raw_paid).replace('R$', '').replace(',', '.')) if raw_paid else 0.0
 
-        conn = get_db_connection()
         if created_at:
             # Substituir T por espaço para formato SQL
             created_at = created_at.replace('T', ' ')
@@ -69,14 +87,14 @@ def add_manual_sale():
             elif len(created_at) == 16:
                 created_at += ":00"
             cursor = conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount) VALUES (?,?,?,?,?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount)
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount, coupon_code, discount_applied) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, created_at, status, paid_amount, applied_coupon, discount_applied)
             )
             sale_id = cursor.lastrowid
         else:
             cursor = conn.execute(
-                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount) VALUES (?,?,?,?,?,?,?,?,?)',
-                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount)
+                'INSERT INTO manual_sales (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount, coupon_code, discount_applied) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount, applied_coupon, discount_applied)
             )
             sale_id = cursor.lastrowid
 
@@ -160,9 +178,9 @@ def list_manual_sales():
                 ms.status,
                 ms.paid_amount,
                 ms.created_at,
-                NULL as coupon_code,
-                0.0 as discount_applied,
-                ms.total_price as subtotal,
+                ms.coupon_code,
+                COALESCE(ms.discount_applied, 0.0) as discount_applied,
+                (ms.total_price + COALESCE(ms.discount_applied, 0.0)) as subtotal,
                 'pt' as language,
                 'BRL' as currency
             FROM manual_sales ms

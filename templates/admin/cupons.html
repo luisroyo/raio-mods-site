@@ -102,6 +102,11 @@
                 <input type="date" id="validUntil" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white md:date-picker-dark placeholder-gray-500" style="color-scheme: dark;">
             </div>
 
+            <div class="flex items-center gap-2 mt-4">
+                <input type="checkbox" id="isSeller" name="is_seller" value="1" class="w-5 h-5 bg-gray-800 border-gray-700 rounded text-amber-500 focus:ring-amber-500">
+                <label for="isSeller" class="text-gray-300 text-sm font-medium">Cupom exclusivo de Vendedor?</label>
+            </div>
+
             <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-gray-800">
                 <button type="button" onclick="closeAddCouponModal()" class="px-5 py-2.5 rounded-lg text-gray-400 hover:text-white transition">Cancelar</button>
                 <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-lg transition-colors font-medium">Salvar Cupom</button>

@@ -11,6 +11,7 @@ let salesTotalPages = 1;
 let salesCategory = '';
 let salesSupplier = '';
 let salesStatus = '';
+let salesType = '';
 let salesDateStart = '';
 let salesDateEnd = '';
 let salesSearch = '';
@@ -163,6 +164,7 @@ function applySalesFilters() {
     salesCategory = document.getElementById('filterCategory').value;
     salesSupplier = document.getElementById('filterSupplier')?.value || '';
     salesStatus = document.getElementById('filterStatus')?.value || '';
+    salesType = document.getElementById('filterType')?.value || '';
     salesDateStart = document.getElementById('filterDateStart').value;
     salesDateEnd = document.getElementById('filterDateEnd').value;
     salesSearch = document.getElementById('filterSearch')?.value || '';
@@ -174,6 +176,7 @@ function clearSalesFilters() {
     salesCategory = '';
     salesSupplier = '';
     salesStatus = '';
+    salesType = '';
     salesDateStart = '';
     salesDateEnd = '';
     salesSearch = '';
@@ -183,6 +186,8 @@ function clearSalesFilters() {
     if (supplierEl) supplierEl.value = '';
     const statusEl = document.getElementById('filterStatus');
     if (statusEl) statusEl.value = '';
+    const typeEl = document.getElementById('filterType');
+    if (typeEl) typeEl.value = '';
     document.getElementById('filterDateStart').value = '';
     document.getElementById('filterDateEnd').value = '';
     const searchEl = document.getElementById('filterSearch');
@@ -198,6 +203,7 @@ async function loadManualSales() {
         if (salesCategory) url += `&category=${encodeURIComponent(salesCategory)}`;
         if (salesSupplier) url += `&supplier=${encodeURIComponent(salesSupplier)}`;
         if (salesStatus) url += `&status=${encodeURIComponent(salesStatus)}`;
+        if (salesType) url += `&type=${encodeURIComponent(salesType)}`;
         if (salesDateStart) url += `&date_start=${salesDateStart}`;
         if (salesDateEnd) url += `&date_end=${salesDateEnd}`;
         if (salesSearch) url += `&search=${encodeURIComponent(salesSearch)}`;
@@ -278,8 +284,11 @@ async function loadManualSales() {
             }
 
             let discountInfo = '';
-            if (sale.discount_applied > 0) {
-                discountInfo = `<br><span class="text-[10px] text-green-400" title="Cupom: ${sale.coupon_code || ''}">Cupom (-R$ ${sale.discount_applied.toFixed(2)})</span>`;
+            if (sale.coupon_code) {
+                let valueText = sale.discount_applied > 0 ? `(-R$ ${sale.discount_applied.toFixed(2)})` : '';
+                discountInfo = `<br><span class="text-[11px] text-green-400 font-bold" title="Cupom Usado">🎟️ ${sale.coupon_code} ${valueText}</span>`;
+            } else if (sale.discount_applied > 0) {
+                discountInfo = `<br><span class="text-[10px] text-green-400" title="Desconto Aplicado">Desconto (-R$ ${sale.discount_applied.toFixed(2)})</span>`;
             }
 
             return `<tr class="border-b border-purple-500/30 hover:bg-purple-900/20">

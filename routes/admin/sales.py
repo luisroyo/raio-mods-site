@@ -243,6 +243,13 @@ def list_manual_sales():
             else:
                 combined_query += ' AND status = ?'
                 params.append(status_filter)
+
+        type_filter = request.args.get('type', '')
+        if type_filter:
+            if type_filter == 'online':
+                combined_query += " AND type = 'online'"
+            elif type_filter == 'manual':
+                combined_query += " AND type = 'manual'"
             
         # Count total and sums
         count_query = f'''

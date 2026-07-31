@@ -214,7 +214,11 @@ def list_manual_sales():
                 'paid' as status,
                 {online_amount_clean} as paid_amount,
                 o.created_at,
-                o.coupon_code,
+                (CASE 
+                    WHEN o.coupon_code IS NOT NULL AND o.coupon_code != '' AND o.seller_coupon IS NOT NULL AND o.seller_coupon != '' THEN o.coupon_code || ' + ' || o.seller_coupon
+                    WHEN o.seller_coupon IS NOT NULL AND o.seller_coupon != '' THEN o.seller_coupon
+                    ELSE o.coupon_code
+                 END) as coupon_code,
                 COALESCE(o.discount_applied, 0.0) as discount_applied,
                 COALESCE(o.subtotal, {online_amount_clean}) as subtotal,
                 o.language,

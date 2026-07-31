@@ -522,17 +522,31 @@ def create_payment():
             final_price = base_price
             
             coupon_code = data.get('coupon')
+            seller_coupon = data.get('seller_coupon')
             applied_coupon = None
             coupon_data = None
             discount_applied = 0.0
             
+            # Se houver seller_ref e ele for válido, nós mantemos. (Sem dar desconto invisível)
+            valid_seller = None
+            if seller_coupon:
+                s_check = conn.execute('SELECT code FROM coupons WHERE code = ? COLLATE NOCASE', (seller_coupon.strip(),)).fetchone()
+                if s_check:
+                    valid_seller = s_check['code']
+                else:
+                    # Pode salvar o ref cru mesmo se não for cupom? Sim, para afliados sem cupom.
+                    valid_seller = seller_coupon[:50] # Limite de tamanho
+            
+            # Aplica o cupom de desconto real digitado pelo usuário
             if coupon_code:
                 discount_amt, err, c_data = get_coupon_discount(coupon_code, base_price, conn)
                 if not err and c_data:
-                    final_price = base_price - discount_amt
+                    final_price -= discount_amt
                     applied_coupon = c_data['id']
                     coupon_data = c_data
-                    discount_applied = discount_amt
+                    discount_applied += discount_amt
+                    
+            final_price = max(1.0, final_price)
 
         sdk = get_mp_sdk()
         if not sdk:
@@ -648,15 +662,15 @@ def create_payment():
                     customer_phone, ip_purchase, terms_accepted_at,
                     telegram_id, telegram_username, telegram_first_name,
                     coupon_id, coupon_code, discount_type, discount_value, discount_applied,
-                    subtotal, total, language, currency
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    subtotal, total, language, currency, seller_coupon
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 order_ref, product_id, email, final_price, 'pending', 
                 qr_code, qr_base64, customer_name, customer_cpf, 
                 customer_phone, client_ip, terms_ts,
                 telegram_id, telegram_username, telegram_first_name,
                 applied_coupon, c_code, c_type, c_val, discount_applied,
-                base_price, final_price, lang, curr
+                base_price, final_price, lang, curr, valid_seller
             ))
             conn.commit()
 

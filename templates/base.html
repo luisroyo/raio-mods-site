@@ -93,20 +93,20 @@
                 </a>
 
                 <form action="{{ url_for('public.busca') }}" method="get" class="hidden sm:flex flex-1 max-w-xs mx-4">
-                    <input type="search" name="q" placeholder="Buscar produto..."
+                    <input type="search" name="q" placeholder="{{ _('search_placeholder', 'Buscar produto...') }}"
                         class="w-full px-3 py-1.5 bg-black/60 border border-neon-cyan/50 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-neon-cyan"
                         value="{{ request.args.get('q', '') }}">
                 </form>
                 <nav class="flex items-center gap-3 md:gap-4">
                     <div class="hidden sm:flex items-center gap-3 md:gap-4">
                         <a href="{{ url_for('public.index') }}"
-                            class="text-xs md:text-sm transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Início</a>
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">{{ _('nav_home', 'Início') }}</a>
                         <a href="{{ url_for('public.links') }}"
-                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Links</a>
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">{{ _('nav_links', 'Links') }}</a>
                         <a href="{{ url_for('public.seguranca') }}"
-                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Segurança</a>
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">{{ _('nav_security', 'Segurança') }}</a>
                         <a href="{{ url_for('client.login_page') }}"
-                            class="text-xs md:text-sm transition-colors font-bold {% if request.endpoint in ('client.login_page', 'client.dashboard_page') %}neon-cyan{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Portal do Cliente</a>
+                            class="text-xs md:text-sm transition-colors font-bold {% if request.endpoint in ('client.login_page', 'client.dashboard_page') %}neon-cyan{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">{{ _('nav_client_portal', 'Portal do Cliente') }}</a>
                     </div>
                     <!-- Seletores de Idioma e Moeda -->
                     <div class="flex items-center gap-1.5 border-l border-white/10 pl-2 md:pl-3">

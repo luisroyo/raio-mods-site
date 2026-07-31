@@ -9,7 +9,7 @@
     "email": "E-mail",
     "name": "Full Name",
     "cpf": "CPF (Optional)",
-    "phone": "Phone Number (Optional)",
+    "phone": "Phone",
     "terms": "Terms of Use",
     "agree_terms": "I have read and accept the terms",
     "checkout_title": "Quick Checkout",
@@ -54,7 +54,6 @@
     "no_stock_description_short": "Contact the administrator via WhatsApp.",
     "no_products_found_for": "No products found for",
     "try_other_terms": "Try other search terms or browse the shop",
-
     "bot_welcome": "Hello! Welcome to *Raio Mods* ⚡\n\nI'm the official store assistant. How can I help you today?",
     "bot_products_menu": "🎱 *Choose a product to see details:*",
     "bot_how_to_buy": "🛒 *How to Buy*\n\n1️⃣ Choose the desired product in the 'Products' menu.\n2️⃣ Click 'Buy' on the plan you want.\n3️⃣ You'll be redirected to our official website to complete the secure payment.\n4️⃣ After purchase, the key is delivered automatically to your site account!",
@@ -63,11 +62,20 @@
     "bot_product_unavailable": "Sorry, this product is no longer available.",
     "bot_available_plans": "💰 *Available Plans:*",
     "bot_no_description": "No description",
-
     "btn_products": "🎱 Products",
     "btn_how_to_buy": "🛒 How to Buy",
     "btn_support": "🛠 Support",
     "btn_official_site": "🌐 Official Website",
     "btn_back": "🔙 Back",
-    "btn_buy_now": "🛒 Buy Now"
+    "btn_buy_now": "🛒 Buy Now",
+    "search_placeholder": "Search product...",
+    "nav_home": "Home",
+    "nav_links": "Links",
+    "nav_security": "Security",
+    "nav_client_portal": "Client Portal",
+    "nav_admin": "Admin",
+    "your_order": "Your Order",
+    "payment_method": "Payment Method",
+    "full_name": "Full Name",
+    "finish_purchase": "Complete Purchase"
 }

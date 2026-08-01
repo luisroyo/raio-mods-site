@@ -209,9 +209,14 @@ async function loadManualSales() {
         if (salesSearch) url += `&search=${encodeURIComponent(salesSearch)}`;
 
         const res = await fetch(url);
+        if (!res.ok) {
+            const text = await res.text();
+            console.error("SERVER ERROR DETAILS:", text);
+            alert("Erro do Servidor: " + text.substring(0, 500));
+        }
         const data = await res.json();
         const sales = data.data;
-        allManualSales = sales; // Store globally
+        allManualSales = sales || []; // Store globally with fallback
         
         // Render dynamic totals for the filtered query
         const formatBrl = (val) => 'R$ ' + (val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});

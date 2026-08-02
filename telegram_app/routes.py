@@ -42,37 +42,55 @@ def shutdown_bot():
 atexit.register(shutdown_bot)
 
 def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markdown', order_ref: str = None) -> None:
-    """Envia mensagem de forma assíncrona e segura de qualquer thread."""
-    global _bot_initialized
-    loop = get_persistent_loop()
+    """Envia mensagem de forma segura usando requests (evita problemas de event loop do asyncio)."""
+    import requests
+    import threading
     
-    async def _send():
-        global _bot_initialized
-        if not _bot_initialized:
-            try:
-                await bot_app.initialize()
-                await bot_app.start()
-                _bot_initialized = True
-            except Exception as e:
-                logger.error(f"Erro ao inicializar o bot no envio seguro de mensagem: {e}")
+    def _send():
         try:
-            msg = await bot_app.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode)
-            if order_ref:
-                try:
-                    from database.models import get_db_connection
-                    from contextlib import closing
-                    
-                    with closing(get_db_connection()) as conn:
-                        conn.execute('''
-                            UPDATE orders 
-                            SET telegram_delivery_status = 'delivered',
-                                telegram_delivered_at = CURRENT_TIMESTAMP,
-                                telegram_message_id = ?
-                            WHERE external_reference = ?
-                        ''', (str(msg.message_id), order_ref))
-                        conn.commit()
-                except Exception as db_err:
-                    logger.error(f"Erro ao atualizar status de entrega de auditoria no banco: {db_err}")
+            url = f"https://api.telegram.org/bot{TelegramConfig.TELEGRAM_TOKEN}/sendMessage"
+            payload = {
+                "chat_id": chat_id,
+                "text": text,
+                "parse_mode": parse_mode
+            }
+            resp = requests.post(url, json=payload, timeout=15)
+            
+            if resp.status_code == 200:
+                data = resp.json()
+                msg_id = data.get('result', {}).get('message_id')
+                if order_ref:
+                    try:
+                        from database.models import get_db_connection
+                        from contextlib import closing
+                        with closing(get_db_connection()) as conn:
+                            conn.execute('''
+                                UPDATE orders 
+                                SET telegram_delivery_status = 'delivered',
+                                    telegram_delivered_at = CURRENT_TIMESTAMP,
+                                    telegram_message_id = ?
+                                WHERE external_reference = ?
+                            ''', (str(msg_id), order_ref))
+                            conn.commit()
+                    except Exception as db_err:
+                        logger.error(f"Erro ao atualizar status de entrega de auditoria no banco: {db_err}")
+            else:
+                logger.error(f"Erro da API do Telegram: {resp.text}")
+                if order_ref:
+                    try:
+                        from database.models import get_db_connection
+                        from contextlib import closing
+                        with closing(get_db_connection()) as conn:
+                            conn.execute('''
+                                UPDATE orders 
+                                SET telegram_delivery_status = 'failed',
+                                    telegram_delivery_error = ?
+                                WHERE external_reference = ?
+                            ''', (resp.text[:500], order_ref))
+                            conn.commit()
+                    except Exception as db_err:
+                        logger.error(f"Erro ao atualizar status de falha de auditoria no banco: {db_err}")
+                        
         except Exception as e:
             logger.error(f"Erro ao enviar mensagem para chat_id {chat_id}: {e}")
             if order_ref:
@@ -90,7 +108,7 @@ def send_telegram_message_safe(chat_id: str, text: str, parse_mode: str = 'Markd
                 except Exception as db_err:
                     logger.error(f"Erro ao atualizar status de falha de auditoria no banco: {db_err}")
             
-    asyncio.run_coroutine_threadsafe(_send(), loop)
+    threading.Thread(target=_send).start()
 
 @telegram_bp.route('/telegram/webhook', methods=['POST'])
 def telegram_webhook():

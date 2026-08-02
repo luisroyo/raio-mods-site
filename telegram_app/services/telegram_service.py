@@ -61,16 +61,20 @@ class TelegramService:
         """Formata e envia a chave do produto para o usuário do Telegram de forma assíncrona."""
         from telegram_app.routes import send_telegram_message_safe
         
+        safe_product_name = str(product_name).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        safe_key_value = str(key_value).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        
         text = (
-            f"⚡ *PAGAMENTO APROVADO!* ⚡\n\n"
-            f"Obrigado por comprar na *RAIO MODS*!\n\n"
-            f"📦 *Produto:* {product_name}\n"
-            f"🔑 *Sua Licença/Chave:* `{key_value}`\n"
+            f"⚡ <b>PAGAMENTO APROVADO!</b> ⚡\n\n"
+            f"Obrigado por comprar na <b>RAIO MODS</b>!\n\n"
+            f"📦 <b>Produto:</b> {safe_product_name}\n"
+            f"🔑 <b>Sua Licença/Chave:</b> <code>{safe_key_value}</code>\n"
         )
         if download_link and download_link.strip():
-            text += f"\n📥 *Link para Download/Instruções:*\n{download_link}"
+            safe_download_link = str(download_link).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            text += f"\n📥 <b>Link para Download/Instruções:</b>\n{safe_download_link}"
             
-        send_telegram_message_safe(chat_id, text, order_ref=order_ref)
+        send_telegram_message_safe(chat_id, text, parse_mode='HTML', order_ref=order_ref)
 
     @staticmethod
     def resend_key_delivery(order_ref: str) -> bool:

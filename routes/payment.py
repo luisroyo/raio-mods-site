@@ -213,12 +213,13 @@ def process_approved_payment(order_ref: str, p_id: str):
                     logger.info(f"Entrega de chave via Telegram agendada para o chat_id: {telegram_id}")
                 else:
                     from telegram_app.routes import send_telegram_message_safe
+                    safe_prod_name = str(product_name).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
                     warn_msg = (
-                        f"⚠️ *PAGAMENTO APROVADO!* ⚠️\n\n"
-                        f"Seu pagamento para o produto *{product_name}* foi confirmado, mas nosso estoque de chaves para este item esgotou temporariamente.\n\n"
+                        f"⚠️ <b>PAGAMENTO APROVADO!</b> ⚠️\n\n"
+                        f"Seu pagamento para o produto <b>{safe_prod_name}</b> foi confirmado, mas nosso estoque de chaves para este item esgotou temporariamente.\n\n"
                         f"O administrador já foi notificado e enviará sua licença manualmente no seu e-mail ou aqui no privado o mais rápido possível!"
                     )
-                    send_telegram_message_safe(telegram_id, warn_msg, order_ref=order['external_reference'])
+                    send_telegram_message_safe(telegram_id, warn_msg, parse_mode='HTML', order_ref=order['external_reference'])
                     logger.warning(f"Aviso de sem estoque enviado via Telegram para o chat_id: {telegram_id}")
             except Exception as e:
                 logger.error(f"Erro ao disparar entrega via Telegram: {e}")

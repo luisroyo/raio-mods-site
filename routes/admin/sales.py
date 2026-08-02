@@ -670,6 +670,8 @@ def get_order_proof(order_id):
             'key_delivered': d.get('key_value', ''),
             'created_at': d.get('created_at', ''),
             'updated_at': d.get('updated_at', ''),
+            'product_platform': d.get('product_platform', ''),
+            'platform_confirmed': d.get('platform_confirmed', 0),
         }
     })
 

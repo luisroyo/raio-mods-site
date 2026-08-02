@@ -24,6 +24,7 @@ def add_product():
     link_id_val = request.form.get('link_id', '').strip()
     link_id = int(link_id_val) if link_id_val and link_id_val.isdigit() else None
     download_link = (request.form.get('download_link') or '').strip()
+    platform = (request.form.get('platform') or '').strip().lower()
     
     try:
         rp_val = request.form.get('reseller_price')
@@ -130,13 +131,13 @@ def add_product():
                 name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status, link_id
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (
                 name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status, link_id
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform
             )
         )
         conn.commit()
@@ -227,6 +228,12 @@ def edit_product(pid):
             link_id = int(link_id_val) if link_id_val.isdigit() else None
         else:
             link_id = existing.get('link_id')
+
+        platform = request.form.get('platform')
+        if platform is not None:
+            platform = platform.strip().lower()
+        else:
+            platform = existing.get('platform', '')
 
         # Se o preço da promoção for vazio, limpa a promoção inteira
         if not promo_price:
@@ -366,14 +373,14 @@ def edit_product(pid):
                 is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, 
                 is_active=?, supplier=?, reseller_price=?, download_link=?,
                 name_pt=?, name_en=?, name_es=?, description_pt=?, description_en=?, description_es=?,
-                price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?
+                price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?, platform=?
             WHERE id=?''',
             (
                 name, desc, price, img, cat, tagline, sort, pid_val, 
                 is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, 
                 is_active, supplier, reseller_price, download_link,
                 name_pt, name_en, name_es, description_pt, description_en, description_es,
-                price_brl, price_usd, default_currency, translation_status, link_id,
+                price_brl, price_usd, default_currency, translation_status, link_id, platform,
                 pid
             )
         )

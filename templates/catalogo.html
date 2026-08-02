@@ -88,6 +88,11 @@
                         👤 {{ product.supplier }}
                     </span>
                     {% endif %}
+                    {% if product.platform %}
+                    <span class="text-[10px] text-white bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full font-semibold">
+                        {% if product.platform == 'android' %}🤖 Android{% elif product.platform == 'ios' %}🍎 iOS{% elif product.platform == 'ambos' %}📱 Universal{% elif product.platform == 'pc' %}💻 PC{% else %}{{ product.platform }}{% endif %}
+                    </span>
+                    {% endif %}
                     {% if product.category and product.category != 'Sem categoria' %}
                     <span class="text-[10px] text-purple-400 bg-purple-950/30 border border-purple-800/40 px-2.5 py-0.5 rounded-full font-semibold">
                         🏷️ {{ product.category }}
@@ -129,6 +134,11 @@
                     👤 {{ product.supplier }}
                 </span>
                 {% endif %}
+                {% if product.platform %}
+                <span class="text-[10px] text-white bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full font-semibold">
+                    {% if product.platform == 'android' %}🤖 Android{% elif product.platform == 'ios' %}🍎 iOS{% elif product.platform == 'ambos' %}📱 Universal{% elif product.platform == 'pc' %}💻 PC{% else %}{{ product.platform }}{% endif %}
+                </span>
+                {% endif %}
                 {% if product.category and product.category != 'Sem categoria' %}
                 <span class="text-[10px] text-purple-400 bg-purple-950/30 border border-purple-800/40 px-2.5 py-0.5 rounded-full font-semibold">
                     🏷️ {{ product.category }}
@@ -154,7 +164,7 @@
 
             {% set display_price = product.promo_price or product.price %}
             {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
-            <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')"
+            <button onclick="openCheckout({{ product.id }}, '{{ product.name|replace('\'', '\\\'') }}', '{{ display_price }}', '{{ product.platform|default('') }}')"
                 class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 py-2 text-sm cursor-pointer mb-2">
                 <span>🛒 {{ _('buy', 'Comprar') }}</span>
             </button>

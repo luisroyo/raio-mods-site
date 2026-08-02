@@ -48,7 +48,7 @@ let currentCouponCode = null;
 let paymentCheckInterval = null;
 
 // Abre o modal
-function openCheckout(id, name, price) {
+function openCheckout(id, name, price, platform = '') {
     currentProductId = id;
     currentProductPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
     currentCouponCode = null;
@@ -79,6 +79,28 @@ function openCheckout(id, name, price) {
     if(btnCoupon) {
         btnCoupon.disabled = false;
         btnCoupon.innerText = 'Aplicar';
+    }
+    
+    // Configura o aviso de plataforma
+    const warningDiv = document.getElementById('platformWarning');
+    const warningText = document.getElementById('platformWarningText');
+    const confirmText = document.getElementById('platformConfirmText');
+    const confirmBox = document.getElementById('platformConfirm');
+    
+    if (warningDiv) {
+        if (platform === 'android') {
+            warningText.innerHTML = '⚠️ Este produto funciona apenas em dispositivos Android. Compras realizadas para iPhone não poderão ser utilizadas.';
+            confirmText.innerText = 'Confirmo que meu dispositivo é Android.';
+            confirmBox.checked = false;
+            warningDiv.classList.remove('hidden');
+        } else if (platform === 'ios') {
+            warningText.innerHTML = '⚠️ Este produto funciona apenas em iPhone/iPad (iOS). Compras para Android não são compatíveis.';
+            confirmText.innerText = 'Confirmo que meu dispositivo é iOS (iPhone/iPad).';
+            confirmBox.checked = false;
+            warningDiv.classList.remove('hidden');
+        } else {
+            warningDiv.classList.add('hidden');
+        }
     }
     
     // Reseta visualização do QR Code/Aviso
@@ -172,6 +194,16 @@ async function startPayment(type) {
         alert('Por favor, digite um e-mail válido.');
         return;
     }
+    
+    const warningDiv = document.getElementById('platformWarning');
+    const confirmBox = document.getElementById('platformConfirm');
+    if (warningDiv && !warningDiv.classList.contains('hidden')) {
+        if (!confirmBox.checked) {
+            alert('Você precisa confirmar o sistema operacional do seu dispositivo para continuar.');
+            return;
+        }
+    }
+    
     if (!termsChecked) {
         alert('Você precisa aceitar os Termos de Serviço para prosseguir.');
         return;
@@ -198,10 +230,12 @@ async function startPayment(type) {
                 cpf: cpf,
                 email: email,
                 phone: phone,
-                coupon: currentCouponCode,
-                seller_coupon: sellerRef, // Enviando tracking do afiliado/vendedor
+                type: type,
                 terms_accepted: termsChecked,
-                type: type // 'pix' ou 'card'
+                coupon: currentCouponCode,
+                seller_coupon: sellerRef,
+                init_data: window.TelegramWebApp ? window.TelegramWebApp.initData : null,
+                platform_confirmed: document.getElementById('platformConfirm') ? document.getElementById('platformConfirm').checked : false
             })
         });
 

@@ -473,6 +473,7 @@ def create_payment():
         customer_cpf = ''.join(filter(str.isdigit, data.get('cpf') or ''))
         customer_phone = (data.get('phone') or '').strip()
         terms_accepted = data.get('terms_accepted', False)
+        platform_confirmed = 1 if data.get('platform_confirmed') else 0
         
         # 1. Rate limiting check
         client_ip = _get_client_ip()
@@ -674,15 +675,17 @@ def create_payment():
                     customer_phone, ip_purchase, terms_accepted_at,
                     telegram_id, telegram_username, telegram_first_name,
                     coupon_id, coupon_code, discount_type, discount_value, discount_applied,
-                    subtotal, total, language, currency, seller_coupon
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    subtotal, total, language, currency, seller_coupon,
+                    product_platform, platform_confirmed
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 order_ref, product_id, email, final_price, 'pending', 
                 qr_code, qr_base64, customer_name, customer_cpf, 
                 customer_phone, client_ip, terms_ts,
                 telegram_id, telegram_username, telegram_first_name,
                 applied_coupon, c_code, c_type, c_val, discount_applied,
-                base_price, final_price, lang, curr, valid_seller
+                base_price, final_price, lang, curr, valid_seller,
+                product.get('platform', ''), platform_confirmed
             ))
             conn.commit()
 

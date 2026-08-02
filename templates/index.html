@@ -72,6 +72,11 @@
                     👤 {{ product.supplier }}
                 </span>
                 {% endif %}
+                {% if product.platform %}
+                <span class="text-[10px] text-white bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full inline-block mb-3 ml-1 font-semibold">
+                    {% if product.platform == 'android' %}🤖 Android{% elif product.platform == 'ios' %}🍎 iOS{% elif product.platform == 'ambos' %}📱 Universal{% elif product.platform == 'pc' %}💻 PC{% else %}{{ product.platform }}{% endif %}
+                </span>
+                {% endif %}
                 <p class="text-gray-400 text-xs mb-4 min-h-[30px] leading-relaxed">{{ product.description }}</p>
                 <div class="catalog-btn py-1.5 px-4 text-xs">
                     <span>📂 {{ _('open_catalog', 'ABRIR CATÁLOGO') }}</span>
@@ -108,6 +113,11 @@
                 👤 {{ product.supplier }}
             </span>
             {% endif %}
+            {% if product.platform %}
+            <span class="text-[10px] text-white bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full inline-block mb-3 ml-1 font-semibold">
+                {% if product.platform == 'android' %}🤖 Android{% elif product.platform == 'ios' %}🍎 iOS{% elif product.platform == 'ambos' %}📱 Universal{% elif product.platform == 'pc' %}💻 PC{% else %}{{ product.platform }}{% endif %}
+            </span>
+            {% endif %}
             <p class="text-gray-400 mb-4 text-xs flex-grow leading-relaxed">{{ product.description }}</p>
             <div class="mt-auto">
                 {% if product.promo_price %}
@@ -122,7 +132,7 @@
 
                 {% set display_price = product.promo_price or product.price %}
                 {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
-                <button onclick="openCheckout({{ product.id }}, '{{ product.name }}', '{{ display_price }}')"
+                <button onclick="openCheckout({{ product.id }}, '{{ product.name|replace('\'', '\\\'') }}', '{{ display_price }}', '{{ product.platform|default('') }}')"
                     class="btn-gradient w-full flex items-center justify-center gap-2 py-2 text-sm mb-2">
                     🛒 {{ _('buy_now', 'Comprar Agora') }}
                 </button>

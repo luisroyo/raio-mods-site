@@ -439,6 +439,8 @@ async function viewOrderProof(orderId) {
                         <p class="text-gray-300">Produto: <span class="text-white">${p.product_name}</span></p>
                         <p class="text-gray-300">Valor: <span class="text-green-400 font-bold">R$ ${(p.amount || 0).toFixed(2)}</span></p>
                         <p class="text-gray-300">Status: <span class="text-yellow-400">${p.status}</span></p>
+                        ${p.product_platform ? `<p class="text-gray-300">Plataforma (No ato da compra): <span class="text-cyan-400 uppercase">${p.product_platform}</span></p>` : ''}
+                        ${p.product_platform && p.product_platform !== 'ambos' && p.product_platform !== 'pc' ? `<p class="text-gray-300">Confirmação: ${p.platform_confirmed ? '<span class="text-green-400 font-bold">✅ Cliente confirmou plataforma</span>' : '<span class="text-red-400 font-bold">❌ Não confirmado</span>'}</p>` : ''}
                     </div>
                     <div class="border border-purple-500/20 rounded p-3 bg-black/40">
                         <p class="text-purple-400 font-bold mb-2">👤 Comprador</p>

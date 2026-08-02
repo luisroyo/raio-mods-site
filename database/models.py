@@ -41,7 +41,7 @@ class PostgreSQLCursorWrapper:
         if is_insert and 'RETURNING' not in query.upper():
             query += ' RETURNING id'
 
-        # 3. Convert sqlite parameter style '?' to postgres '%s'
+        # 3. Format query safely to convert sqlite '?' to postgres '%s' and escape '%'
         if params is not None:
             if not isinstance(params, (list, tuple, dict)):
                 params = (params,)
@@ -52,9 +52,42 @@ class PostgreSQLCursorWrapper:
                 params = None
             elif isinstance(params, dict) and len(params) == 0:
                 params = None
-        
+
         if params is not None:
-            query = query.replace('?', '%s')
+            # Robust conversion ignoring '?' inside strings
+            result = []
+            in_string = False
+            string_char = None
+            i = 0
+            while i < len(query):
+                char = query[i]
+                if not in_string:
+                    if char in ("'", '"'):
+                        in_string = True
+                        string_char = char
+                        result.append(char)
+                    elif char == '?':
+                        result.append('%s')
+                    elif char == '%' and i + 1 < len(query) and query[i+1] == 's':
+                        result.append('%')
+                    else:
+                        result.append(char)
+                else:
+                    if char == string_char:
+                        if i + 1 < len(query) and query[i+1] == string_char:
+                            result.append(char)
+                            result.append(char)
+                            i += 1
+                        else:
+                            in_string = False
+                            result.append(char)
+                    else:
+                        if char == '%':
+                            result.append('%%')
+                        else:
+                            result.append(char)
+                i += 1
+            query = "".join(result)
 
         # 4. Execute and convert psycopg2 exceptions to sqlite3 exceptions
         try:

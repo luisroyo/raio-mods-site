@@ -79,7 +79,16 @@ app.register_blueprint(client_bp)
 app.register_blueprint(reseller_bp)
 app.register_blueprint(telegram_bp)
 
+import traceback
+from flask import render_template
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"Erro Interno do Servidor: {e}\n{traceback.format_exc()}")
+    return render_template('500.html'), 500
+
 if __name__ == '__main__':
     # 4. Roda a aplicação
     # O host='0.0.0.0' permite acessar pelo IP da rede (igual ao seu original)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    is_debug = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    app.run(debug=is_debug, host='0.0.0.0', port=5000)

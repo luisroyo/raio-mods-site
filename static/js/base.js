@@ -1,3 +1,63 @@
+// --- SISTEMA DE TOASTS ---
+window.showToast = function(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        alert(message); // Fallback
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `transform transition-all duration-300 translate-x-full opacity-0 flex items-center justify-between p-4 rounded-lg shadow-lg pointer-events-auto border-l-4 backdrop-blur-md`;
+
+    let bgColor, borderColor, icon;
+    switch (type) {
+        case 'success':
+            bgColor = 'bg-green-900/90';
+            borderColor = 'border-green-500';
+            icon = '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            break;
+        case 'error':
+            bgColor = 'bg-red-900/90';
+            borderColor = 'border-red-500';
+            icon = '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            break;
+        case 'warning':
+            bgColor = 'bg-yellow-900/90';
+            borderColor = 'border-yellow-500';
+            icon = '<svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+            break;
+        default: // info
+            bgColor = 'bg-blue-900/90';
+            borderColor = 'border-blue-500';
+            icon = '<svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            break;
+    }
+
+    toast.classList.add(bgColor, borderColor);
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            ${icon}
+            <span class="text-white text-sm font-medium">${message}</span>
+        </div>
+        <button class="ml-4 text-gray-300 hover:text-white" onclick="this.parentElement.remove()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    `;
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-full', 'opacity-0');
+        toast.classList.add('translate-x-0', 'opacity-100');
+    });
+
+    setTimeout(() => {
+        toast.classList.remove('translate-x-0', 'opacity-100');
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Inicialização do AOS (Animações)
     if (typeof AOS !== 'undefined') {
@@ -187,11 +247,11 @@ async function startPayment(type) {
     
     const nameParts = name.trim().split(/\s+/);
     if (!name || nameParts.length < 2 || nameParts[0].length < 2 || nameParts[1].length < 2) {
-        alert('Por favor, digite seu NOME e SOBRENOME corretamente. Apelidos ou apenas o primeiro nome não são aceitos.');
+        showToast('Por favor, digite seu NOME e SOBRENOME corretamente. Apelidos ou apenas o primeiro nome não são aceitos.', 'warning');
         return;
     }
     if (!email || !email.includes('@')) {
-        alert('Por favor, digite um e-mail válido.');
+        showToast('Por favor, digite um e-mail válido.', 'warning');
         return;
     }
     
@@ -199,13 +259,13 @@ async function startPayment(type) {
     const confirmBox = document.getElementById('platformConfirm');
     if (warningDiv && !warningDiv.classList.contains('hidden')) {
         if (!confirmBox.checked) {
-            alert('Você precisa confirmar o sistema operacional do seu dispositivo para continuar.');
+            showToast('Você precisa confirmar o sistema operacional do seu dispositivo para continuar.', 'warning');
             return;
         }
     }
     
     if (!termsChecked) {
-        alert('Você precisa aceitar os Termos de Serviço para prosseguir.');
+        showToast('Você precisa aceitar os Termos de Serviço para prosseguir.', 'warning');
         return;
     }
 
@@ -242,7 +302,7 @@ async function startPayment(type) {
         const data = await response.json();
 
         if (data.error) {
-            alert('Erro: ' + data.error);
+            showToast('Erro: ' + data.error, 'error');
             resetButtons();
             return;
         }
@@ -299,7 +359,7 @@ async function startPayment(type) {
 
     } catch (error) {
         console.error(error);
-        alert('Erro ao conectar com o servidor.');
+        showToast('Erro ao conectar com o servidor.', 'error');
         resetButtons();
     }
 
@@ -315,13 +375,13 @@ function copyPix() {
     const copyText = document.getElementById("pixCopyPaste");
     copyText.select();
     document.execCommand("copy");
-    alert("Código PIX copiado!");
+    showToast("Código PIX copiado!", 'success');
 }
 
 function copyKey() {
     const keyText = document.getElementById("finalKey").innerText;
     navigator.clipboard.writeText(keyText).then(() => {
-        alert("Chave copiada!");
+        showToast("Chave copiada!", 'success');
     });
 }
 
@@ -374,13 +434,13 @@ async function revealKey() {
             document.getElementById('step-reveal').classList.add('hidden');
             document.getElementById('step-success').classList.remove('hidden');
         } else {
-            alert('Erro ao revelar a chave: ' + (data.error || 'Tente novamente.'));
+            showToast('Erro ao revelar a chave: ' + (data.error || 'Tente novamente.'), 'error');
             btn.disabled = false;
             btn.innerHTML = '🔓 Revelar Minha Chave';
         }
     } catch (err) {
         console.error(err);
-        alert('Erro ao conectar com o servidor.');
+        showToast('Erro ao conectar com o servidor.', 'error');
         btn.disabled = false;
         btn.innerHTML = '🔓 Revelar Minha Chave';
     }
@@ -398,9 +458,9 @@ function showSuccess(key) {
 function copyProductLink(productId) {
     const link = window.location.origin + '/pagamento?product_id=' + productId;
     navigator.clipboard.writeText(link).then(() => {
-        alert("Link do produto copiado! Você pode colar no seu catálogo do WhatsApp.");
+        showToast("Link do produto copiado! Você pode colar no seu catálogo do WhatsApp.", 'success');
     }).catch(err => {
         console.error('Erro ao copiar: ', err);
-        alert("Erro ao copiar o link. Tente copiar manualmente: " + link);
+        showToast("Erro ao copiar o link. Tente copiar manualmente: " + link, 'error');
     });
 }

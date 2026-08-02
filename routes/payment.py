@@ -57,47 +57,43 @@ def get_mp_sdk():
 
 def verify_webhook_signature(request) -> bool:
     """Valida a assinatura x-signature do Mercado Pago (Prevenção de Fraudes e Webhooks Falsos)"""
+    client_ip = _get_client_ip()
+    now = datetime.now().isoformat()
+    
+    def _reject(reason):
+        logger.warning(f"[REJEITADO] Webhook inválido. IP: {client_ip} | Data: {now} | Motivo: {reason}")
+        return False
+
     secret = os.getenv('MP_WEBHOOK_SECRET')
     if not secret:
-        # Se o admin não configurou o secret no .env, não temos como validar.
-        # Loga o aviso mas deixa passar para não quebrar a lojinha, mas IDEALMENTE deve se configurar.
-        logger.warning("MP_WEBHOOK_SECRET não configurado. Webhooks podem ser falsificados.")
-        return True 
+        return _reject("MP_WEBHOOK_SECRET não configurado.")
 
     x_signature = request.headers.get('x-signature')
     x_request_id = request.headers.get('x-request-id')
     
     if not x_signature or not x_request_id:
-        logger.warning("Cabeçalhos x-signature ou x-request-id ausentes. Permitindo mesmo assim pois o status é verificado na API.")
-        return True
+        return _reject("Cabeçalhos x-signature ou x-request-id ausentes.")
         
     try:
-        # Extrai 'ts' (timestamp) e 'v1' (hash) da string x_signature. Ex: 'ts=170000000,v1=abc123hash'
         parts = dict(part.split('=') for part in x_signature.split(','))
         ts = parts.get('ts')
         v1 = parts.get('v1')
         
         if not ts or not v1:
-            logger.warning("Assinatura do webhook malformada. Permitindo mesmo assim.")
-            return True
+            return _reject("Assinatura do webhook malformada.")
             
-        # O payload para o HMAC é montar 'id_url-request_id-ts' (MercadoPago docs)
-        # O ID da transação no request.args ou no body (JSON)
         data_id = request.args.get('data.id') or request.args.get('id')
         if not data_id:
-            # tenta body
             if request.is_json:
                 data_id = request.json.get('data', {}).get('id') or request.json.get('id')
                 
         if not data_id:
-            logger.warning("Verificação do webhook falhou: ID do pagamento não encontrado. Permitindo mesmo assim.")
-            return True
+            return _reject("ID do pagamento não encontrado no payload.")
             
         data_id = str(data_id)
         
         manifest = f"id:{data_id};request-id:{x_request_id};ts:{ts};"
         
-        # Gera assinatura local e compara
         expected_signature = hmac.new(
             secret.encode('utf-8'),
             manifest.encode('utf-8'),
@@ -107,12 +103,10 @@ def verify_webhook_signature(request) -> bool:
         if hmac.compare_digest(expected_signature, v1):
             return True
         else:
-            logger.warning("Assinatura do webhook inválida. Permitindo mesmo assim pois o status é verificado na API.")
-            return True
+            return _reject("Assinatura do webhook inválida (hash não confere).")
             
     except Exception as e:
-        logger.warning(f"Erro ao validar assinatura do webhook: {e}. Permitindo mesmo assim.")
-        return True
+        return _reject(f"Erro na validação do webhook: {e}")
 
 def parse_price(price_str) -> float:
     """Converte strings de preço em float de forma segura e padronizada."""

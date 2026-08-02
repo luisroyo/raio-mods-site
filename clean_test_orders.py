@@ -19,16 +19,16 @@ def clean_tests(email):
                 ext_ref = order['external_reference']
                 print(f"Limpando pedido {ext_ref}...")
                 
-                # Devolve a chave ao estoque
+                # As chaves eram fakes, então vamos deletá-las do banco também
                 if key_id:
-                    conn.execute("UPDATE product_keys SET is_used = 0 WHERE id = ?", (key_id,))
-                    print(f" -> Chave {key_id} restaurada no estoque.")
+                    conn.execute("DELETE FROM product_keys WHERE id = ?", (key_id,))
+                    print(f" -> Chave fake (ID: {key_id}) deletada definitivamente do estoque.")
                     
                 # Deleta o pedido
                 conn.execute("DELETE FROM orders WHERE id = ?", (order_id,))
                 
             conn.commit()
-            print(f"Sucesso! {len(orders)} pedido(s) removido(s) e chaves devolvidas.")
+            print(f"Sucesso! {len(orders)} pedido(s) e suas chaves fakes foram removidos do sistema.")
 
 if __name__ == '__main__':
     clean_tests('luisroyo25@gmail.com')

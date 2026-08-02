@@ -183,7 +183,7 @@ async function checkOrderStatus() {
         const response = await fetch(`/api/check_status/${ORDER_REF}`);
         const data = await response.json();
 
-        if (data.status === 'ready_to_reveal') {
+        if (data.status === 'ready_to_reveal' || data.status === 'paid_no_key') {
             clearInterval(pollInterval);
             showApprovedCard(data);
         } else if (data.status === 'not_found') {
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/check_status/${ORDER_REF}`);
             const data = await response.json();
 
-            if (data.status === 'ready_to_reveal') {
+            if (data.status === 'ready_to_reveal' || data.status === 'paid_no_key') {
                 showApprovedCard(data);
             } else if (data.status === 'not_found') {
                 document.getElementById('status-pending').classList.add('hidden');

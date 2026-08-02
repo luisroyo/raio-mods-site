@@ -303,7 +303,7 @@ function startPolling(orderId) {
             const response = await fetch(`/api/check_status/${orderId}`);
             const data = await response.json();
 
-            if (data.status === 'ready_to_reveal') {
+            if (data.status === 'ready_to_reveal' || data.status === 'paid_no_key') {
                 // PAGAMENTO APROVADO — mostra botão de revelar
                 clearInterval(paymentCheckInterval);
                 showRevealStep();

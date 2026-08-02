@@ -83,10 +83,16 @@ def verify_webhook_signature(request) -> bool:
         # O payload para o HMAC é montar 'id_url-request_id-ts' (MercadoPago docs)
         # O ID da transação no request.args ou no body (JSON)
         data_id = request.args.get('data.id') or request.args.get('id')
-        if not data_id and request.is_json:
-            body = request.json or {}
-            data_id = body.get('data', {}).get('id') or body.get('id')
-        data_id = str(data_id) if data_id else ''
+        if not data_id:
+            # tenta body
+            if request.is_json:
+                data_id = request.json.get('data', {}).get('id') or request.json.get('id')
+                
+        if not data_id:
+            logger.warning("Verificação do webhook falhou: ID do pagamento não encontrado na requisição.")
+            return False
+            
+        data_id = str(data_id)
         
         manifest = f"id:{data_id};request-id:{x_request_id};ts:{ts};"
         
@@ -194,7 +200,7 @@ def process_approved_payment(order_ref: str, p_id: str):
         product = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (order['product_id'],)).fetchone()
         
         # Enviar chave via Telegram (se o cliente comprou pelo bot)
-        telegram_id = order.get('telegram_id')
+        telegram_id = dict(order).get('telegram_id')
         if telegram_id:
             try:
                 from telegram_app.services.telegram_service import TelegramService

@@ -180,7 +180,7 @@ function startOrderPolling() {
 
 async function checkOrderStatus() {
     try {
-        const response = await fetch(`/api/check_status/${ORDER_REF}`);
+        const response = await fetch(`/api/check_status/${ORDER_REF}?_t=${new Date().getTime()}`);
         const data = await response.json();
 
         if (data.status === 'ready_to_reveal' || data.status === 'paid_no_key') {
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Verifica imediatamente na carga da página e depois faz polling
     (async () => {
         try {
-            const response = await fetch(`/api/check_status/${ORDER_REF}`);
+            const response = await fetch(`/api/check_status/${ORDER_REF}?_t=${new Date().getTime()}`);
             const data = await response.json();
 
             if (data.status === 'ready_to_reveal' || data.status === 'paid_no_key') {

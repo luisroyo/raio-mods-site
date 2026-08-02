@@ -300,7 +300,7 @@ function startPolling(orderId) {
 
     paymentCheckInterval = setInterval(async () => {
         try {
-            const response = await fetch(`/api/check_status/${orderId}`);
+            const response = await fetch(`/api/check_status/${orderId}?_t=${new Date().getTime()}`);
             const data = await response.json();
 
             if (data.status === 'ready_to_reveal' || data.status === 'paid_no_key') {

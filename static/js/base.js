@@ -29,6 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-mobile-link').forEach(link => {
         link.addEventListener('click', closeMenu);
     });
+
+    // --- CAPTURA DE REFERÊNCIA DE VENDEDOR (AFILIADO) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+        // Salva no localStorage e remove da URL para ficar limpo (opcional)
+        localStorage.setItem('seller_ref', ref.trim().toUpperCase());
+        console.log("Referência de vendedor salva:", ref);
+    }
 });
 
 // --- LÓGICA DE CHECKOUT AUTOMÁTICO (MERCADO PAGO) ---
@@ -178,6 +187,8 @@ async function startPayment(type) {
     else btnCard.innerHTML = '🔄 Redirecionando...';
 
     try {
+        const sellerRef = localStorage.getItem('seller_ref');
+        
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -188,6 +199,7 @@ async function startPayment(type) {
                 email: email,
                 phone: phone,
                 coupon: currentCouponCode,
+                seller_coupon: sellerRef, // Enviando tracking do afiliado/vendedor
                 terms_accepted: termsChecked,
                 type: type // 'pix' ou 'card'
             })

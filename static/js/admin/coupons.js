@@ -40,7 +40,10 @@ async function loadCoupons() {
             tr.innerHTML = `
                 <td class="p-4">
                     <div class="font-mono font-bold text-amber-400">${c.code}</div>
-                    <div class="mt-1">${statusBadge}</div>
+                    <div class="mt-1 flex items-center gap-1 flex-wrap">
+                        ${statusBadge}
+                        ${c.is_seller ? '<span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs" title="Cupom exclusivo para vendedores">Vendedor</span>' : ''}
+                    </div>
                 </td>
                 <td class="p-4 text-white">${discount}</td>
                 <td class="p-4 text-gray-300">${uses}</td>
@@ -75,6 +78,9 @@ async function saveCoupon() {
     formData.append('discount_value', document.getElementById('discountValue').value);
     formData.append('max_uses', document.getElementById('maxUses').value);
     formData.append('valid_until', document.getElementById('validUntil').value);
+    if (document.getElementById('isSeller').checked) {
+        formData.append('is_seller', '1');
+    }
 
     try {
         const res = await fetch('/admin/coupons/add', {

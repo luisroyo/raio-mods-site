@@ -36,6 +36,38 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=get_main_menu_keyboard(lang)
     )
 
+async def catalogo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Trata os comandos /catalogo, /kos, /apk e exibe o menu de produtos."""
+    lang = _lang(update)
+    logger.info(f"Usuário {update.effective_user.id} acionou um comando de catálogo (lang={lang}).")
+    products_list = ProductService.get_all_products()
+    keyboard = get_products_keyboard(products_list, lang)
+    await TelegramService.send_message(
+        update=update,
+        text=get_products_menu(lang),
+        reply_markup=keyboard
+    )
+
+async def suporte_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Trata o comando /suporte."""
+    lang = _lang(update)
+    logger.info(f"Usuário {update.effective_user.id} acionou /suporte (lang={lang}).")
+    await TelegramService.send_message(
+        update=update,
+        text=get_support(lang),
+        reply_markup=get_back_button_keyboard(lang)
+    )
+
+async def site_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Trata o comando /site."""
+    lang = _lang(update)
+    logger.info(f"Usuário {update.effective_user.id} acionou /site (lang={lang}).")
+    await TelegramService.send_message(
+        update=update,
+        text="🌐 Acesse nosso site oficial:\nhttps://raiomodsgames.pythonanywhere.com",
+        reply_markup=get_back_button_keyboard(lang)
+    )
+
 
 async def main_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Processa todos os cliques do Menu Principal e navegação geral."""

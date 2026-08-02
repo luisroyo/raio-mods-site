@@ -5,7 +5,10 @@ registro dos Handlers e do ErrorHandler.
 """
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 from telegram_app.config import TelegramConfig
-from telegram_app.handlers import start_command, main_menu_callback, product_selection_callback
+from telegram_app.handlers import (
+    start_command, main_menu_callback, product_selection_callback,
+    catalogo_command, suporte_command, site_command
+)
 from telegram_app.constants import CB_PREFIX_PRODUCT
 from telegram_app.error_handler import global_error_handler
 import logging
@@ -25,6 +28,11 @@ def create_bot_application() -> Application:
 
     # Registra Command Handlers
     application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("catalogo", catalogo_command))
+    application.add_handler(CommandHandler("kos", catalogo_command))
+    application.add_handler(CommandHandler("apk", catalogo_command))
+    application.add_handler(CommandHandler("suporte", suporte_command))
+    application.add_handler(CommandHandler("site", site_command))
 
     # Registra Callback Handlers
     # 1. Botões do Menu Principal (cliques genéricos que não são produtos)

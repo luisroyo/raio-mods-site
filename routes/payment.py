@@ -685,7 +685,7 @@ def create_payment():
                 telegram_id, telegram_username, telegram_first_name,
                 applied_coupon, c_code, c_type, c_val, discount_applied,
                 base_price, final_price, lang, curr, valid_seller,
-                product.get('platform', ''), platform_confirmed
+                dict(product).get('platform', ''), platform_confirmed
             ))
             conn.commit()
 
@@ -770,16 +770,17 @@ def check_status(order_ref):
     
     def _build_approved_response(row):
         """Monta o payload completo quando o pedido está aprovado."""
+        row_dict = dict(row)
         # Prioriza a URL da tabela de links, com fallback para o link manual antigo
-        download_link = row.get('linked_download_url')
+        download_link = row_dict.get('linked_download_url')
         if not download_link or not download_link.strip():
-            download_link = row.get('download_link') or ''
+            download_link = row_dict.get('download_link') or ''
         else:
             download_link = download_link.strip()
             
         return jsonify({
             'status': 'ready_to_reveal',
-            'product_name': row.get('product_name') or '',
+            'product_name': row_dict.get('product_name') or '',
             'download_link': download_link,
             'has_download': bool(download_link.strip())
         })

@@ -14,7 +14,7 @@ def clean_orders():
             SELECT id, key_assigned_id, external_reference, customer_email 
             FROM orders 
             WHERE customer_email = 'luisroyo25@gmail.com' 
-               OR external_reference = 'ORD-25003956dfe7'
+               OR external_reference = 'ORD-533d0f657831'
         ''').fetchall()
         
         if not orders:

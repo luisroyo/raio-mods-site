@@ -662,6 +662,11 @@ def create_payment():
             c_type = coupon_data['discount_type'] if coupon_data else ''
             c_val = coupon_data['discount_value'] if coupon_data else 0.0
 
+            # Descontar 5% se for cartão para refletir o valor líquido recebido
+            amount_to_save = final_price
+            if payment_type != 'pix':
+                amount_to_save = round(final_price * 0.95, 2)
+
             conn.execute('''
                 INSERT INTO orders (
                     external_reference, product_id, customer_email, amount, status, 
@@ -673,12 +678,12 @@ def create_payment():
                     product_platform, platform_confirmed
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
-                order_ref, product_id, email, final_price, 'pending', 
+                order_ref, product_id, email, amount_to_save, 'pending', 
                 qr_code, qr_base64, customer_name, customer_cpf, 
                 customer_phone, client_ip, terms_ts,
                 telegram_id, telegram_username, telegram_first_name,
                 applied_coupon, c_code, c_type, c_val, discount_applied,
-                base_price, final_price, lang, curr, valid_seller,
+                base_price, amount_to_save, lang, curr, valid_seller,
                 dict(product).get('platform', ''), platform_confirmed
             ))
             conn.commit()

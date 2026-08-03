@@ -662,9 +662,10 @@ def create_payment():
             c_type = coupon_data['discount_type'] if coupon_data else ''
             c_val = coupon_data['discount_value'] if coupon_data else 0.0
 
-            # Descontar 5% se for cartão para refletir o valor líquido recebido
-            amount_to_save = final_price
-            if payment_type != 'pix':
+            # Descontar 5% se for cartão e 1% se for PIX para refletir o valor líquido recebido
+            if payment_type == 'pix':
+                amount_to_save = round(final_price * 0.99, 2)
+            else:
                 amount_to_save = round(final_price * 0.95, 2)
 
             conn.execute('''

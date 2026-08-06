@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from contextlib import closing
 
 import mercadopago
+from services.payment_service import PaymentService
 from flask import Blueprint, request, jsonify, current_app
 from database.models import get_db_connection
 
@@ -33,80 +34,6 @@ def _get_client_ip() -> str:
     if forwarded:
         return forwarded.split(',')[0].strip()
     return request.remote_addr or 'unknown'
-
-def get_mp_sdk():
-    """Recupera o SDK do Mercado Pago inicializado com o token salvo no banco de dados ou .env."""
-    token = None
-    
-    # Prioridade máxima: Banco de Dados (Admin Panel) - permite trocar facilmente
-    try:
-        with closing(get_db_connection()) as conn:
-            config = conn.execute('SELECT mercado_pago_token FROM config WHERE id = 1').fetchone()
-            if config and 'mercado_pago_token' in config.keys():
-                db_token = config['mercado_pago_token']
-                if db_token and db_token.strip():
-                    token = db_token.strip()
-    except Exception as e:
-        logger.warning(f"Erro ao ler token do banco: {e}")
-    
-    # Fallback: Variável de ambiente (.env)
-    if not token:
-        token = os.getenv('MP_ACCESS_TOKEN')
-
-    return mercadopago.SDK(token) if token else None
-
-def verify_webhook_signature(request) -> bool:
-    """Valida a assinatura x-signature do Mercado Pago (Prevenção de Fraudes e Webhooks Falsos)"""
-    client_ip = _get_client_ip()
-    now = datetime.now().isoformat()
-    
-    def _reject(reason):
-        logger.warning(f"[REJEITADO] Webhook inválido. IP: {client_ip} | Data: {now} | Motivo: {reason}")
-        return False
-
-    secret = os.getenv('MP_WEBHOOK_SECRET')
-    if not secret:
-        return _reject("MP_WEBHOOK_SECRET não configurado.")
-
-    x_signature = request.headers.get('x-signature')
-    x_request_id = request.headers.get('x-request-id')
-    
-    if not x_signature or not x_request_id:
-        return _reject("Cabeçalhos x-signature ou x-request-id ausentes.")
-        
-    try:
-        parts = dict(part.split('=') for part in x_signature.split(','))
-        ts = parts.get('ts')
-        v1 = parts.get('v1')
-        
-        if not ts or not v1:
-            return _reject("Assinatura do webhook malformada.")
-            
-        data_id = request.args.get('data.id') or request.args.get('id')
-        if not data_id:
-            if request.is_json:
-                data_id = request.json.get('data', {}).get('id') or request.json.get('id')
-                
-        if not data_id:
-            return _reject("ID do pagamento não encontrado no payload.")
-            
-        data_id = str(data_id)
-        
-        manifest = f"id:{data_id};request-id:{x_request_id};ts:{ts};"
-        
-        expected_signature = hmac.new(
-            secret.encode('utf-8'),
-            manifest.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
-        
-        if hmac.compare_digest(expected_signature, v1):
-            return True
-        else:
-            return _reject("Assinatura do webhook inválida (hash não confere).")
-            
-    except Exception as e:
-        return _reject(f"Erro na validação do webhook: {e}")
 
 def parse_price(price_str) -> float:
     """Converte strings de preço em float de forma segura e padronizada."""
@@ -555,10 +482,6 @@ def create_payment():
                     
             final_price = max(1.0, final_price)
 
-        sdk = get_mp_sdk()
-        if not sdk:
-            return jsonify({'error': 'Configuração de pagamento (Mercado Pago) ausente ou inválida.'}), 500
-
         final_price = round(final_price, 2)
         order_ref = f"ORD-{uuid.uuid4().hex[:12]}"
         first_name, last_name = parse_customer_name(customer_name, email)
@@ -574,79 +497,33 @@ def create_payment():
         if customer_phone:
             payer_info["phone"] = {"number": customer_phone}
 
-        # Inicializa variáveis de pagamento localmente a serem preenchidas pelo PIX/Cartão
         response_data = {'success': True, 'type': payment_type, 'order_ref': order_ref}
         qr_code, qr_base64, checkout_url = None, None, None
 
-        # --- PIX (PREÇO ORIGINAL) ---
-        if payment_type == 'pix':
-            payment_data = {
-                "transaction_amount": final_price,
-                "description": f"{product_dict['name']} (Key)",
-                "payment_method_id": "pix",
-                "external_reference": order_ref,
-                "payer": payer_info,
-                "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
-            }
-
-            mp_res = sdk.payment().create(payment_data)
-            payment_resp = mp_res.get("response", {})
-            
-            if 'error' in payment_resp:
-                 return jsonify({'error': f"Erro MP: {payment_resp.get('message', 'Erro desconhecido')}"}), 400
-
-            try:
-                tx_data = payment_resp['point_of_interaction']['transaction_data']
-                qr_code = tx_data['qr_code']
-                qr_base64 = tx_data['qr_code_base64']
-            except KeyError:
-                logger.error(f"Resposta inesperada do MP ao gerar PIX: {payment_resp}")
-                return jsonify({'error': 'Resposta inválida na geração de Pix pelo MercadoPago.'}), 500
-
-            response_data.update({'qr_code': qr_code, 'qr_code_base64': qr_base64})
-
-        # --- CARTÃO (ACRÉSCIMO DE 7%) ---
-        else:
-            final_price = round(final_price * 1.07, 2)
-
-            # Preference exige formato 'surname'
-            card_payer = {
-                "email": email,
-                "name": first_name,
-                "surname": last_name
-            }
-            if customer_cpf:
-                card_payer["identification"] = {"type": "CPF", "number": customer_cpf}
-            if customer_phone:
-                card_payer["phone"] = {"area_code": "", "number": customer_phone}
-
-            preference_data = {
-                "items": [{
-                    "title": f"Key: {product_dict['name']} (+Taxa Cartão)",
-                    "quantity": 1,
-                    "currency_id": "BRL",
-                    "unit_price": final_price
-                }],
-                "payer": card_payer,
-                "external_reference": order_ref,
-                "back_urls": {
-                    "success": f"https://raiomodsgames.pythonanywhere.com/pedido/{order_ref}",
-                    "failure": f"https://raiomodsgames.pythonanywhere.com/pedido/{order_ref}?status=failure",
-                    "pending": f"https://raiomodsgames.pythonanywhere.com/pedido/{order_ref}?status=pending"
-                },
-                "auto_return": "approved",
-                "notification_url": "https://raiomodsgames.pythonanywhere.com/webhook/mp"
-            }
-
-            pref_res = sdk.preference().create(preference_data)
-            response_body = pref_res.get("response", {})
-            checkout_url = response_body.get("init_point") or response_body.get("sandbox_init_point")
-
-            if not checkout_url:
-                logger.error(f"Erro MP Preference: {pref_res}")
-                return jsonify({'error': 'Erro ao gerar link de pagamento do Cartão.'}), 500
-
-            response_data.update({'checkout_url': checkout_url})
+        try:
+            if payment_type == 'pix':
+                pix_res = PaymentService.create_pix_payment(final_price, product_dict['name'], order_ref, payer_info)
+                qr_code = pix_res.get('qr_code')
+                qr_base64 = pix_res.get('qr_code_base64')
+                response_data.update(pix_res)
+            else:
+                final_price = round(final_price * 1.07, 2)
+                card_payer = {
+                    "email": email,
+                    "name": first_name,
+                    "surname": last_name
+                }
+                if customer_cpf:
+                    card_payer["identification"] = {"type": "CPF", "number": customer_cpf}
+                if customer_phone:
+                    card_payer["phone"] = {"area_code": "", "number": customer_phone}
+                    
+                card_res = PaymentService.create_card_payment(final_price, product_dict['name'], order_ref, card_payer)
+                checkout_url = card_res.get('checkout_url')
+                response_data.update(card_res)
+        except ValueError as ve:
+            logger.error(f"Erro ao criar pagamento MP: {ve}")
+            return jsonify({'error': str(ve)}), 500
 
         # Persistência do pedido unificada
         with closing(get_db_connection()) as conn:
@@ -713,18 +590,21 @@ def webhook():
         logger.info(f"Webhook recebido: topic={topic}, id={p_id}")
         
         # Segurança: Valida x-signature antes de prosseguir
-        if not verify_webhook_signature(request):
+        client_ip = _get_client_ip()
+        headers = dict(request.headers)
+        query_args = dict(request.args)
+        json_data = request.json if request.is_json else {}
+        
+        if not PaymentService.verify_webhook_signature(headers, query_args, json_data, client_ip):
             logger.error(f"Webhook rejeitado: Assinatura x-signature inválida. (ID pago: {p_id})")
             return jsonify({'error': 'Unauthorized webhook. Signature mismatch.'}), 403
 
         if topic == 'payment' and p_id:
-            sdk = get_mp_sdk()
-            if not sdk:
+            try:
+                payment = PaymentService.get_payment_info(p_id)
+            except ValueError:
                 logger.error("Erro: SDK Mercado Pago não configurado.")
                 return jsonify({'status': 'error_config'}), 500
-            
-            payment_info = sdk.payment().get(p_id)
-            payment = payment_info.get('response', {})
             
             if 'error' in payment or 'status' not in payment:
                 logger.error(f"Erro ao buscar pagamento {p_id}: {payment}")
@@ -794,11 +674,8 @@ def check_status(order_ref):
     # Fallback: se ainda está pendente, consulta o MP diretamente
     if row['status'] == 'pending':
         try:
-            sdk = get_mp_sdk()
-            if sdk:
-                search_result = sdk.payment().search({"external_reference": order_ref})
-                results = search_result.get("response", {}).get("results", [])
-                for payment in results:
+            results = PaymentService.search_payment(order_ref)
+            for payment in results:
                     if payment.get("status") == "approved":
                         logger.info(f"Fallback ativo: pagamento aprovado encontrado para {order_ref} (Payment ID: {payment.get('id')})")
                         process_approved_payment(order_ref, str(payment.get("id", "")))

@@ -1,0 +1,74 @@
+{% extends "admin/_base_admin.html" %}
+
+{% block title %}Comissões de Vendedores{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <div>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent">
+            🤝 Comissões de Vendedores
+        </h2>
+        <p class="text-gray-400 mt-1">Gerencie os pagamentos aos vendedores afiliados.</p>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="flex gap-4 mb-6 border-b border-gray-800">
+    <button onclick="switchTab('summary')" id="tab-summary" class="px-4 py-2 text-emerald-500 border-b-2 border-emerald-500 font-medium">Resumo por Vendedor</button>
+    <button onclick="switchTab('history')" id="tab-history" class="px-4 py-2 text-gray-500 hover:text-gray-300 font-medium transition">Histórico de Lançamentos</button>
+</div>
+
+<!-- Tab 1: Summary -->
+<div id="view-summary">
+    <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-xl overflow-hidden mb-8">
+        <div class="p-4 border-b border-gray-700 bg-gray-900/50 flex justify-between items-center">
+            <h3 class="font-bold text-gray-200">Valores a Pagar</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-900/80 text-gray-400 text-sm uppercase tracking-wider">
+                        <th class="p-4 font-semibold">Vendedor (Cupom)</th>
+                        <th class="p-4 font-semibold text-amber-500">Total Pendente</th>
+                        <th class="p-4 font-semibold text-emerald-500">Total Pago (Histórico)</th>
+                        <th class="p-4 text-right font-semibold">Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryList" class="divide-y divide-gray-700/50">
+                    <tr><td colspan="4" class="p-4 text-center text-gray-400">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 2: History -->
+<div id="view-history" class="hidden">
+    <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-xl overflow-hidden mb-8">
+        <div class="p-4 border-b border-gray-700 bg-gray-900/50 flex justify-between items-center">
+            <h3 class="font-bold text-gray-200">Extrato Detalhado</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-900/80 text-gray-400 text-sm uppercase tracking-wider">
+                        <th class="p-4 font-semibold">Data</th>
+                        <th class="p-4 font-semibold">Vendedor</th>
+                        <th class="p-4 font-semibold">Pedido Associado</th>
+                        <th class="p-4 font-semibold">Valor da Venda</th>
+                        <th class="p-4 font-semibold">Comissão</th>
+                        <th class="p-4 font-semibold">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="historyList" class="divide-y divide-gray-700/50">
+                    <tr><td colspan="6" class="p-4 text-center text-gray-400">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/admin/commissions.js"></script>
+{% endblock %}

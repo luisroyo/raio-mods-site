@@ -120,6 +120,36 @@ def process_approved_payment(order_ref: str, p_id: str):
             except Exception as e:
                 logger.error(f"Erro ao atualizar uso do cupom no pedido {order['id']}: {e}")
 
+        # Processar comissão de vendedor (se houver)
+        # Pode vir pelo link (seller_coupon) ou pelo cupom digitado (coupon_code)
+        possible_sellers = []
+        if order.get('seller_coupon'):
+            possible_sellers.append(order['seller_coupon'])
+        if order.get('coupon_code'):
+            possible_sellers.append(order['coupon_code'])
+            
+        processed_sellers = set()
+        for sc in possible_sellers:
+            if not sc or sc.upper() in processed_sellers: 
+                continue
+            
+            try:
+                # Busca os dados do vendedor no banco de cupons
+                seller_data = conn.execute('SELECT commission_percentage FROM coupons WHERE code = ? COLLATE NOCASE AND is_seller = TRUE', (sc,)).fetchone()
+                if seller_data and seller_data['commission_percentage'] > 0:
+                    com_perc = seller_data['commission_percentage']
+                    sale_amt = order['amount']
+                    com_amt = round(sale_amt * (com_perc / 100.0), 2)
+                    
+                    conn.execute('''
+                        INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status)
+                        VALUES (?, ?, ?, ?, 'pending')
+                    ''', (sc.upper(), order['id'], sale_amt, com_amt))
+                    logger.info(f"Comissão gerada: R$ {com_amt} para {sc} no pedido {order['id']}")
+                    processed_sellers.add(sc.upper())
+            except Exception as e:
+                logger.error(f"Erro ao gerar comissão do vendedor {sc} no pedido {order['id']}: {e}")
+
         conn.commit()
 
         # Envia e-mails de notificação (Admin e Cliente) de forma assíncrona

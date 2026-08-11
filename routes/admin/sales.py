@@ -56,11 +56,15 @@ def add_manual_sale():
         discount_applied = 0.0
         applied_coupon = None
 
+        com_perc = 0.0
+
         if seller_coupon:
             coupon_data = conn.execute('SELECT * FROM coupons WHERE code = ? AND is_seller = TRUE', (seller_coupon,)).fetchone()
             if not coupon_data:
                 conn.close()
                 return jsonify({'error': 'Cupom de vendedor inválido ou inexistente!'}), 400
+            
+            com_perc = float(coupon_data['commission_percentage']) if 'commission_percentage' in dict(coupon_data) and coupon_data['commission_percentage'] else 0.0
             
             if coupon_data['discount_type'] == 'percent':
                 discount_applied = total_price * (coupon_data['discount_value'] / 100.0)
@@ -98,6 +102,13 @@ def add_manual_sale():
                 (product_id, quantity, unit_price, cost_per_unit_brl, total_price, client_name, client_email, status, paid_amount, applied_coupon, discount_applied)
             )
             sale_id = cursor.lastrowid
+
+        if applied_coupon and com_perc > 0:
+            com_amt = round(total_price * (com_perc / 100.0), 2)
+            conn.execute('''
+                INSERT INTO commissions (seller_coupon, manual_sale_id, sale_amount, commission_amount, status)
+                VALUES (?, ?, ?, ?, 'pending')
+            ''', (applied_coupon, sale_id, total_price, com_amt))
 
         prod_row = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (product_id,)).fetchone()
         prod_name = prod_row['name'] if prod_row else 'Produto'

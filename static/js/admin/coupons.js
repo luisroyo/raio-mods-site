@@ -42,7 +42,7 @@ async function loadCoupons() {
                     <div class="font-mono font-bold text-amber-400">${c.code}</div>
                     <div class="mt-1 flex items-center gap-1 flex-wrap">
                         ${statusBadge}
-                        ${c.is_seller ? '<span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs" title="Cupom exclusivo para vendedores">Vendedor</span>' : ''}
+                        ${c.is_seller ? `<span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs" title="Cupom exclusivo para vendedores">Vendedor (${c.commission_percentage || 0}%)</span>` : ''}
                     </div>
                 </td>
                 <td class="p-4 text-white">${discount}</td>
@@ -80,6 +80,7 @@ async function saveCoupon() {
     formData.append('valid_until', document.getElementById('validUntil').value);
     if (document.getElementById('isSeller').checked) {
         formData.append('is_seller', '1');
+        formData.append('commission_percentage', document.getElementById('commissionPercentage').value);
     }
 
     try {

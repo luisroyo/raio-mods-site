@@ -103,8 +103,14 @@
             </div>
 
             <div class="flex items-center gap-2 mt-4">
-                <input type="checkbox" id="isSeller" name="is_seller" value="1" class="w-5 h-5 bg-gray-800 border-gray-700 rounded text-amber-500 focus:ring-amber-500">
+                <input type="checkbox" id="isSeller" name="is_seller" value="1" onchange="document.getElementById('commissionDiv').classList.toggle('hidden', !this.checked)" class="w-5 h-5 bg-gray-800 border-gray-700 rounded text-amber-500 focus:ring-amber-500">
                 <label for="isSeller" class="text-gray-300 text-sm font-medium">Cupom exclusivo de Vendedor?</label>
+            </div>
+            
+            <div id="commissionDiv" class="hidden mt-2 p-3 bg-amber-900/20 border border-amber-500/30 rounded-lg">
+                <label class="block text-amber-400 text-sm mb-1 font-bold">Porcentagem de Comissão (%)</label>
+                <input type="number" id="commissionPercentage" step="0.01" value="0" min="0" max="100" class="w-full bg-gray-800 border border-amber-500/50 rounded-lg p-2.5 text-white" placeholder="Ex: 15.5">
+                <p class="text-[10px] text-gray-400 mt-1">Quanto o vendedor vai ganhar por cada venda com este cupom.</p>
             </div>
 
             <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-gray-800">

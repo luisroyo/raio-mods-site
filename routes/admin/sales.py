@@ -156,6 +156,7 @@ def list_manual_sales():
         date_end = request.args.get('date_end', '')
         search = request.args.get('search', '').strip()
         status_filter = request.args.get('status', '')
+        seller_link = request.args.get('seller_link', '').strip()
         
         dolar_hoje = get_dolar_hoje()
         
@@ -266,6 +267,10 @@ def list_manual_sales():
             else:
                 combined_query += ' AND status = ?'
                 params.append(status_filter)
+
+        if seller_link:
+            combined_query += ' AND coupon_code LIKE ?'
+            params.append(f'%{seller_link}%')
 
         type_filter = request.args.get('type', '')
         if type_filter:

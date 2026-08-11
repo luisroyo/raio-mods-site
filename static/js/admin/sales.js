@@ -15,6 +15,7 @@ let salesType = '';
 let salesDateStart = '';
 let salesDateEnd = '';
 let salesSearch = '';
+let salesSellerLink = '';
 
 function setupManualSaleForm() {
     document.getElementById('manualSaleForm')?.addEventListener('submit', async (e) => {
@@ -168,6 +169,7 @@ function applySalesFilters() {
     salesDateStart = document.getElementById('filterDateStart').value;
     salesDateEnd = document.getElementById('filterDateEnd').value;
     salesSearch = document.getElementById('filterSearch')?.value || '';
+    salesSellerLink = document.getElementById('filterSellerLink')?.value || '';
     salesPage = 1; // Reset to page 1
     loadManualSales();
 }
@@ -192,6 +194,8 @@ function clearSalesFilters() {
     document.getElementById('filterDateEnd').value = '';
     const searchEl = document.getElementById('filterSearch');
     if (searchEl) searchEl.value = '';
+    const sellerLinkEl = document.getElementById('filterSellerLink');
+    if (sellerLinkEl) sellerLinkEl.value = '';
     
     salesPage = 1;
     loadManualSales();
@@ -207,6 +211,7 @@ async function loadManualSales() {
         if (salesDateStart) url += `&date_start=${salesDateStart}`;
         if (salesDateEnd) url += `&date_end=${salesDateEnd}`;
         if (salesSearch) url += `&search=${encodeURIComponent(salesSearch)}`;
+        if (salesSellerLink) url += `&seller_link=${encodeURIComponent(salesSellerLink)}`;
 
         const res = await fetch(url);
         if (!res.ok) {

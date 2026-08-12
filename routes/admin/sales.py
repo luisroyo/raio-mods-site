@@ -604,6 +604,9 @@ def sales_report():
             product_stats[name] = {'qtd': 0, 'total': 0.0}
         product_stats[name]['qtd'] += row['qtd']
         product_stats[name]['total'] += row['total'] or 0
+    # Comissões de afiliados
+    commissions_res = conn.execute(f"SELECT SUM(commission_amount) as total FROM commissions WHERE 1=1 {date_clause_panel}", params_panel).fetchone()
+    total_commissions = float(commissions_res['total'] or 0) if commissions_res else 0.0
 
     conn.close()
 
@@ -620,10 +623,6 @@ def sales_report():
 
     # Totais
     total_revenue = online_revenue + manual_revenue
-    
-    # Comissões de afiliados
-    commissions_res = conn.execute(f"SELECT SUM(commission_amount) as total FROM commissions WHERE 1=1 {date_clause_panel}", params_panel).fetchone()
-    total_commissions = float(commissions_res['total'] or 0) if commissions_res else 0.0
     
     # Reduzindo comissões do faturamento exibido
     total_revenue -= total_commissions

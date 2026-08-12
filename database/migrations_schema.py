@@ -278,7 +278,8 @@ def run_schema_migrations(cursor, is_real_postgres):
         ('subtotal', 'REAL DEFAULT 0.0'),
         ('total', 'REAL DEFAULT 0.0'),
         ('language', "TEXT DEFAULT 'pt'"),
-        ('currency', "TEXT DEFAULT 'BRL'")
+        ('currency', "TEXT DEFAULT 'BRL'"),
+        ('seller_coupon', 'TEXT DEFAULT ""')
     ]
     
     existing_ord_cols = []
@@ -306,3 +307,44 @@ def run_schema_migrations(cursor, is_real_postgres):
                 cursor.execute(f'ALTER TABLE orders ADD COLUMN {col_name} {col_type}')
             except Exception as e:
                 print(f"[BD] Erro ao adicionar coluna {col_name} em orders: {e}")
+
+    # --- MIGRAÇÃO: Coluna de Vendedor em Cupons ---
+    try:
+        cursor.execute('SELECT commission_percentage FROM coupons LIMIT 1')
+    except Exception:
+        try:
+            print("--> Adicionando coluna commission_percentage em coupons...")
+            cursor.execute('ALTER TABLE coupons ADD COLUMN commission_percentage REAL DEFAULT 0.0')
+        except Exception as e:
+            print(f"[BD] Erro ao adicionar commission_percentage: {e}")
+
+    # --- MIGRAÇÃO: Coluna coupon_code em manual_sales ---
+    try:
+        cursor.execute('SELECT coupon_code FROM manual_sales LIMIT 1')
+    except Exception:
+        try:
+            print("--> Adicionando coluna coupon_code em manual_sales...")
+            cursor.execute('ALTER TABLE manual_sales ADD COLUMN coupon_code TEXT DEFAULT ""')
+            cursor.execute('ALTER TABLE manual_sales ADD COLUMN discount_applied REAL DEFAULT 0.0')
+        except Exception as e:
+            print(f"[BD] Erro ao adicionar coupon_code em manual_sales: {e}")
+
+    # --- MIGRAÇÃO: Criar Tabela de Comissões ---
+    pk_type = "SERIAL" if is_real_postgres else "INTEGER PRIMARY KEY AUTOINCREMENT"
+    try:
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS commissions (
+                id {pk_type},
+                seller_coupon TEXT NOT NULL,
+                order_id INTEGER,
+                manual_sale_id INTEGER,
+                sale_amount REAL NOT NULL,
+                commission_amount REAL NOT NULL,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                paid_at TIMESTAMP
+            )
+        ''')
+        print("--> Tabela commissions verificada/criada com sucesso.")
+    except Exception as e:
+        print(f"[BD] Erro ao criar tabela commissions: {e}")

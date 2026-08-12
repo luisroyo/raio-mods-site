@@ -56,9 +56,14 @@ function renderSummary() {
             <td class="p-4 text-amber-500 font-bold">R$ ${s.total_pending.toFixed(2)}</td>
             <td class="p-4 text-emerald-500 font-medium">R$ ${s.total_paid.toFixed(2)}</td>
             <td class="p-4 text-right">
-                <button ${onClick} class="${btnClass} px-3 py-1.5 rounded-lg transition-colors font-medium text-sm">
-                    Pagar Pendências
-                </button>
+                <div class="flex flex-col gap-2 items-end">
+                    <button ${onClick} class="${btnClass} px-3 py-1 rounded transition-colors font-medium text-xs">
+                        Pagar Pendências
+                    </button>
+                    <button onclick="debitCommissions('${s.seller_coupon}')" class="bg-red-900/50 hover:bg-red-800 border border-red-500 text-red-300 px-3 py-1 rounded transition-colors font-medium text-xs">
+                        Debitar Saldo
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
@@ -113,6 +118,37 @@ async function payCommissions(sellerCoupon) {
         
         if (data.success) {
             alert('Sucesso! As comissões foram marcadas como pagas.');
+            loadCommissions();
+        } else {
+            alert(data.error || 'Erro ao processar');
+        }
+    } catch (e) {
+        alert('Erro de conexão.');
+    }
+}
+
+async function debitCommissions(sellerCoupon) {
+    const amountStr = prompt(`Quanto você quer debitar do saldo de ${sellerCoupon}?\n(Use ponto para centavos. Ex: 70.00)`);
+    if (!amountStr) return;
+    
+    const amount = parseFloat(amountStr.replace(',', '.'));
+    if (isNaN(amount) || amount <= 0) {
+        alert('Valor inválido!');
+        return;
+    }
+    
+    if(!confirm(`Confirma o débito de R$ ${amount.toFixed(2)} do saldo pendente de ${sellerCoupon}?`)) return;
+    
+    try {
+        const res = await fetch('/admin/api/commissions/debit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ seller_coupon: sellerCoupon, amount: amount })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            alert(data.message);
             loadCommissions();
         } else {
             alert(data.error || 'Erro ao processar');

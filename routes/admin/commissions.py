@@ -81,7 +81,40 @@ def pay_commissions():
         conn.close()
 
 
+def debit_commissions():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+        
+    data = request.json or {}
+    seller_coupon = data.get('seller_coupon')
+    amount_str = data.get('amount')
+    
+    if not seller_coupon or not amount_str:
+        return jsonify({'error': 'Vendedor ou valor não especificado'}), 400
+        
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            return jsonify({'error': 'O valor deve ser maior que zero'}), 400
+    except ValueError:
+        return jsonify({'error': 'Valor inválido'}), 400
+        
+    conn = get_db_connection()
+    try:
+        # Registra um débito como uma comissão negativa
+        conn.execute('''
+            INSERT INTO commissions (seller_coupon, sale_amount, commission_amount, status)
+            VALUES (?, 0, ?, 'pending')
+        ''', (seller_coupon, -amount))
+        conn.commit()
+        return jsonify({'success': True, 'message': f'R$ {amount:.2f} debitados com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
 def register_commissions_routes(bp):
     bp.route('/admin/commissions')(admin_commissions_page)
     bp.route('/admin/api/commissions/list', methods=['GET'])(list_commissions)
     bp.route('/admin/api/commissions/pay', methods=['POST'])(pay_commissions)
+    bp.route('/admin/api/commissions/debit', methods=['POST'])(debit_commissions)

@@ -318,6 +318,15 @@ def run_schema_migrations(cursor, is_real_postgres):
         except Exception as e:
             print(f"[BD] Erro ao adicionar commission_percentage: {e}")
 
+    try:
+        cursor.execute('SELECT is_seller FROM coupons LIMIT 1')
+    except Exception:
+        try:
+            print("--> Adicionando coluna is_seller em coupons...")
+            cursor.execute('ALTER TABLE coupons ADD COLUMN is_seller INTEGER DEFAULT 0')
+        except Exception as e:
+            print(f"[BD] Erro ao adicionar is_seller: {e}")
+
     # --- MIGRAÇÃO: Coluna coupon_code em manual_sales ---
     try:
         cursor.execute('SELECT coupon_code FROM manual_sales LIMIT 1')

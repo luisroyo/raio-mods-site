@@ -121,7 +121,9 @@ def create_tables(cursor):
             max_uses INTEGER DEFAULT 0, -- 0 = ilimitado
             current_uses INTEGER DEFAULT 0,
             valid_until TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            commission_percentage REAL DEFAULT 0.0,
+            is_seller INTEGER DEFAULT 0
         )
     ''')
 

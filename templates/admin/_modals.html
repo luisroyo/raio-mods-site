@@ -611,12 +611,18 @@
                 </div>
             </div>
 
-            <div class="border border-gray-700 p-2 rounded">
+            <div class="border border-gray-700 p-2 rounded flex flex-col gap-2">
                 <div class="flex items-center gap-2">
                     <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" id="edit_is_active" name="is_active" value="1" checked
                         class="w-4 h-4 text-green-600">
                     <label for="edit_is_active" class="text-white text-sm">Visível na Loja? (Ativado)</label>
+                </div>
+                <div class="flex items-center gap-2 border-t border-gray-700 pt-2">
+                    <input type="hidden" name="pays_commission" value="0">
+                    <input type="checkbox" id="edit_pays_commission" name="pays_commission" value="1" checked
+                        class="w-4 h-4 text-emerald-500">
+                    <label for="edit_pays_commission" class="text-white text-sm">Paga Comissão para Afiliados?</label>
                 </div>
             </div>
 

@@ -103,15 +103,20 @@ def add_manual_sale():
             )
             sale_id = cursor.lastrowid
 
-        if applied_coupon and com_perc > 0:
+        prod_row = conn.execute('SELECT name, download_link, pays_commission FROM products WHERE id = ?', (product_id,)).fetchone()
+        prod_name = prod_row['name'] if prod_row else 'Produto'
+        
+        try:
+            pays_commission = int(prod_row['pays_commission']) if prod_row and 'pays_commission' in prod_row.keys() else 1
+        except Exception:
+            pays_commission = 1
+
+        if applied_coupon and com_perc > 0 and pays_commission == 1:
             com_amt = round(total_price * (com_perc / 100.0), 2)
             conn.execute('''
                 INSERT INTO commissions (seller_coupon, manual_sale_id, sale_amount, commission_amount, status)
                 VALUES (?, ?, ?, ?, 'pending')
             ''', (applied_coupon, sale_id, total_price, com_amt))
-
-        prod_row = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (product_id,)).fetchone()
-        prod_name = prod_row['name'] if prod_row else 'Produto'
         
         form_download_link = request.form.get('download_link')
         if form_download_link and form_download_link.strip():

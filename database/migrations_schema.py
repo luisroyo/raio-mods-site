@@ -18,7 +18,8 @@ def run_schema_migrations(cursor, is_real_postgres):
         ('is_active', 'INTEGER DEFAULT 1'),
         ('supplier', 'TEXT DEFAULT ""'),
         ('reseller_price', 'REAL DEFAULT 0'),
-        ('download_link', 'TEXT DEFAULT ""')
+        ('download_link', 'TEXT DEFAULT ""'),
+        ('pays_commission', 'INTEGER DEFAULT 1')
     ]
 
     for col_name, col_type in new_columns_products:

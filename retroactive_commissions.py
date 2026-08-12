@@ -18,12 +18,15 @@ def recalculate_retroactive_commissions():
                 
                 # Vendas Manuais
                 manual_sales = conn.execute('''
-                    SELECT id, total_price 
-                    FROM manual_sales 
-                    WHERE coupon_code = ?
+                    SELECT ms.id, ms.total_price, COALESCE(p.pays_commission, 1) as pays_commission
+                    FROM manual_sales ms
+                    LEFT JOIN products p ON ms.product_id = p.id
+                    WHERE ms.coupon_code = ?
                 ''', (code,)).fetchall()
                 
                 for sale in manual_sales:
+                    if int(sale['pays_commission']) == 0:
+                        continue
                     # Verifica se já existe comissão para não duplicar
                     exists = conn.execute('SELECT 1 FROM commissions WHERE manual_sale_id = ?', (sale['id'],)).fetchone()
                     if not exists:
@@ -36,12 +39,15 @@ def recalculate_retroactive_commissions():
                         
                 # Vendas Online
                 online_sales = conn.execute('''
-                    SELECT id, amount 
-                    FROM orders 
-                    WHERE (seller_coupon = ? OR coupon_code = ?) AND status IN ('approved', 'paid_no_key')
+                    SELECT o.id, o.amount, COALESCE(p.pays_commission, 1) as pays_commission
+                    FROM orders o
+                    LEFT JOIN products p ON o.product_id = p.id
+                    WHERE (o.seller_coupon = ? OR o.coupon_code = ?) AND o.status IN ('approved', 'paid_no_key')
                 ''', (code, code)).fetchall()
                 
                 for order in online_sales:
+                    if int(order['pays_commission']) == 0:
+                        continue
                     # Verifica se já existe comissão
                     exists = conn.execute('SELECT 1 FROM commissions WHERE order_id = ?', (order['id'],)).fetchone()
                     if not exists:

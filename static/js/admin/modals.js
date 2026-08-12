@@ -95,6 +95,16 @@ function openEditModal(
         // Desabilita a opção de selecionar a si mesmo como pai (evita loop)
         [...parentSel.options].forEach(o => o.disabled = o.value == id);
     }
+    
+    // Fetch info extra do produto (como pays_commission)
+    fetch('/admin/product/info/' + id)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                setVal('edit_pays_commission', data.pays_commission !== undefined ? data.pays_commission : 1);
+            }
+        })
+        .catch(e => console.error("Erro ao buscar detalhes extras do produto:", e));
 
     document.getElementById('editModal')?.classList.add('modal-active');
 }

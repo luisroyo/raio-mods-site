@@ -63,6 +63,16 @@ def add_product():
             is_active = int(request.form.get('is_active', 1) or 1)
     except:
         is_active = 1
+        
+    # pays_commission checkbox
+    try:
+        vals_pays_comm = request.form.getlist('pays_commission')
+        if vals_pays_comm:
+            pays_commission = int(vals_pays_comm[-1])
+        else:
+            pays_commission = int(request.form.get('pays_commission', 1) or 1)
+    except:
+        pays_commission = 1
     
     try:
         is_catalog = int(request.form.get('is_catalog', 0))
@@ -131,13 +141,13 @@ def add_product():
                 name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (
                 name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission
             )
         )
         conn.commit()
@@ -281,6 +291,16 @@ def edit_product(pid):
                 is_active = int(request.form.get('is_active', existing.get('is_active', 1)) or 1)
         except:
             is_active = int(existing.get('is_active', 1) or 1)
+            
+        # pays_commission
+        try:
+            vals_pays_comm = request.form.getlist('pays_commission')
+            if vals_pays_comm:
+                pays_commission = int(vals_pays_comm[-1])
+            else:
+                pays_commission = int(request.form.get('pays_commission', existing.get('pays_commission', 1)) or 1)
+        except:
+            pays_commission = int(existing.get('pays_commission', 1) or 1)
         
         try:
             is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
@@ -373,14 +393,14 @@ def edit_product(pid):
                 is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, 
                 is_active=?, supplier=?, reseller_price=?, download_link=?,
                 name_pt=?, name_en=?, name_es=?, description_pt=?, description_en=?, description_es=?,
-                price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?, platform=?
+                price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?, platform=?, pays_commission=?
             WHERE id=?''',
             (
                 name, desc, price, img, cat, tagline, sort, pid_val, 
                 is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, 
                 is_active, supplier, reseller_price, download_link,
                 name_pt, name_en, name_es, description_pt, description_en, description_es,
-                price_brl, price_usd, default_currency, translation_status, link_id, platform,
+                price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
                 pid
             )
         )
@@ -437,6 +457,7 @@ def product_info(pid):
             'cost_brl': round(cost_brl, 2),
             'apply_iof': apply_iof,
             'is_active': int(prod.is_active) if prod.is_active is not None else 1,
+            'pays_commission': int(getattr(prod, 'pays_commission', 1) if getattr(prod, 'pays_commission', 1) is not None else 1),
             'dolar_rate': round(dolar_rate, 4),
             'calculated_cost_brl': calculated_cost_brl,
             'stock': stock_count,

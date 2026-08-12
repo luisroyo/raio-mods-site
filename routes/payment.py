@@ -130,10 +130,11 @@ def process_approved_payment(order_ref: str, p_id: str):
 
         if pays_commission == 1:
             possible_sellers = []
-            if order.get('seller_coupon'):
-                possible_sellers.append(order['seller_coupon'])
-            if order.get('coupon_code'):
-                possible_sellers.append(order['coupon_code'])
+            order_dict = dict(order)
+            if order_dict.get('seller_coupon'):
+                possible_sellers.append(order_dict['seller_coupon'])
+            if order_dict.get('coupon_code'):
+                possible_sellers.append(order_dict['coupon_code'])
                 
             processed_sellers = set()
             for sc in possible_sellers:

@@ -60,15 +60,6 @@
     </div>
     
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 md:gap-4" id="salesSummary">
-        <!-- Dólar -->
-        <div class="bg-gray-800 rounded-lg p-3 border border-gray-700 flex flex-col justify-between">
-            <div class="flex justify-between items-center mb-1">
-                <span class="text-gray-400 text-xs">USD→BRL</span>
-                <button id="refresh_dolar" class="text-xs text-cyan-400 hover:text-cyan-300" title="Atualizar">🔄</button>
-            </div>
-            <p class="text-xl font-bold text-green-400">R$ <span id="dolarValue">{{ financeiro.dolar_hoje }}</span></p>
-            <p class="text-[10px] text-gray-500 mt-1 hidden md:block" id="dolarUpdated">{{ financeiro.dolar_updated }}</p>
-        </div>
         
         <!-- Online -->
         <div class="bg-gray-800 rounded-lg p-3 border border-blue-500/30 flex flex-col justify-between">
@@ -102,6 +93,13 @@
             <div id="totalCostsDelta"></div>
         </div>
 
+        <!-- Comissões -->
+        <div class="bg-gray-800 rounded-lg p-3 border border-amber-500/30 flex flex-col justify-between">
+            <p class="text-gray-400 text-xs mb-1">🤝 Comissões</p>
+            <p class="text-xl font-bold text-amber-500" id="totalCommissionsCard">R$ 0,00</p>
+            <p class="text-[10px] text-gray-500">Pagamentos a Afiliados</p>
+        </div>
+
         <!-- Lucro -->
         <div class="bg-gray-800 rounded-lg p-3 border border-emerald-500/30 flex flex-col justify-between">
             <p class="text-gray-400 text-xs mb-1">🎯 Lucro Líquido</p>
@@ -125,10 +123,10 @@
         <div class="mt-2 space-y-1 font-mono">
             <p>Vendas Online: <span id="detailOnlineRev">R$ {{ financeiro.online_revenue|round(2) }}</span></p>
             <p>Vendas Manuais: <span id="detailManualRev">R$ {{ financeiro.manual_revenue|round(2) }}</span></p>
-            <p class="text-amber-500">(-) Comissões Afiliados: <span id="detailCommissions">R$ {{ financeiro.total_commissions|round(2) if financeiro.total_commissions else '0.00' }}</span></p>
             <p>---</p>
-            <p>Faturamento Total Líquido: <span id="detailRevenue">R$ {{ financeiro.faturamento_total }}</span></p>
-            <p>(-) Custos (Recargas): <span id="detailTotalCosts">R$ {{ financeiro.custo_total }}</span></p>
+            <p>Faturamento Bruto: <span id="detailRevenue">R$ {{ financeiro.faturamento_total }}</span></p>
+            <p class="text-red-400">(-) Custos (Recargas): <span id="detailTotalCosts">R$ {{ financeiro.custo_total }}</span></p>
+            <p class="text-amber-500">(-) Comissões Afiliados: <span id="detailCommissions">R$ {{ financeiro.total_commissions|round(2) if financeiro.total_commissions else '0.00' }}</span></p>
             <p class="text-lg {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}"
                 id="detailProfitLine">
                 = Lucro Líquido: <span id="detailProfit">R$ {{ financeiro.lucro_liquido }}</span>

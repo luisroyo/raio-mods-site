@@ -100,9 +100,9 @@ def _get_admin_data():
 
     # Totais
     faturamento_bruto = online_revenue + manual_revenue
-    faturamento_total = faturamento_bruto - total_commissions  # Desconta comissões do faturamento que é exibido
+    faturamento_total = faturamento_bruto  # Sem descontar comissões no faturamento bruto
     custo_total = total_recharged_brl
-    lucro_liquido = faturamento_total - custo_total
+    lucro_liquido = faturamento_total - custo_total - total_commissions
     
     financeiro = {
         'dolar_hoje': round(dolar_hoje, 4),

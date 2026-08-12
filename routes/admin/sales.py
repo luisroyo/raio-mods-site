@@ -624,12 +624,9 @@ def sales_report():
     # Totais
     total_revenue = online_revenue + manual_revenue
     
-    # Reduzindo comissões do faturamento exibido
-    total_revenue -= total_commissions
-    
     # CORREÇÃO: Usar apenas o custo de recargas (Regime de Caixa) para evitar contagem dupla
     total_costs = online_cost_brl + manual_cost_brl
-    total_profit = total_revenue - total_costs
+    total_profit = total_revenue - total_costs - total_commissions
     
     return jsonify({
         'online': {

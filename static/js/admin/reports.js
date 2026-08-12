@@ -239,6 +239,10 @@ async function updateSalesData() {
         if (document.getElementById('totalCosts')) 
             document.getElementById('totalCosts').textContent = fmt(sumCosts);
 
+        // Comissões
+        if (document.getElementById('totalCommissionsCard'))
+            document.getElementById('totalCommissionsCard').textContent = fmt(report.summary.total_commissions || 0);
+
         // Atualiza Lucros
         
         // 1. Cartão Inferior (Vendas Page) e Cartão de Lucro (Dashboard)

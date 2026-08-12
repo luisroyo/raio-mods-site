@@ -4,7 +4,7 @@ import os
 # Adiciona o diretório atual ao sys.path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from database.db import get_db_connection
+from database.connection import get_db_connection
 from routes.payment import process_approved_payment
 
 def approve_specific_pending():

@@ -26,11 +26,11 @@ def fix_dates():
         print(f"✅ {cursor.rowcount} comissões de vendas online tiveram suas datas corrigidas.")
         
         # Corrige as datas das comissões baseadas em Vendas Manuais (se houver alguma)
-        # A tabela manual_sales usa 'date_sold', então copiamos de lá
+        # A tabela manual_sales usa 'created_at', então copiamos de lá
         cursor = conn.execute('''
             UPDATE commissions
             SET created_at = (
-                SELECT date_sold 
+                SELECT created_at 
                 FROM manual_sales 
                 WHERE manual_sales.id = commissions.manual_sale_id
             )

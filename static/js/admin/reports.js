@@ -167,11 +167,18 @@ async function loadSalesReport() {
 
 // Auto-initialize on load if elements exist
 document.addEventListener('DOMContentLoaded', () => {
-    // ⏰ Definir data padrão como Hoje para corrigir relatórios vazios exibindo todos os tempos
-    const tzOffset = new Date().getTimezoneOffset() * 60000; 
-    const todayISO = new Date(Date.now() - tzOffset).toISOString().slice(0, 10);
+    // ⏰ Definir data padrão como Início do Mês até Hoje para o dashboard ter informações
+    const now = new Date();
+    const todayISO = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const firstDayISO = new Date(firstDay.getTime() - (firstDay.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
     
-    ['reportDateStart', 'reportDateEnd', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+    ['reportDateStart', 'filterDateStart'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = firstDayISO;
+    });
+
+    ['reportDateEnd', 'filterDateEnd'].forEach(id => {
         const el = document.getElementById(id);
         if (el && !el.value) el.value = todayISO;
     });

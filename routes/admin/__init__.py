@@ -91,8 +91,16 @@ def _get_admin_data():
     recharges = conn.execute('SELECT SUM(total_cost_usd * dolar_rate) as total_brl FROM panel_recharges').fetchone()
     total_recharged_brl = float(recharges['total_brl'] or 0) if recharges else 0.0
     
+    # 4. Comissões de Afiliados
+    try:
+        commissions_res = conn.execute("SELECT SUM(commission_amount) as total FROM commissions").fetchone()
+        total_commissions = float(commissions_res['total'] or 0) if commissions_res else 0.0
+    except sqlite3.OperationalError:
+        total_commissions = 0.0
+
     # Totais
-    faturamento_total = online_revenue + manual_revenue
+    faturamento_bruto = online_revenue + manual_revenue
+    faturamento_total = faturamento_bruto - total_commissions  # Desconta comissões do faturamento que é exibido
     custo_total = total_recharged_brl
     lucro_liquido = faturamento_total - custo_total
     
@@ -104,7 +112,8 @@ def _get_admin_data():
         'total_vendas': len(approved_orders) + conn.execute('SELECT COUNT(*) FROM manual_sales').fetchone()[0],
         'iof': IOF,
         'online_revenue': online_revenue,
-        'manual_revenue': manual_revenue
+        'manual_revenue': manual_revenue,
+        'total_commissions': round(total_commissions, 2)
     }
 
     try:

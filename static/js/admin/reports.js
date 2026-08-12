@@ -273,6 +273,9 @@ async function updateSalesData() {
         if (document.getElementById('detailManualRev')) 
             document.getElementById('detailManualRev').textContent = fmt(report.manual.revenue);
 
+        if (document.getElementById('detailCommissions')) 
+            document.getElementById('detailCommissions').textContent = fmt(report.summary.total_commissions || 0);
+
         if (document.getElementById('detailRevenue')) 
             document.getElementById('detailRevenue').textContent = fmt(report.summary.total_revenue);
 

@@ -301,14 +301,22 @@ async function loadManualSales() {
                 discountInfo = `<br><span class="text-[10px] text-green-400" title="Desconto Aplicado">Desconto (-R$ ${sale.discount_applied.toFixed(2)})</span>`;
             }
 
+            let commissionInfo = '';
+            if (sale.commission && sale.commission > 0) {
+                commissionInfo = `<br><span class="text-[11px] text-amber-500 font-bold" title="Comissão de Afiliado">Comissão (-R$ ${sale.commission.toFixed(2)})</span>`;
+            }
+
+            const netTotal = (sale.total_price - (sale.commission || 0)).toFixed(2);
+            const netProfit = (sale.profit - (sale.commission || 0)).toFixed(2);
+
             return `<tr class="border-b border-purple-500/30 hover:bg-purple-900/20">
                 <td class="p-2 text-center">${typeBadge}</td>
                 <td class="p-2">${sale.product_name}</td>
                 <td class="p-2 text-center">${sale.quantity}</td>
                 <td class="p-2 text-right">R$ ${sale.unit_price.toFixed(2)}</td>
                 <td class="p-2 text-right text-gray-500">R$ ${sale.cost_per_unit_brl.toFixed(2)}</td>
-                <td class="p-2 text-right font-bold text-green-400">R$ ${totalVenda} ${discountInfo}</td>
-                <td class="p-2 text-right font-bold text-yellow-400">R$ ${lucro}</td>
+                <td class="p-2 text-right font-bold text-green-400">R$ ${netTotal} ${discountInfo} ${commissionInfo}</td>
+                <td class="p-2 text-right font-bold text-yellow-400">R$ ${netProfit}</td>
                 <td class="p-2 text-center">${statusBadge}</td>
                 <td class="p-2 text-left">${clientInfo}</td>
                 <td class="p-2 text-center text-xs text-gray-500">${dataStr}</td>

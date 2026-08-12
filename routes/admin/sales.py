@@ -199,6 +199,7 @@ def list_manual_sales():
                 ms.coupon_code,
                 COALESCE(ms.discount_applied, 0.0) as discount_applied,
                 (ms.total_price + COALESCE(ms.discount_applied, 0.0)) as subtotal,
+                (SELECT COALESCE(commission_amount, 0) FROM commissions c WHERE c.manual_sale_id = ms.id LIMIT 1) as commission,
                 'pt' as language,
                 'BRL' as currency
             FROM manual_sales ms
@@ -239,6 +240,7 @@ def list_manual_sales():
                  END) as coupon_code,
                 COALESCE(o.discount_applied, 0.0) as discount_applied,
                 COALESCE(o.subtotal, {online_amount_clean}) as subtotal,
+                (SELECT COALESCE(commission_amount, 0) FROM commissions c WHERE c.order_id = o.id LIMIT 1) as commission,
                 o.language,
                 o.currency
             FROM orders o
@@ -299,8 +301,8 @@ def list_manual_sales():
         count_query = f'''
             SELECT 
                 COUNT(*), 
-                COALESCE(SUM(total_price), 0) as total_revenue, 
-                COALESCE(SUM(profit), 0) as total_profit 
+                COALESCE(SUM(total_price - COALESCE(commission, 0)), 0) as total_revenue, 
+                COALESCE(SUM(profit - COALESCE(commission, 0)), 0) as total_profit 
             FROM ({combined_query}) as counted
         '''
         
@@ -619,6 +621,13 @@ def sales_report():
     # Totais
     total_revenue = online_revenue + manual_revenue
     
+    # Comissões de afiliados
+    commissions_res = conn.execute(f"SELECT SUM(commission_amount) as total FROM commissions WHERE 1=1 {date_clause_panel}", params_panel).fetchone()
+    total_commissions = float(commissions_res['total'] or 0) if commissions_res else 0.0
+    
+    # Reduzindo comissões do faturamento exibido
+    total_revenue -= total_commissions
+    
     # CORREÇÃO: Usar apenas o custo de recargas (Regime de Caixa) para evitar contagem dupla
     total_costs = online_cost_brl + manual_cost_brl
     total_profit = total_revenue - total_costs
@@ -645,6 +654,7 @@ def sales_report():
             'dolar_rate': round(dolar_hoje, 2),
             'total_revenue': round(total_revenue, 2),
             'total_costs': round(total_costs, 2),
+            'total_commissions': round(total_commissions, 2),
             'total_profit': round(total_profit, 2),
             'profit_margin': round((total_profit / total_revenue * 100) if total_revenue > 0 else 0, 2)
         }

@@ -125,8 +125,9 @@
         <div class="mt-2 space-y-1 font-mono">
             <p>Vendas Online: <span id="detailOnlineRev">R$ {{ financeiro.online_revenue|round(2) }}</span></p>
             <p>Vendas Manuais: <span id="detailManualRev">R$ {{ financeiro.manual_revenue|round(2) }}</span></p>
+            <p class="text-amber-500">(-) Comissões Afiliados: <span id="detailCommissions">R$ {{ financeiro.total_commissions|round(2) if financeiro.total_commissions else '0.00' }}</span></p>
             <p>---</p>
-            <p>Faturamento Total: <span id="detailRevenue">R$ {{ financeiro.faturamento_total }}</span></p>
+            <p>Faturamento Total Líquido: <span id="detailRevenue">R$ {{ financeiro.faturamento_total }}</span></p>
             <p>(-) Custos (Recargas): <span id="detailTotalCosts">R$ {{ financeiro.custo_total }}</span></p>
             <p class="text-lg {% if financeiro.lucro_liquido >= 0 %}text-emerald-400{% else %}text-red-500{% endif %}"
                 id="detailProfitLine">

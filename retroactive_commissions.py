@@ -64,5 +64,9 @@ def recalculate_retroactive_commissions():
         print(f"Failed: {e}")
         sys.exit(1)
 
+from database.connection import init_db
+
 if __name__ == '__main__':
+    print("Inicializando banco de dados para aplicar migrações...")
+    init_db()
     recalculate_retroactive_commissions()

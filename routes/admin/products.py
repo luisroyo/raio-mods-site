@@ -26,6 +26,10 @@ def add_product():
     download_link = (request.form.get('download_link') or '').strip()
     platform = (request.form.get('platform') or '').strip().lower()
     
+    api_game_type = (request.form.get('api_game_type') or '').strip()
+    api_duration_val = request.form.get('api_duration', '').strip()
+    api_duration = int(api_duration_val) if api_duration_val and api_duration_val.isdigit() else None
+    
     try:
         rp_val = request.form.get('reseller_price')
         reseller_price = float(str(rp_val).replace(',', '.') if rp_val else 0.0)
@@ -141,13 +145,15 @@ def add_product():
                 name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
+                api_game_type, api_duration
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (
                 name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
-                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission
+                description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
+                api_game_type, api_duration
             )
         )
         conn.commit()
@@ -244,6 +250,19 @@ def edit_product(pid):
             platform = platform.strip().lower()
         else:
             platform = existing.get('platform', '')
+
+        api_game_type = request.form.get('api_game_type')
+        if api_game_type is not None:
+            api_game_type = api_game_type.strip()
+        else:
+            api_game_type = existing.get('api_game_type', '')
+            
+        api_duration_val = request.form.get('api_duration')
+        if api_duration_val is not None:
+            api_duration_val = api_duration_val.strip()
+            api_duration = int(api_duration_val) if api_duration_val.isdigit() else None
+        else:
+            api_duration = existing.get('api_duration')
 
         # Se o preço da promoção for vazio, limpa a promoção inteira
         if not promo_price:
@@ -393,7 +412,8 @@ def edit_product(pid):
                 is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, 
                 is_active=?, supplier=?, reseller_price=?, download_link=?,
                 name_pt=?, name_en=?, name_es=?, description_pt=?, description_en=?, description_es=?,
-                price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?, platform=?, pays_commission=?
+                price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?, platform=?, pays_commission=?,
+                api_game_type=?, api_duration=?
             WHERE id=?''',
             (
                 name, desc, price, img, cat, tagline, sort, pid_val, 
@@ -401,6 +421,7 @@ def edit_product(pid):
                 is_active, supplier, reseller_price, download_link,
                 name_pt, name_en, name_es, description_pt, description_en, description_es,
                 price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
+                api_game_type, api_duration,
                 pid
             )
         )
@@ -472,7 +493,9 @@ def product_info(pid):
             'price_usd': float(prod.price_usd or 0.0),
             'default_currency': prod.default_currency or 'BRL',
             'translation_status': prod.translation_status or 'draft',
-            'link_id': prod.link_id
+            'link_id': prod.link_id,
+            'api_game_type': getattr(prod, 'api_game_type', ''),
+            'api_duration': getattr(prod, 'api_duration', None)
         })
     except Exception as e:
         print(f"Erro product_info: {e}")

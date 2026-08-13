@@ -24,7 +24,9 @@ def create_tables(cursor):
             price_usd DECIMAL(10,2) DEFAULT 0.0,
             default_currency TEXT DEFAULT "BRL",
             translation_status TEXT DEFAULT "draft",
-            link_id INTEGER REFERENCES links(id)
+            link_id INTEGER REFERENCES links(id),
+            api_game_type TEXT DEFAULT "",
+            api_duration INTEGER
         )
     ''')
     
@@ -87,6 +89,7 @@ def create_tables(cursor):
             product_id INTEGER NOT NULL,
             key_value TEXT NOT NULL,
             is_used INTEGER DEFAULT 0, -- 0 = Disponível, 1 = Vendida
+            api_key_id INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (product_id) REFERENCES products (id)
         )

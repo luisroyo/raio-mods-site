@@ -19,7 +19,9 @@ def run_schema_migrations(cursor, is_real_postgres):
         ('supplier', 'TEXT DEFAULT ""'),
         ('reseller_price', 'REAL DEFAULT 0'),
         ('download_link', 'TEXT DEFAULT ""'),
-        ('pays_commission', 'INTEGER DEFAULT 1')
+        ('pays_commission', 'INTEGER DEFAULT 1'),
+        ('api_game_type', 'TEXT DEFAULT ""'),
+        ('api_duration', 'INTEGER NULL')
     ]
 
     for col_name, col_type in new_columns_products:
@@ -258,6 +260,16 @@ def run_schema_migrations(cursor, is_real_postgres):
             cursor.execute('ALTER TABLE product_keys ADD COLUMN used_by_email TEXT DEFAULT ""')
         except Exception as e:
             print(f"Erro ao adicionar coluna used_by_email: {e}")
+
+    # --- MIGRAÇÃO: Adicionar coluna api_key_id na tabela product_keys ---
+    try:
+        cursor.execute('SELECT api_key_id FROM product_keys LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            print("--> Adicionando coluna api_key_id em product_keys...")
+            cursor.execute('ALTER TABLE product_keys ADD COLUMN api_key_id INTEGER NULL')
+        except Exception as e:
+            print(f"Erro ao adicionar coluna api_key_id: {e}")
 
     # --- MIGRAÇÃO: Google Analytics (config) ---
     try:

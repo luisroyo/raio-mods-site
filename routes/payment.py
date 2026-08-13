@@ -67,12 +67,47 @@ def process_approved_payment(order_ref: str, p_id: str):
 
         logger.info(f"Atualizando pedido {order['id']} (Status atual: {order['status']})")
         
-        # Tenta encontrar uma chave disponível (estoque)
-        key = conn.execute('SELECT * FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (order['product_id'],)).fetchone()
+        product_info = conn.execute('SELECT api_game_type, api_duration FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+        api_game_type = product_info['api_game_type'] if product_info and 'api_game_type' in product_info.keys() else None
+        api_duration = product_info['api_duration'] if product_info and 'api_duration' in product_info.keys() else None
+        
+        key = None
+        
+        if api_game_type and api_duration:
+            try:
+                from services.kos_api import KosSellerApi
+                kos_api = KosSellerApi()
+                idempotency_key = KosSellerApi.new_intended_action_key()
+                response = kos_api.generate_keys(
+                    game_type=api_game_type,
+                    duration=int(api_duration),
+                    quantity=1,
+                    idempotency_key=idempotency_key
+                )
+                if response and isinstance(response, list) and len(response) > 0:
+                    api_key = response[0]
+                    key_value = api_key.get("key")
+                    api_key_id = api_key.get("id")
+                    
+                    if key_value:
+                        cursor = conn.execute(
+                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
+                            (order['product_id'], key_value, api_key_id)
+                        )
+                        new_key_id = cursor.lastrowid
+                        key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
+                        logger.info(f"Chave gerada via API KOS: ID {key['id']} ({api_game_type})")
+            except Exception as e:
+                logger.error(f"Erro ao gerar chave via API KOS (Fallback ativado): {e}")
+        
+        if not key:
+            # Tenta encontrar uma chave disponível (estoque)
+            key = conn.execute('SELECT * FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (order['product_id'],)).fetchone()
+            if key:
+                logger.info(f"Chave local (estoque) encontrada: ID {key['id']}")
+                conn.execute('UPDATE product_keys SET is_used = 1 WHERE id = ?', (key['id'],))
         
         if key:
-            logger.info(f"Chave encontrada: ID {key['id']}")
-            conn.execute('UPDATE product_keys SET is_used = 1 WHERE id = ?', (key['id'],))
             conn.execute(
                 'UPDATE orders SET status = "approved", key_assigned_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
                 (key['id'], order['id'])

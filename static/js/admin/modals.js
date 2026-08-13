@@ -36,7 +36,8 @@ function openEditModal(
     id, name, desc, price, cat, img,
     tagline, sort, pid, isCat,
     payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice, downloadLink, linkId,
-    namePt, nameEn, nameEs, descPt, descEn, descEs, priceBrl, priceUsd, defaultCurrency, translationStatus, platform
+    namePt, nameEn, nameEs, descPt, descEn, descEs, priceBrl, priceUsd, defaultCurrency, translationStatus, platform,
+    apiGameType, apiDuration
 ) {
     setVal('edit_id', id);
     setVal('edit_name', name);
@@ -82,6 +83,8 @@ function openEditModal(
     setVal('edit_default_currency', defaultCurrency || 'BRL');
     setVal('edit_translation_status', translationStatus || 'draft');
     setVal('edit_platform', platform || '');
+    setVal('edit_api_game_type', apiGameType || '');
+    setVal('edit_api_duration', apiDuration || '');
 
     const preview = document.getElementById('edit_preview');
     if (preview) preview.src = img || '';

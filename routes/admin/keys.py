@@ -131,6 +131,7 @@ def redeem_key_admin():
             except Exception as e:
                 import traceback
                 traceback.print_exc()
+                api_error_msg = str(e)
                 # Em caso de erro, continua para o fallback
         
         # 3. Fallback: Buscar uma chave disponível (is_used = 0) do estoque local
@@ -138,7 +139,8 @@ def redeem_key_admin():
             key_row = conn.execute('SELECT id, key_value FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
             if not key_row:
                 conn.close()
-                return jsonify({'error': 'Sem chaves disponíveis em estoque para este produto. Por favor, adicione chaves ou verifique a API.'}), 400
+                error_prefix = f"KOS API falhou ({api_error_msg}) e " if 'api_error_msg' in locals() else ""
+                return jsonify({'error': f'{error_prefix}Sem chaves disponíveis em estoque local para este produto. Por favor, verifique a API ou adicione chaves manuais.'}), 400
                 
             key_id = key_row['id']
             key_value = key_row['key_value']
@@ -192,9 +194,13 @@ def redeem_key_admin():
         else:
             download_link = product['download_link'] if 'download_link' in dict(product) else ''
 
+        msg_success = 'Chave resgatada e venda registrada com sucesso!'
+        if 'api_error_msg' in locals():
+            msg_success = f'Aviso: A KOS API falhou ({api_error_msg}). A chave foi retirada do estoque local.'
+
         return jsonify({
             'success': True,
-            'message': 'Chave resgatada e venda registrada com sucesso!',
+            'message': msg_success,
             'key': key_value,
             'sale': {
                 'id': sale_id,

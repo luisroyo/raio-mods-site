@@ -202,6 +202,10 @@ function setupPDVCheckoutForm() {
             const data = await res.json();
 
             if (data.success) {
+                if (data.message && data.message.includes('Aviso:')) {
+                    alert('⚠️ ' + data.message);
+                }
+                
                 // Fechar modal de checkout
                 closePDVCheckout();
 

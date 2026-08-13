@@ -38,12 +38,12 @@
                 <p id="approved-product-name" class="text-gray-400 text-sm mt-1"></p>
             </div>
 
-            <!-- Seção de Download (aparece imediatamente se houver link) -->
-            <div id="section-download" class="hidden border-b border-gray-800">
-                <div class="p-5">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-lg">⬇️</span>
-                        <h4 class="text-white font-bold text-sm uppercase tracking-wider">Baixe o Aplicativo</h4>
+            <!-- Seção de Download (será mostrada após revelar a chave) -->
+            <div id="section-download" class="hidden mt-4">
+                <div class="p-5 bg-gradient-to-b from-gray-900 to-black rounded-lg border border-gray-800 shadow-inner">
+                    <div class="flex items-center gap-2 mb-3 justify-center">
+                        <span class="text-xl">⬇️</span>
+                        <h4 class="text-white font-bold text-sm uppercase tracking-wider">Baixe o Arquivo Aqui</h4>
                     </div>
                     <a id="btn-download" href="#" target="_blank" rel="noopener noreferrer"
                        onclick="trackDownloadClick()"
@@ -51,9 +51,9 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
-                        BAIXAR AGORA
+                        CLIQUE AQUI PARA BAIXAR
                     </a>
-                    <p class="text-gray-500 text-xs text-center mt-2">A chave de acesso abaixo será solicitada ao abrir o aplicativo.</p>
+                    <p class="text-gray-400 text-xs text-center mt-3">Copie a sua chave acima, ela será necessária para acesso.</p>
                 </div>
             </div>
 
@@ -155,16 +155,7 @@ function showApprovedCard(data) {
     const nameEl = document.getElementById('approved-product-name');
     if (nameEl && productName) nameEl.textContent = productName;
 
-    // Exibe o bloco de download IMEDIATAMENTE — sem precisar revelar a chave
-    if (hasDownload && downloadLink && downloadLink.trim()) {
-        document.getElementById('section-download').classList.remove('hidden');
-        document.getElementById('btn-download').href = downloadLink;
-
-        // GA4: download_link_shown
-        if (typeof gtag === 'function') {
-            gtag('event', 'download_link_shown', { order_ref: ORDER_REF, product: productName });
-        }
-    }
+    // O bloco de download não será exibido imediatamente, apenas após revelar a chave
 
     // GA4: purchase event
     if (typeof gtag === 'function') {
@@ -214,6 +205,20 @@ async function revealKeyPage() {
             document.getElementById('finalKeyPage').innerText = data.key;
             document.getElementById('key-unrevealed').classList.add('hidden');
             document.getElementById('key-revealed').classList.remove('hidden');
+            
+            // Mostrar link de download
+            const linkToUse = data.download_link || orderData.downloadLink;
+            if (linkToUse && linkToUse.trim()) {
+                document.getElementById('section-download').classList.remove('hidden');
+                document.getElementById('btn-download').href = linkToUse;
+                // Move o download para dentro da seção da chave
+                const keySection = document.getElementById('key-revealed');
+                keySection.appendChild(document.getElementById('section-download'));
+
+                if (typeof gtag === 'function') {
+                    gtag('event', 'download_link_shown', { order_ref: ORDER_REF });
+                }
+            }
 
             // GA4: key_revealed
             if (typeof gtag === 'function') {

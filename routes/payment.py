@@ -163,7 +163,19 @@ def process_approved_payment(order_ref: str, p_id: str):
         conn.commit()
 
         # Envia e-mails de notificação (Admin e Cliente) de forma assíncrona
-        product = conn.execute('SELECT name, download_link FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+        product = conn.execute('''
+            SELECT p.name, p.download_link, l.download_link AS linked_download_url
+            FROM products p
+            LEFT JOIN links l ON p.link_id = l.id
+            WHERE p.id = ?
+        ''', (order['product_id'],)).fetchone()
+        
+        product_dict = dict(product) if product else {}
+        download_link = product_dict.get('linked_download_url')
+        if not download_link or not download_link.strip():
+            download_link = product_dict.get('download_link') or ''
+        else:
+            download_link = download_link.strip()
         
         # Enviar chave via Telegram (se o cliente comprou pelo bot)
         telegram_id = dict(order).get('telegram_id')
@@ -171,7 +183,6 @@ def process_approved_payment(order_ref: str, p_id: str):
             try:
                 from telegram_app.services.telegram_service import TelegramService
                 product_name = product['name'] if product else 'Produto Desconhecido'
-                download_link = product['download_link'] if (product and 'download_link' in product.keys()) else ''
                 
                 if key:
                     key_value = key['key_value']
@@ -200,8 +211,6 @@ def process_approved_payment(order_ref: str, p_id: str):
 
         if config and config['smtp_server'] and config['smtp_user']:
             prod_name = product['name'] if product else 'Produto Desconhecido'
-            product_dict = dict(product) if product else {}
-            download_link = product_dict.get('download_link') or ''
             order_dict = dict(order)
             config_dict = dict(config)
             
@@ -748,9 +757,11 @@ def reveal_key(order_ref):
     """
     with closing(get_db_connection()) as conn:
         order = conn.execute('''
-            SELECT o.*, k.key_value
+            SELECT o.*, k.key_value, p.download_link, l.download_link AS linked_download_url
             FROM orders o
             LEFT JOIN product_keys k ON o.key_assigned_id = k.id
+            LEFT JOIN products p ON o.product_id = p.id
+            LEFT JOIN links l ON p.link_id = l.id
             WHERE o.external_reference = ?
         ''', (order_ref,)).fetchone()
 
@@ -779,5 +790,12 @@ def reveal_key(order_ref):
             except Exception as e:
                 logger.error(f"Erro ao registrar consumo anti-chargeback (Order Ref: {order_ref}): {e}", exc_info=True)
 
-    # Retorna apenas a chave — dados do pedido já foram entregues pelo check_status
-    return jsonify({'status': 'revealed', 'key': key_value})
+    order_dict = dict(order)
+    download_link = order_dict.get('linked_download_url')
+    if not download_link or not download_link.strip():
+        download_link = order_dict.get('download_link') or ''
+    else:
+        download_link = download_link.strip()
+
+    # Retorna a chave e o link
+    return jsonify({'status': 'revealed', 'key': key_value, 'download_link': download_link})

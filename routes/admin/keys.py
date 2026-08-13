@@ -89,22 +89,61 @@ def redeem_key_admin():
         conn = get_db_connection()
         
         # 1. Verificar se o produto existe
-        product = conn.execute('SELECT name, cost_usd, cost_brl, apply_iof, download_link FROM products WHERE id = ?', (product_id,)).fetchone()
+        product = conn.execute('SELECT name, cost_usd, cost_brl, apply_iof, download_link, api_game_type, api_duration FROM products WHERE id = ?', (product_id,)).fetchone()
         if not product:
             conn.close()
             return jsonify({'error': 'Produto não encontrado'}), 404
             
-        # 2. Buscar uma chave disponível (is_used = 0)
-        key_row = conn.execute('SELECT id, key_value FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
-        if not key_row:
-            conn.close()
-            return jsonify({'error': 'Sem chaves disponíveis em estoque para este produto. Por favor, adicione chaves primeiro.'}), 400
-            
-        # 3. Marcar chave como usada
+        key_value = None
+        key_id = None
+        
+        api_game_type = product['api_game_type'] if 'api_game_type' in dict(product) else None
+        api_duration = product['api_duration'] if 'api_duration' in dict(product) else None
+        
         used_by = f"Admin (Resgate manual para {client_name})" if client_name else "Admin (Resgate manual)"
         if client_email:
             used_by += f" - {client_email}"
-        conn.execute('UPDATE product_keys SET is_used = 1, used_by_email = ? WHERE id = ?', (used_by, key_row['id']))
+            
+        # 2. Tentar gerar chave via API KOS
+        if api_game_type and api_duration:
+            try:
+                from services.kos_api import KosSellerApi
+                kos_api = KosSellerApi()
+                idempotency_key = KosSellerApi.new_intended_action_key()
+                response = kos_api.generate_keys(
+                    game_type=api_game_type,
+                    duration=int(api_duration),
+                    quantity=1,
+                    idempotency_key=idempotency_key
+                )
+                if response and isinstance(response, list) and len(response) > 0:
+                    api_key = response[0]
+                    generated_key = api_key.get("key")
+                    api_key_id = api_key.get("id")
+                    
+                    if generated_key:
+                        cursor = conn.execute(
+                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                            (product_id, generated_key, api_key_id, used_by)
+                        )
+                        key_id = cursor.lastrowid
+                        key_value = generated_key
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                # Em caso de erro, continua para o fallback
+        
+        # 3. Fallback: Buscar uma chave disponível (is_used = 0) do estoque local
+        if not key_value:
+            key_row = conn.execute('SELECT id, key_value FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
+            if not key_row:
+                conn.close()
+                return jsonify({'error': 'Sem chaves disponíveis em estoque para este produto. Por favor, adicione chaves ou verifique a API.'}), 400
+                
+            key_id = key_row['id']
+            key_value = key_row['key_value']
+            conn.execute('UPDATE product_keys SET is_used = 1, used_by_email = ? WHERE id = ?', (used_by, key_id))
+
         
         # 4. Calcular o custo unitário em BRL do produto
         cost_per_unit_brl = 0.0
@@ -156,13 +195,13 @@ def redeem_key_admin():
         return jsonify({
             'success': True,
             'message': 'Chave resgatada e venda registrada com sucesso!',
-            'key': key_row['key_value'],
+            'key': key_value,
             'sale': {
                 'id': sale_id,
                 'product_name': product['name'],
                 'client_name': client_name,
                 'unit_price': unit_price,
-                'key_value': key_row['key_value'],
+                'key_value': key_value,
                 'download_link': download_link
             }
         })

@@ -84,19 +84,27 @@ def process_approved_payment(order_ref: str, p_id: str):
                     quantity=1,
                     idempotency_key=idempotency_key
                 )
-                if response and isinstance(response, list) and len(response) > 0:
-                    api_key = response[0]
-                    key_value = api_key.get("key")
-                    api_key_id = api_key.get("id")
-                    
-                    if key_value:
-                        cursor = conn.execute(
-                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
-                            (order['product_id'], key_value, api_key_id)
-                        )
-                        new_key_id = cursor.lastrowid
-                        key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
-                        logger.info(f"Chave gerada via API KOS: ID {key['id']} ({api_game_type})")
+                if response and isinstance(response, dict):
+                    keys_list = response.get("keys", [])
+                    if keys_list and len(keys_list) > 0:
+                        api_key = keys_list[0]
+                        key_value = api_key.get("key_string") or api_key.get("key")
+                        api_key_id = api_key.get("id")
+                        
+                        if key_value:
+                            cursor = conn.execute(
+                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
+                                (order['product_id'], key_value, api_key_id)
+                            )
+                            new_key_id = cursor.lastrowid
+                            key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
+                            logger.info(f"Chave gerada via API KOS: ID {key['id']} ({api_game_type})")
+                        else:
+                            raise Exception("Campo 'key_string' vazio na resposta da API.")
+                    else:
+                        raise Exception("Array 'keys' vazio na resposta da API.")
+                else:
+                    raise Exception("Formato de resposta inesperado (não é dicionário).")
             except Exception as e:
                 logger.error(f"Erro ao gerar chave via API KOS (Fallback ativado): {e}")
         

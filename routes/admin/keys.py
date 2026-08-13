@@ -116,29 +116,26 @@ def redeem_key_admin():
                     quantity=1,
                     idempotency_key=idempotency_key
                 )
-                if response:
-                    if isinstance(response, list) and len(response) > 0:
-                        api_key = response[0]
-                    elif isinstance(response, dict):
-                        api_key = response
-                    else:
-                        raise Exception(f"Formato desconhecido recebido da API: {response}")
+                if response and isinstance(response, dict):
+                    keys_list = response.get("keys", [])
+                    if keys_list and len(keys_list) > 0:
+                        api_key = keys_list[0]
+                        generated_key = api_key.get("key_string") or api_key.get("key")
+                        api_key_id = api_key.get("id")
                         
-                    generated_key = api_key.get("key")
-                    api_key_id = api_key.get("id")
-                    
-                    if not generated_key:
-                        raise Exception(f"A API retornou sucesso mas a chave 'key' não foi encontrada. Resposta: {response}")
-                    
-                    if generated_key:
-                        cursor = conn.execute(
-                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
-                            (product_id, generated_key, api_key_id, used_by)
-                        )
-                        key_id = cursor.lastrowid
-                        key_value = generated_key
+                        if generated_key:
+                            cursor = conn.execute(
+                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                                (product_id, generated_key, api_key_id, used_by)
+                            )
+                            key_id = cursor.lastrowid
+                            key_value = generated_key
+                        else:
+                            raise Exception(f"Chave 'key_string' não encontrada na resposta: {response}")
+                    else:
+                        raise Exception(f"Array 'keys' vazio ou ausente na resposta: {response}")
                 else:
-                    raise Exception("A API não retornou nenhuma resposta válida (response vazio).")
+                    raise Exception(f"Formato inesperado (não é um dicionário): {response}")
             except Exception as e:
                 import traceback
                 traceback.print_exc()

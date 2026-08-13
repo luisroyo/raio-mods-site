@@ -116,10 +116,19 @@ def redeem_key_admin():
                     quantity=1,
                     idempotency_key=idempotency_key
                 )
-                if response and isinstance(response, list) and len(response) > 0:
-                    api_key = response[0]
+                if response:
+                    if isinstance(response, list) and len(response) > 0:
+                        api_key = response[0]
+                    elif isinstance(response, dict):
+                        api_key = response
+                    else:
+                        raise Exception(f"Formato desconhecido recebido da API: {response}")
+                        
                     generated_key = api_key.get("key")
                     api_key_id = api_key.get("id")
+                    
+                    if not generated_key:
+                        raise Exception(f"A API retornou sucesso mas a chave 'key' não foi encontrada. Resposta: {response}")
                     
                     if generated_key:
                         cursor = conn.execute(
@@ -128,6 +137,8 @@ def redeem_key_admin():
                         )
                         key_id = cursor.lastrowid
                         key_value = generated_key
+                else:
+                    raise Exception("A API não retornou nenhuma resposta válida (response vazio).")
             except Exception as e:
                 import traceback
                 traceback.print_exc()

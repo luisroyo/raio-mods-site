@@ -86,7 +86,10 @@ async function loadKeysList() {
 
             li.innerHTML = `
                 <span class="${statusClass} text-sm">${statusIcon} ${k.key_value}</span>
-                <button onclick="deleteKey(${k.id})" class="text-red-500 hover:text-red-300 ml-2" title="Excluir">🗑️</button>
+                <div>
+                    <button onclick="checkKosStatus('${k.key_value}')" class="text-cyan-400 hover:text-cyan-300 ml-2" title="Verificar Status KOS">🔍</button>
+                    <button onclick="deleteKey(${k.id})" class="text-red-500 hover:text-red-300 ml-2" title="Excluir">🗑️</button>
+                </div>
             `;
             ul.appendChild(li);
         });
@@ -105,3 +108,67 @@ async function deleteKey(id) {
         alert("Erro ao excluir chave");
     }
 }
+
+async function checkKosStatus(keyValue) {
+    if (!keyValue) return;
+    
+    // Create or show loading modal
+    let modal = document.getElementById('kosStatusModal');
+    if (!modal) {
+        const modalHtml = `
+        <div class="fixed inset-0 bg-black/90 z-[400] flex items-center justify-center p-4 backdrop-blur-sm" id="kosStatusModal">
+            <div class="bg-gray-900 border-2 border-cyan-500 rounded-xl w-full max-w-sm overflow-hidden shadow-[0_0_30px_rgba(0,242,255,0.2)] relative">
+                <div class="bg-cyan-500/10 p-4 border-b border-cyan-500/30 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-cyan-400">🔍 Status da Chave</h3>
+                    <button onclick="document.getElementById('kosStatusModal').remove()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+                </div>
+                <div class="p-6 space-y-4 text-sm" id="kosStatusContent">
+                    <div class="text-center text-cyan-400 font-bold py-4">⏳ Consultando KOS API...</div>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = document.getElementById('kosStatusModal');
+    } else {
+        document.getElementById('kosStatusContent').innerHTML = '<div class="text-center text-cyan-400 font-bold py-4">⏳ Consultando KOS API...</div>';
+        modal.classList.remove('hidden');
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('key_value', keyValue);
+        
+        const res = await fetch('/admin/keys/status', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        const content = document.getElementById('kosStatusContent');
+        
+        if (data.success) {
+            let statusColor = data.status === 'available' ? 'text-green-400' : 
+                              data.status === 'used' || data.status === 'activated' ? 'text-yellow-400' : 'text-cyan-400';
+            
+            content.innerHTML = `
+                <div class="border border-cyan-500/20 rounded p-3 bg-black/40">
+                    <p class="text-gray-400 mb-2">Chave: <span class="text-white font-mono text-xs break-all">${keyValue}</span></p>
+                    <p class="text-gray-400">Status KOS: <span class="${statusColor} font-bold uppercase">${data.status}</span></p>
+                    ${data.hardware_id ? `<p class="text-gray-400 mt-2">HWID: <span class="text-gray-300 font-mono text-xs break-all">${data.hardware_id}</span></p>` : ''}
+                    ${data.activated_at ? `<p class="text-gray-400 mt-1">Ativado em: <span class="text-white">${new Date(data.activated_at).toLocaleString()}</span></p>` : ''}
+                    ${data.expires_at ? `<p class="text-gray-400 mt-1">Expira em: <span class="text-white">${new Date(data.expires_at).toLocaleString()}</span></p>` : ''}
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="border border-red-500/20 rounded p-3 bg-red-900/20">
+                    <p class="text-red-400 font-bold text-center">❌ ${data.error}</p>
+                </div>
+            `;
+        }
+    } catch (err) {
+        document.getElementById('kosStatusContent').innerHTML = `
+            <div class="border border-red-500/20 rounded p-3 bg-red-900/20">
+                <p class="text-red-400 font-bold text-center">❌ Erro de conexão ao consultar status.</p>
+            </div>
+        `;
+    }
+}
+

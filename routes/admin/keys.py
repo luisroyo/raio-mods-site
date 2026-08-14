@@ -225,9 +225,55 @@ def redeem_key_admin():
         return jsonify({'error': f'Erro ao processar resgate: {str(e)}'}), 500
 
 
+def check_key_status():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    key_value = request.form.get('key_value')
+    if not key_value:
+        return jsonify({'error': 'Chave não informada'}), 400
+        
+    conn = get_db_connection()
+    key_row = conn.execute('SELECT api_key_id, product_id FROM product_keys WHERE key_value = ?', (key_value,)).fetchone()
+    if not key_row:
+        conn.close()
+        return jsonify({'error': 'Chave não encontrada no banco de dados local.'}), 404
+        
+    api_key_id = key_row['api_key_id']
+    if not api_key_id:
+        conn.close()
+        return jsonify({'error': 'Esta chave foi inserida manualmente e não possui vínculo (ID) com a KOS API.'}), 400
+        
+    try:
+        from services.kos_api import KosSellerApi
+        kos_api = KosSellerApi()
+        
+        try:
+            status_data = kos_api.get_key(api_key_id, "activation")
+        except Exception as e:
+            if "not found" in str(e).lower():
+                status_data = kos_api.get_key(api_key_id, "direct-license")
+            else:
+                raise e
+                
+        conn.close()
+        return jsonify({
+            'success': True,
+            'status': status_data.get('status', 'Desconhecido'),
+            'hardware_id': status_data.get('hardware_id'),
+            'activated_at': status_data.get('activated_at'),
+            'expires_at': status_data.get('expires_at')
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'Erro ao consultar KOS API: {str(e)}'}), 500
+
+
 def register_keys_routes(bp):
     bp.route('/admin/keys/add', methods=['POST'])(add_keys)
     bp.route('/admin/keys/list/<int:product_id>', methods=['GET'])(list_keys)
     bp.route('/admin/keys/delete/<int:key_id>', methods=['POST'])(delete_key)
     bp.route('/admin/keys/redeem', methods=['POST'])(redeem_key_admin)
+    bp.route('/admin/keys/status', methods=['POST'])(check_key_status)
+
 

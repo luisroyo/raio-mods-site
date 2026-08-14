@@ -471,8 +471,11 @@ async function viewOrderProof(orderId) {
                         <p class="text-gray-300">Compra em: <span class="text-white">${formatDate(p.created_at)}</span></p>
                         <p class="text-gray-300">Chave revelada em: <span class="text-white">${formatDate(p.delivered_at)}</span></p>
                     </div>
-                    <div class="border border-yellow-500/20 rounded p-3 bg-black/40">
-                        <p class="text-yellow-400 font-bold mb-2">🔑 Chave Entregue</p>
+                    <div class="border border-yellow-500/20 rounded p-3 bg-black/40 relative">
+                        <p class="text-yellow-400 font-bold mb-2 flex justify-between items-center">
+                            <span>🔑 Chave Entregue</span>
+                            ${p.key_delivered && p.key_delivered !== '—' ? `<button onclick="checkKosStatus('${p.key_delivered}')" class="text-[10px] bg-cyan-600/30 text-cyan-400 hover:bg-cyan-600/50 px-2 py-1 rounded" title="Verificar status na KOS API">🔍 Status KOS</button>` : ''}
+                        </p>
                         <p class="text-white font-mono break-all">${p.key_delivered || '—'}</p>
                         <p class="text-gray-500 text-[10px] mt-1">SHA-256: <span class="font-mono">${p.key_hash || '—'}</span></p>
                     </div>

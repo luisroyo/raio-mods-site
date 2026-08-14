@@ -447,11 +447,15 @@
         </a>
     </div>
 
+    <!-- Social Proof Container -->
+    <div id="social-proof-container" class="fixed bottom-20 sm:bottom-5 left-5 z-[250] flex flex-col gap-3 pointer-events-none w-[90%] max-w-[300px]"></div>
+
     <!-- Toast Container -->
     <div id="toast-container" class="fixed top-5 right-5 z-[300] flex flex-col gap-3 pointer-events-none w-[90%] max-w-sm sm:w-auto"></div>
 
     <script src="{{ url_for('static', filename='js/base.js') }}?v=4"></script>
     <script src="{{ url_for('static', filename='js/lucky_spin.js') }}?v=3"></script>
+    <script src="{{ url_for('static', filename='js/social_proof.js') }}?v=1" defer></script>
     <script src="{{ url_for('static', filename='js/effects.js') }}" defer></script>
 
     {% block extra_js %}{% endblock %}

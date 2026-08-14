@@ -1,0 +1,2 @@
+openEditModal(1, "8 Ball Pool VIP", "Description", "R$ 49,90", "VIP", "8ball.jpg", "", 0, null, 1, "", "", "", 0.0, 0.0, 1, 1, "", 0.0, "", "", "8 Ball Pool VIP", "8 Ball Pool VIP", "", "Description", "Description", "", 49.90, 0.00, "BRL", "draft", null, "", null)
+openEditModal(2, "Temp Product", "", "100", "Key80", "", "", 0, 1, 0, "", "", "SALE", 0.0, 0.0, 1, 1, "", 0.0, "", "", "Temp Product", "Temp Product", "", "", "", "", 100.00, 0.00, "BRL", "draft", null, "", null)

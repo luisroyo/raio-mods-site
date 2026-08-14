@@ -34,8 +34,10 @@ function createSocialProofToast() {
     const time = getRandomItem(socialProofData.times);
 
     const toast = document.createElement('div');
-    // Animação de entrada (desliza de baixo)
-    toast.className = `transform transition-all duration-500 translate-y-10 opacity-0 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-[0_0_15px_rgba(6,182,212,0.15)] flex items-center gap-3 pointer-events-auto`;
+    toast.style.transition = 'all 0.5s ease-in-out';
+    toast.style.transform = 'translateY(40px)';
+    toast.style.opacity = '0';
+    toast.className = `bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-3 flex items-center gap-3 pointer-events-auto shadow-lg`;
 
     toast.innerHTML = `
         <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-neon-cyan to-blue-600 flex items-center justify-center border border-white/20">
@@ -65,15 +67,17 @@ function createSocialProofToast() {
 
     // Fade in
     requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-10', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        }, 50);
     });
 
     // Fade out e remove após 5 segundos
     setTimeout(() => {
         if (toast.parentNode) {
-            toast.classList.remove('translate-y-0', 'opacity-100');
-            toast.classList.add('translate-y-10', 'opacity-0');
+            toast.style.transform = 'translateY(40px)';
+            toast.style.opacity = '0';
             setTimeout(() => {
                 if (toast.parentNode) toast.remove();
             }, 500); // tempo da transição
@@ -82,7 +86,7 @@ function createSocialProofToast() {
 }
 
 // Inicia o sistema de social proof
-document.addEventListener('DOMContentLoaded', () => {
+function initSocialProof() {
     // Espera 3 segundos para mostrar o primeiro
     setTimeout(() => {
         createSocialProofToast();
@@ -94,4 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 20000); 
     }, 3000);
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSocialProof);
+} else {
+    initSocialProof();
+}

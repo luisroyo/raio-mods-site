@@ -70,7 +70,7 @@ def _get_admin_data():
             SELECT amount, p.cost_usd, p.price, p.apply_iof
             FROM orders o
             JOIN products p ON o.product_id = p.id
-            WHERE o.status = 'approved'
+            WHERE o.status = 'approved' AND date(o.created_at, 'localtime') = date('now', 'localtime')
         ''').fetchall()
     except sqlite3.OperationalError:
         approved_orders = []
@@ -84,16 +84,16 @@ def _get_admin_data():
             pass
 
     # 2. Vendas Manuais
-    manual_sales = conn.execute('SELECT SUM(total_price) as total FROM manual_sales').fetchone()
+    manual_sales = conn.execute("SELECT SUM(total_price) as total FROM manual_sales WHERE date(created_at, 'localtime') = date('now', 'localtime')").fetchone()
     manual_revenue = float(manual_sales['total'] or 0) if manual_sales else 0.0
 
     # 3. Custos (Regime de Caixa - Apenas Recargas)
-    recharges = conn.execute('SELECT SUM(total_cost_usd * dolar_rate) as total_brl FROM panel_recharges').fetchone()
+    recharges = conn.execute("SELECT SUM(total_cost_usd * dolar_rate) as total_brl FROM panel_recharges WHERE date(created_at, 'localtime') = date('now', 'localtime')").fetchone()
     total_recharged_brl = float(recharges['total_brl'] or 0) if recharges else 0.0
     
     # 4. Comissões de Afiliados
     try:
-        commissions_res = conn.execute("SELECT SUM(commission_amount) as total FROM commissions").fetchone()
+        commissions_res = conn.execute("SELECT SUM(commission_amount) as total FROM commissions WHERE date(created_at, 'localtime') = date('now', 'localtime')").fetchone()
         total_commissions = float(commissions_res['total'] or 0) if commissions_res else 0.0
     except sqlite3.OperationalError:
         total_commissions = 0.0
@@ -109,7 +109,7 @@ def _get_admin_data():
         'faturamento_total': round(faturamento_total, 2),
         'custo_total': round(custo_total, 2),
         'lucro_liquido': round(lucro_liquido, 2),
-        'total_vendas': len(approved_orders) + conn.execute('SELECT COUNT(*) FROM manual_sales').fetchone()[0],
+        'total_vendas': len(approved_orders) + conn.execute("SELECT COUNT(*) FROM manual_sales WHERE date(created_at, 'localtime') = date('now', 'localtime')").fetchone()[0],
         'iof': IOF,
         'online_revenue': online_revenue,
         'manual_revenue': manual_revenue,

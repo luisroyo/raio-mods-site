@@ -172,13 +172,28 @@ function openCheckout(id, name, price, platform = '') {
     const msgCard = document.getElementById('msg-card-warning');
     if(msgCard) msgCard.remove();
     
-    // Mostra o modal
-    document.getElementById('checkoutModal').classList.remove('hidden');
+    // Mostra o modal com animação Drawer
+    const modal = document.getElementById('checkoutModal');
+    const content = document.getElementById('checkoutModalContent');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        if(content) content.classList.remove('translate-x-full');
+    }, 10);
 }
 
 // Fecha o modal e para a verificação de pagamento
 function closeCheckout() {
-    document.getElementById('checkoutModal').classList.add('hidden');
+    const modal = document.getElementById('checkoutModal');
+    const content = document.getElementById('checkoutModalContent');
+    
+    modal.classList.add('opacity-0');
+    if(content) content.classList.add('translate-x-full');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+    
     if (paymentCheckInterval) {
         clearInterval(paymentCheckInterval);
         paymentCheckInterval = null;

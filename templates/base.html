@@ -204,9 +204,9 @@
     </footer>
 
     <div id="checkoutModal"
-        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4">
-        <div
-            class="glass-card w-full max-w-md overflow-hidden relative shadow-2xl">
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] hidden flex justify-end transition-opacity duration-300 opacity-0">
+        <div id="checkoutModalContent"
+            class="glass-card w-full max-w-md h-full overflow-y-auto relative shadow-2xl rounded-none md:rounded-l-2xl border-r-0 transform translate-x-full transition-transform duration-300">
 
             <button onclick="closeCheckout()" class="absolute top-3 right-3 text-gray-400 hover:text-white z-10 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

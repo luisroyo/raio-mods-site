@@ -55,317 +55,331 @@ def parse_customer_name(customer_name: str, email: str) -> tuple[str, str]:
 def process_approved_payment(order_ref: str, p_id: str):
     """Lógica separada para aprovação do pedido e consumo de estoque do banco."""
     with closing(get_db_connection()) as conn:
-        order = conn.execute('SELECT * FROM orders WHERE external_reference = ?', (order_ref,)).fetchone()
-        
-        if not order:
-            logger.warning(f"Pedido não encontrado para OrderRef: {order_ref}")
-            return
-
-        if order['status'] == 'approved':
-            logger.info(f"Pedido {order['id']} já estava aprovado.")
-            return
-
-        logger.info(f"Atualizando pedido {order['id']} (Status atual: {order['status']})")
-        
-        product_info = conn.execute('SELECT api_game_type, api_duration FROM products WHERE id = ?', (order['product_id'],)).fetchone()
-        api_game_type = product_info['api_game_type'] if product_info and 'api_game_type' in product_info.keys() else None
-        api_duration = product_info['api_duration'] if product_info and 'api_duration' in product_info.keys() else None
-        
-        key = None
-        
-        if api_game_type and api_duration:
-            try:
-                from services.kos_api import KosSellerApi
-                kos_api = KosSellerApi()
-                idempotency_key = KosSellerApi.new_intended_action_key()
-                response = kos_api.generate_keys(
-                    game_type=api_game_type,
-                    duration=int(api_duration),
-                    quantity=1,
-                    idempotency_key=idempotency_key
-                )
-                if response and isinstance(response, dict):
-                    keys_list = response.get("keys", [])
-                    if keys_list and len(keys_list) > 0:
-                        api_key = keys_list[0]
-                        key_value = api_key.get("key_string") or api_key.get("key")
-                        api_key_id = api_key.get("id")
-                        
-                        if key_value:
-                            cursor = conn.execute(
-                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
-                                (order['product_id'], key_value, api_key_id)
-                            )
-                            new_key_id = cursor.lastrowid
-                            key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
-                            logger.info(f"Chave gerada via API KOS: ID {key['id']} ({api_game_type})")
-                        else:
-                            raise Exception("Campo 'key_string' vazio na resposta da API.")
-                    else:
-                        raise Exception("Array 'keys' vazio na resposta da API.")
-                else:
-                    raise Exception("Formato de resposta inesperado (não é dicionário).")
-            except Exception as e:
-                logger.error(f"Erro ao gerar chave via API KOS (Fallback ativado): {e}")
-        
-        if not key:
-            # Tenta encontrar uma chave disponível (estoque)
-            key = conn.execute('SELECT * FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (order['product_id'],)).fetchone()
-            if key:
-                logger.info(f"Chave local (estoque) encontrada: ID {key['id']}")
-                conn.execute('UPDATE product_keys SET is_used = 1 WHERE id = ?', (key['id'],))
-        
-        if key:
-            conn.execute(
-                'UPDATE orders SET status = "approved", key_assigned_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
-                (key['id'], order['id'])
-            )
-            logger.info(f"Pedido {order['id']} aprovado com chave {key['id']}")
-        else:
-            # ERRO CRÍTICO: SEM ESTOQUE
-            logger.critical(f"SEM ESTOQUE para o produto {order['product_id']} no pedido {order['id']}!")
-            # Marca como 'paid_no_key' para auditoria futura
-            conn.execute('UPDATE orders SET status = "paid_no_key", updated_at = CURRENT_TIMESTAMP WHERE id = ?', (order['id'],))
-            
-        # Atribuir Pontos de Fidelidade
-        customer_email = order['customer_email'].strip().lower()
-        amount_val = order['amount']
-        points_to_add = int(amount_val)
-        if points_to_add > 0:
-            try:
-                prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (order['product_id'],)).fetchone()
-                prod_name = prod_row['name'] if prod_row else 'Produto'
-                
-                client_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (customer_email,)).fetchone()
-                if client_row:
-                    conn.execute('UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (points_to_add, customer_email))
-                else:
-                    conn.execute('INSERT INTO client_points (email, points) VALUES (?, ?)', (customer_email, points_to_add))
-                
-                conn.execute(
-                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
-                    (customer_email, points_to_add, 'earn_online', f"Compra online #{order['id']} - {prod_name}")
-                )
-                logger.info(f"Creditado {points_to_add} pontos para {customer_email} pela compra #{order['id']}")
-            except Exception as e:
-                logger.error(f"Erro ao creditar pontos de fidelidade para {customer_email}: {e}")
-
-        # Incrementar uso do cupom, se houver (somente após pagamento aprovado)
-        if 'coupon_id' in order.keys() and order['coupon_id']:
-            try:
-                c_id = order['coupon_id']
-                conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (c_id,))
-                
-                if 'coupon_code' in order.keys() and order['coupon_code']:
-                    if str(order['coupon_code']).upper().startswith('FID-'):
-                        conn.execute('UPDATE loyalty_coupons SET is_used = 1 WHERE coupon_code = ?', (order['coupon_code'],))
-                logger.info(f"Uso do cupom ID {c_id} incrementado.")
-            except Exception as e:
-                logger.error(f"Erro ao atualizar uso do cupom no pedido {order['id']}: {e}")
-
-        # Processar comissão de vendedor (se houver)
-        # Verifica se o produto paga comissão
-        try:
-            prod_info = conn.execute('SELECT pays_commission FROM products WHERE id = ?', (order['product_id'],)).fetchone()
-            pays_commission = int(prod_info['pays_commission']) if prod_info and 'pays_commission' in prod_info.keys() else 1
-        except Exception:
-            pays_commission = 1
-
-        if pays_commission == 1:
-            possible_sellers = []
-            order_dict = dict(order)
-            if order_dict.get('seller_coupon'):
-                possible_sellers.append(order_dict['seller_coupon'])
-            if order_dict.get('coupon_code'):
-                possible_sellers.append(order_dict['coupon_code'])
-                
-            processed_sellers = set()
-            for sc in possible_sellers:
-                if not sc or sc.upper() in processed_sellers: 
-                    continue
-                
-                try:
-                    # Busca os dados do vendedor no banco de cupons
-                    seller_data = conn.execute('SELECT commission_percentage FROM coupons WHERE code = ? COLLATE NOCASE AND is_seller = TRUE', (sc,)).fetchone()
-                    if seller_data and seller_data['commission_percentage'] > 0:
-                        com_perc = seller_data['commission_percentage']
-                        sale_amt = order['amount']
-                        com_amt = round(sale_amt * (com_perc / 100.0), 2)
-                        
-                        conn.execute('''
-                            INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status)
-                            VALUES (?, ?, ?, ?, 'pending')
-                        ''', (sc.upper(), order['id'], sale_amt, com_amt))
-                        logger.info(f"Comissão gerada: R$ {com_amt} para {sc} no pedido {order['id']}")
-                        processed_sellers.add(sc.upper())
-                except Exception as e:
-                    logger.error(f"Erro ao gerar comissão do vendedor {sc} no pedido {order['id']}: {e}")
-        else:
-            logger.info(f"Produto {order['product_id']} não paga comissão. Nenhuma comissão gerada para o pedido {order['id']}")
-
+        # ATOMIC UPDATE: Previne Race Conditions (duplicação de comissões, pontos, etc)
+        # Tenta travar esse pedido mudando o status para 'processing'. Funciona perfeitamente em SQLite.
+        cursor = conn.execute("UPDATE orders SET status = 'processing' WHERE external_reference = ? AND status = 'pending'", (order_ref,))
         conn.commit()
-
-        # Envia e-mails de notificação (Admin e Cliente) de forma assíncrona
-        product = conn.execute('''
-            SELECT p.name, p.download_link, l.download_link AS linked_download_url
-            FROM products p
-            LEFT JOIN links l ON p.link_id = l.id
-            WHERE p.id = ?
-        ''', (order['product_id'],)).fetchone()
         
-        product_dict = dict(product) if product else {}
-        download_link = product_dict.get('linked_download_url')
-        if not download_link or not download_link.strip():
-            download_link = product_dict.get('download_link') or ''
-        else:
-            download_link = download_link.strip()
-        
-        # Enviar chave via Telegram (se o cliente comprou pelo bot)
-        telegram_id = dict(order).get('telegram_id')
-        if telegram_id:
-            try:
-                from telegram_app.services.telegram_service import TelegramService
-                product_name = product['name'] if product else 'Produto Desconhecido'
-                
-                if key:
-                    key_value = key['key_value']
-                    TelegramService.send_key_delivery(
-                        chat_id=telegram_id,
-                        product_name=product_name,
-                        key_value=key_value,
-                        download_link=download_link,
-                        order_ref=order['external_reference']
-                    )
-                    logger.info(f"Entrega de chave via Telegram agendada para o chat_id: {telegram_id}")
-                else:
-                    from telegram_app.routes import send_telegram_message_safe
-                    safe_prod_name = str(product_name).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                    warn_msg = (
-                        f"⚠️ <b>PAGAMENTO APROVADO!</b> ⚠️\n\n"
-                        f"Seu pagamento para o produto <b>{safe_prod_name}</b> foi confirmado, mas nosso estoque de chaves para este item esgotou temporariamente.\n\n"
-                        f"O administrador já foi notificado e enviará sua licença manualmente no seu e-mail ou aqui no privado o mais rápido possível!"
-                    )
-                    send_telegram_message_safe(telegram_id, warn_msg, parse_mode='HTML', order_ref=order['external_reference'])
-                    logger.warning(f"Aviso de sem estoque enviado via Telegram para o chat_id: {telegram_id}")
-            except Exception as e:
-                logger.error(f"Erro ao disparar entrega via Telegram: {e}")
-                
-        config = conn.execute('SELECT smtp_server, smtp_port, smtp_user, smtp_password FROM config WHERE id = 1').fetchone()
-
-        if config and config['smtp_server'] and config['smtp_user']:
-            prod_name = product['name'] if product else 'Produto Desconhecido'
-            order_dict = dict(order)
-            config_dict = dict(config)
+        # Se rowcount == 0, outra thread já pegou ou já está processado
+        if cursor.rowcount == 0:
+            order_check = conn.execute('SELECT status FROM orders WHERE external_reference = ?', (order_ref,)).fetchone()
+            if not order_check:
+                logger.warning(f"Pedido não encontrado para OrderRef: {order_ref}")
+            else:
+                logger.info(f"Pedido {order_ref} ignorado na aprovação (Status já está: {order_check['status']}). Isso previne duplicações.")
+            return
             
-            # 1. Enviar e-mail de notificação para o Admin
-            def send_admin_email():
+        # Agora temos a garantia exclusiva de processar esse pedido
+        try:
+            order = conn.execute('SELECT * FROM orders WHERE external_reference = ?', (order_ref,)).fetchone()
+            logger.info(f"Iniciando processamento do pedido {order['id']} (travado exclusivamento como 'processing')")
+        
+            product_info = conn.execute('SELECT api_game_type, api_duration FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+            api_game_type = product_info['api_game_type'] if product_info and 'api_game_type' in product_info.keys() else None
+            api_duration = product_info['api_duration'] if product_info and 'api_duration' in product_info.keys() else None
+        
+            key = None
+        
+            if api_game_type and api_duration:
                 try:
-                    msg = MIMEMultipart("alternative")
-                    msg['Subject'] = f"Nova Venda! 🚀 - {prod_name}"
-                    msg['From'] = f"RAIO MODS Loja <{config_dict['smtp_user']}>"
-                    msg['To'] = config_dict['smtp_user'] # Envia para o próprio admin
-                    
-                    html = f"""
-                    <html>
-                      <body style="background-color: #050505; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
-                        <div style="background-color: #111; border: 1px solid #333; border-radius: 8px; max-width: 600px; margin: 0 auto; padding: 30px; text-align: left;">
-                            <h1 style="color: #06b6d4;">RAIO MODS - Nova Venda Aprovada!</h1>
-                            <p style="color: #ccc; font-size: 16px;">Você acabou de realizar uma nova venda.</p>
-                            
-                            <h2 style="color: #fff; margin-top:20px;">Detalhes do Pedido</h2>
-                            <ul style="color: #ccc; font-size: 14px; line-height: 1.6;">
-                                <li><strong>ID do Pedido:</strong> {order_dict.get('id')}</li>
-                                <li><strong>Referência:</strong> {order_dict.get('external_reference')}</li>
-                                <li><strong>Produto:</strong> {prod_name}</li>
-                                <li><strong>Valor:</strong> R$ {order_dict.get('amount')}</li>
-                                <li><strong>Cliente (Nome):</strong> {order_dict.get('customer_name')}</li>
-                                <li><strong>Cliente (CPF):</strong> {order_dict.get('customer_cpf')}</li>
-                                <li><strong>Email do Cliente:</strong> {order_dict.get('customer_email')}</li>
-                            </ul>
-                            
-                            <p style="color: #666; font-size: 12px; margin-top: 30px;">Notificação Automática - RAIO MODS Administrativo.</p>
-                        </div>
-                      </body>
-                    </html>
-                    """
-                    msg.attach(MIMEText(html, "html"))
-                    
-                    server = smtplib.SMTP(config_dict['smtp_server'], int(config_dict['smtp_port']))
-                    server.starttls()
-                    server.login(config_dict['smtp_user'], config_dict['smtp_password'])
-                    server.sendmail(config_dict['smtp_user'], config_dict['smtp_user'], msg.as_string())
-                    server.quit()
-                    logger.info("Email de notificação para admin enviado com sucesso.")
+                    from services.kos_api import KosSellerApi
+                    kos_api = KosSellerApi()
+                    idempotency_key = KosSellerApi.new_intended_action_key()
+                    response = kos_api.generate_keys(
+                        game_type=api_game_type,
+                        duration=int(api_duration),
+                        quantity=1,
+                        idempotency_key=idempotency_key
+                    )
+                    if response and isinstance(response, dict):
+                        keys_list = response.get("keys", [])
+                        if keys_list and len(keys_list) > 0:
+                            api_key = keys_list[0]
+                            key_value = api_key.get("key_string") or api_key.get("key")
+                            api_key_id = api_key.get("id")
+                        
+                            if key_value:
+                                cursor = conn.execute(
+                                    'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
+                                    (order['product_id'], key_value, api_key_id)
+                                )
+                                new_key_id = cursor.lastrowid
+                                key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
+                                logger.info(f"Chave gerada via API KOS: ID {key['id']} ({api_game_type})")
+                            else:
+                                raise Exception("Campo 'key_string' vazio na resposta da API.")
+                        else:
+                            raise Exception("Array 'keys' vazio na resposta da API.")
+                    else:
+                        raise Exception("Formato de resposta inesperado (não é dicionário).")
                 except Exception as e:
-                    logger.error(f"Erro ao enviar e-mail de notificação para admin: {e}")
-                    
-            threading.Thread(target=send_admin_email).start()
-
-            # 2. Enviar e-mail com a Chave para o Cliente (se houver chave associada)
-            # Para evitar consultas no banco dentro da thread (e possíveis locks), extraímos o valor da chave antes.
-            key_value = None
+                    logger.error(f"Erro ao gerar chave via API KOS (Fallback ativado): {e}")
+        
+            if not key:
+                # Tenta encontrar uma chave disponível (estoque)
+                key = conn.execute('SELECT * FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (order['product_id'],)).fetchone()
+                if key:
+                    logger.info(f"Chave local (estoque) encontrada: ID {key['id']}")
+                    conn.execute('UPDATE product_keys SET is_used = 1 WHERE id = ?', (key['id'],))
+        
             if key:
+                conn.execute(
+                    'UPDATE orders SET status = "approved", key_assigned_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
+                    (key['id'], order['id'])
+                )
+                logger.info(f"Pedido {order['id']} aprovado com chave {key['id']}")
+            else:
+                # ERRO CRÍTICO: SEM ESTOQUE
+                logger.critical(f"SEM ESTOQUE para o produto {order['product_id']} no pedido {order['id']}!")
+                # Marca como 'paid_no_key' para auditoria futura
+                conn.execute('UPDATE orders SET status = "paid_no_key", updated_at = CURRENT_TIMESTAMP WHERE id = ?', (order['id'],))
+            
+            # Atribuir Pontos de Fidelidade
+            customer_email = order['customer_email'].strip().lower()
+            amount_val = order['amount']
+            points_to_add = int(amount_val)
+            if points_to_add > 0:
                 try:
-                    key_value = key['key_value']
-                except Exception:
-                    pass
+                    prod_row = conn.execute('SELECT name FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+                    prod_name = prod_row['name'] if prod_row else 'Produto'
+                
+                    client_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (customer_email,)).fetchone()
+                    if client_row:
+                        conn.execute('UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (points_to_add, customer_email))
+                    else:
+                        conn.execute('INSERT INTO client_points (email, points) VALUES (?, ?)', (customer_email, points_to_add))
+                
+                    conn.execute(
+                        'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                        (customer_email, points_to_add, 'earn_online', f"Compra online #{order['id']} - {prod_name}")
+                    )
+                    logger.info(f"Creditado {points_to_add} pontos para {customer_email} pela compra #{order['id']}")
+                except Exception as e:
+                    logger.error(f"Erro ao creditar pontos de fidelidade para {customer_email}: {e}")
 
-            if key_value:
-                def send_customer_email():
+            # Incrementar uso do cupom, se houver (somente após pagamento aprovado)
+            if 'coupon_id' in order.keys() and order['coupon_id']:
+                try:
+                    c_id = order['coupon_id']
+                    conn.execute('UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?', (c_id,))
+                
+                    if 'coupon_code' in order.keys() and order['coupon_code']:
+                        if str(order['coupon_code']).upper().startswith('FID-'):
+                            conn.execute('UPDATE loyalty_coupons SET is_used = 1 WHERE coupon_code = ?', (order['coupon_code'],))
+                    logger.info(f"Uso do cupom ID {c_id} incrementado.")
+                except Exception as e:
+                    logger.error(f"Erro ao atualizar uso do cupom no pedido {order['id']}: {e}")
+
+            # Processar comissão de vendedor (se houver)
+            # Verifica se o produto paga comissão
+            try:
+                prod_info = conn.execute('SELECT pays_commission FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+                pays_commission = int(prod_info['pays_commission']) if prod_info and 'pays_commission' in prod_info.keys() else 1
+            except Exception:
+                pays_commission = 1
+
+            if pays_commission == 1:
+                possible_sellers = []
+                order_dict = dict(order)
+                if order_dict.get('seller_coupon'):
+                    possible_sellers.append(order_dict['seller_coupon'])
+                if order_dict.get('coupon_code'):
+                    possible_sellers.append(order_dict['coupon_code'])
+                
+                processed_sellers = set()
+                for sc in possible_sellers:
+                    if not sc or sc.upper() in processed_sellers: 
+                        continue
+                
+                    try:
+                        # Busca os dados do vendedor no banco de cupons
+                        seller_data = conn.execute('SELECT commission_percentage FROM coupons WHERE code = ? COLLATE NOCASE AND is_seller = TRUE', (sc,)).fetchone()
+                        if seller_data and seller_data['commission_percentage'] > 0:
+                            com_perc = seller_data['commission_percentage']
+                            sale_amt = order['amount']
+                            com_amt = round(sale_amt * (com_perc / 100.0), 2)
+                        
+                            conn.execute('''
+                                INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status)
+                                VALUES (?, ?, ?, ?, 'pending')
+                            ''', (sc.upper(), order['id'], sale_amt, com_amt))
+                            logger.info(f"Comissão gerada: R$ {com_amt} para {sc} no pedido {order['id']}")
+                            processed_sellers.add(sc.upper())
+                    except Exception as e:
+                        logger.error(f"Erro ao gerar comissão do vendedor {sc} no pedido {order['id']}: {e}")
+            else:
+                logger.info(f"Produto {order['product_id']} não paga comissão. Nenhuma comissão gerada para o pedido {order['id']}")
+
+            conn.commit()
+
+            # Envia e-mails de notificação (Admin e Cliente) de forma assíncrona
+            product = conn.execute('''
+                SELECT p.name, p.download_link, l.download_link AS linked_download_url
+                FROM products p
+                LEFT JOIN links l ON p.link_id = l.id
+                WHERE p.id = ?
+            ''', (order['product_id'],)).fetchone()
+        
+            product_dict = dict(product) if product else {}
+            download_link = product_dict.get('linked_download_url')
+            if not download_link or not download_link.strip():
+                download_link = product_dict.get('download_link') or ''
+            else:
+                download_link = download_link.strip()
+        
+            # Enviar chave via Telegram (se o cliente comprou pelo bot)
+            telegram_id = dict(order).get('telegram_id')
+            if telegram_id:
+                try:
+                    from telegram_app.services.telegram_service import TelegramService
+                    product_name = product['name'] if product else 'Produto Desconhecido'
+                
+                    if key:
+                        key_value = key['key_value']
+                        TelegramService.send_key_delivery(
+                            chat_id=telegram_id,
+                            product_name=product_name,
+                            key_value=key_value,
+                            download_link=download_link,
+                            order_ref=order['external_reference']
+                        )
+                        logger.info(f"Entrega de chave via Telegram agendada para o chat_id: {telegram_id}")
+                    else:
+                        from telegram_app.routes import send_telegram_message_safe
+                        safe_prod_name = str(product_name).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                        warn_msg = (
+                            f"⚠️ <b>PAGAMENTO APROVADO!</b> ⚠️\n\n"
+                            f"Seu pagamento para o produto <b>{safe_prod_name}</b> foi confirmado, mas nosso estoque de chaves para este item esgotou temporariamente.\n\n"
+                            f"O administrador já foi notificado e enviará sua licença manualmente no seu e-mail ou aqui no privado o mais rápido possível!"
+                        )
+                        send_telegram_message_safe(telegram_id, warn_msg, parse_mode='HTML', order_ref=order['external_reference'])
+                        logger.warning(f"Aviso de sem estoque enviado via Telegram para o chat_id: {telegram_id}")
+                except Exception as e:
+                    logger.error(f"Erro ao disparar entrega via Telegram: {e}")
+                
+            config = conn.execute('SELECT smtp_server, smtp_port, smtp_user, smtp_password FROM config WHERE id = 1').fetchone()
+
+            if config and config['smtp_server'] and config['smtp_user']:
+                prod_name = product['name'] if product else 'Produto Desconhecido'
+                order_dict = dict(order)
+                config_dict = dict(config)
+            
+                # 1. Enviar e-mail de notificação para o Admin
+                def send_admin_email():
                     try:
                         msg = MIMEMultipart("alternative")
-                        msg['Subject'] = f"Seu produto está pronto! ⚡ - {prod_name}"
-                        msg['From'] = f"RAIO MODS <{config_dict['smtp_user']}>"
-                        msg['To'] = customer_email
-                        
-                        html_download = ""
-                        if download_link and download_link.strip():
-                            html_download = f"""
-                            <p style="color: #ccc; font-size: 15px; margin-top: 20px;">
-                                <strong>Link para Download / Instruções:</strong><br>
-                                <a href="{download_link}" target="_blank" style="color: #06b6d4; text-decoration: underline; font-weight: bold;">Clique aqui para baixar</a>
-                            </p>
-                            """
-                        
+                        msg['Subject'] = f"Nova Venda! 🚀 - {prod_name}"
+                        msg['From'] = f"RAIO MODS Loja <{config_dict['smtp_user']}>"
+                        msg['To'] = config_dict['smtp_user'] # Envia para o próprio admin
+                    
                         html = f"""
                         <html>
                           <body style="background-color: #050505; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
-                            <div style="background-color: #111; border: 1px solid #333; border-radius: 8px; max-width: 600px; margin: 0 auto; padding: 30px; text-align: center;">
-                                <h1 style="color: #06b6d4; font-size: 28px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px;">RAIO MODS</h1>
-                                <h2 style="color: #fff; font-size: 20px; margin-bottom: 20px;">Obrigado por sua compra! 🎉</h2>
-                                <p style="color: #ccc; font-size: 15px;">
-                                    Seu pagamento para o produto <strong>{prod_name}</strong> foi aprovado.
-                                </p>
-                                <p style="color: #ccc; font-size: 15px; margin-top: 15px;">
-                                    Abaixo está a sua chave de ativação / licença:
-                                </p>
-                                <div style="margin: 25px 0;">
-                                    <span style="background-color: #1a1a1a; border: 2px dashed #06b6d4; color: #06b6d4; padding: 12px 25px; border-radius: 6px; font-weight: bold; font-size: 20px; letter-spacing: 1px; display: inline-block; font-family: monospace;">
-                                        {key_value}
-                                    </span>
-                                </div>
-                                {html_download}
-                                <hr style="border-color: #222; margin: 25px 0;">
-                                <p style="color: #888; font-size: 12px; line-height: 1.4;">
-                                    Referência do Pedido: <strong>{order_ref}</strong><br>
-                                    Caso precise de ajuda ou suporte, entre em contato através do nosso WhatsApp.
-                                </p>
+                            <div style="background-color: #111; border: 1px solid #333; border-radius: 8px; max-width: 600px; margin: 0 auto; padding: 30px; text-align: left;">
+                                <h1 style="color: #06b6d4;">RAIO MODS - Nova Venda Aprovada!</h1>
+                                <p style="color: #ccc; font-size: 16px;">Você acabou de realizar uma nova venda.</p>
+                            
+                                <h2 style="color: #fff; margin-top:20px;">Detalhes do Pedido</h2>
+                                <ul style="color: #ccc; font-size: 14px; line-height: 1.6;">
+                                    <li><strong>ID do Pedido:</strong> {order_dict.get('id')}</li>
+                                    <li><strong>Referência:</strong> {order_dict.get('external_reference')}</li>
+                                    <li><strong>Produto:</strong> {prod_name}</li>
+                                    <li><strong>Valor:</strong> R$ {order_dict.get('amount')}</li>
+                                    <li><strong>Cliente (Nome):</strong> {order_dict.get('customer_name')}</li>
+                                    <li><strong>Cliente (CPF):</strong> {order_dict.get('customer_cpf')}</li>
+                                    <li><strong>Email do Cliente:</strong> {order_dict.get('customer_email')}</li>
+                                </ul>
+                            
+                                <p style="color: #666; font-size: 12px; margin-top: 30px;">Notificação Automática - RAIO MODS Administrativo.</p>
                             </div>
                           </body>
                         </html>
                         """
                         msg.attach(MIMEText(html, "html"))
-                        
+                    
                         server = smtplib.SMTP(config_dict['smtp_server'], int(config_dict['smtp_port']))
                         server.starttls()
                         server.login(config_dict['smtp_user'], config_dict['smtp_password'])
-                        server.sendmail(config_dict['smtp_user'], customer_email, msg.as_string())
+                        server.sendmail(config_dict['smtp_user'], config_dict['smtp_user'], msg.as_string())
                         server.quit()
-                        logger.info(f"Email de entrega de chave enviado para {customer_email} com sucesso.")
+                        logger.info("Email de notificação para admin enviado com sucesso.")
                     except Exception as e:
-                        logger.error(f"Erro ao enviar e-mail de entrega de chave para o cliente: {e}")
+                        logger.error(f"Erro ao enviar e-mail de notificação para admin: {e}")
+                    
+                threading.Thread(target=send_admin_email).start()
 
-                threading.Thread(target=send_customer_email).start()
+                # 2. Enviar e-mail com a Chave para o Cliente (se houver chave associada)
+                # Para evitar consultas no banco dentro da thread (e possíveis locks), extraímos o valor da chave antes.
+                key_value = None
+                if key:
+                    try:
+                        key_value = key['key_value']
+                    except Exception:
+                        pass
+
+                if key_value:
+                    def send_customer_email():
+                        try:
+                            msg = MIMEMultipart("alternative")
+                            msg['Subject'] = f"Seu produto está pronto! ⚡ - {prod_name}"
+                            msg['From'] = f"RAIO MODS <{config_dict['smtp_user']}>"
+                            msg['To'] = customer_email
+                        
+                            html_download = ""
+                            if download_link and download_link.strip():
+                                html_download = f"""
+                                <p style="color: #ccc; font-size: 15px; margin-top: 20px;">
+                                    <strong>Link para Download / Instruções:</strong><br>
+                                    <a href="{download_link}" target="_blank" style="color: #06b6d4; text-decoration: underline; font-weight: bold;">Clique aqui para baixar</a>
+                                </p>
+                                """
+                        
+                            html = f"""
+                            <html>
+                              <body style="background-color: #050505; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
+                                <div style="background-color: #111; border: 1px solid #333; border-radius: 8px; max-width: 600px; margin: 0 auto; padding: 30px; text-align: center;">
+                                    <h1 style="color: #06b6d4; font-size: 28px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px;">RAIO MODS</h1>
+                                    <h2 style="color: #fff; font-size: 20px; margin-bottom: 20px;">Obrigado por sua compra! 🎉</h2>
+                                    <p style="color: #ccc; font-size: 15px;">
+                                        Seu pagamento para o produto <strong>{prod_name}</strong> foi aprovado.
+                                    </p>
+                                    <p style="color: #ccc; font-size: 15px; margin-top: 15px;">
+                                        Abaixo está a sua chave de ativação / licença:
+                                    </p>
+                                    <div style="margin: 25px 0;">
+                                        <span style="background-color: #1a1a1a; border: 2px dashed #06b6d4; color: #06b6d4; padding: 12px 25px; border-radius: 6px; font-weight: bold; font-size: 20px; letter-spacing: 1px; display: inline-block; font-family: monospace;">
+                                            {key_value}
+                                        </span>
+                                    </div>
+                                    {html_download}
+                                    <hr style="border-color: #222; margin: 25px 0;">
+                                    <p style="color: #888; font-size: 12px; line-height: 1.4;">
+                                        Referência do Pedido: <strong>{order_ref}</strong><br>
+                                        Caso precise de ajuda ou suporte, entre em contato através do nosso WhatsApp.
+                                    </p>
+                                </div>
+                              </body>
+                            </html>
+                            """
+                            msg.attach(MIMEText(html, "html"))
+                        
+                            server = smtplib.SMTP(config_dict['smtp_server'], int(config_dict['smtp_port']))
+                            server.starttls()
+                            server.login(config_dict['smtp_user'], config_dict['smtp_password'])
+                            server.sendmail(config_dict['smtp_user'], customer_email, msg.as_string())
+                            server.quit()
+                            logger.info(f"Email de entrega de chave enviado para {customer_email} com sucesso.")
+                        except Exception as e:
+                            logger.error(f"Erro ao enviar e-mail de entrega de chave para o cliente: {e}")
+
+            threading.Thread(target=send_customer_email).start()
+
+        except Exception as e:
+            logger.error(f"Erro ao processar pedido {order_ref}: {e}")
+            conn.rollback()
+            conn.execute("UPDATE orders SET status = 'pending' WHERE external_reference = ?", (order_ref,))
+            conn.commit()
+            raise e
 
 
 

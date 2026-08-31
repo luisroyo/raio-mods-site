@@ -412,10 +412,14 @@ function startPolling(orderId) {
             const response = await fetch(`/api/check_status/${orderId}?_t=${new Date().getTime()}`);
             const data = await response.json();
 
-            if (data.status === 'ready_to_reveal' || data.status === 'paid_no_key') {
-                // PAGAMENTO APROVADO — mostra botão de revelar
+            if (data.status === 'ready_to_reveal') {
+                // PAGAMENTO APROVADO COM CHAVE
                 clearInterval(paymentCheckInterval);
                 showRevealStep();
+            } else if (data.status === 'paid_no_key') {
+                // PAGAMENTO APROVADO SEM CHAVE (ENTREGA MANUAL)
+                clearInterval(paymentCheckInterval);
+                showNoKeyStep();
             }
         } catch (e) {
             console.error("Erro no polling", e);
@@ -429,6 +433,21 @@ function showRevealStep() {
     document.getElementById('step-email').classList.add('hidden');
     document.getElementById('step-reveal').classList.remove('hidden');
     document.getElementById('step-success').classList.add('hidden');
+}
+
+// Mostra o passo de sucesso mas sem chave (contato manual)
+function showNoKeyStep() {
+    document.getElementById('step-payment').classList.add('hidden');
+    document.getElementById('step-email').classList.add('hidden');
+    document.getElementById('step-reveal').classList.add('hidden');
+    
+    document.getElementById('step-success').classList.remove('hidden');
+    document.getElementById('finalKey').innerText = 'Fale conosco no WhatsApp';
+    const copyBtn = document.querySelector('#step-success button[title="Copiar"]');
+    if(copyBtn) copyBtn.style.display = 'none';
+    
+    const msgEl = document.querySelector('#step-success p');
+    if(msgEl) msgEl.innerText = 'Pagamento aprovado! Produto será entregue manualmente.';
 }
 
 // Chama o backend para registrar prova de consumo e revelar a chave

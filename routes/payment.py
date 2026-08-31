@@ -544,9 +544,10 @@ def create_payment():
 
         with closing(get_db_connection()) as conn:
             # Validação ágil de estoque antes do processamento pesado
-            has_stock = conn.execute('SELECT 1 FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
-            if not has_stock:
-                return jsonify({'error': 'Produto esgotado! Contate o suporte.'}), 409
+            # Removido para permitir compras sem chave em estoque
+            # has_stock = conn.execute('SELECT 1 FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
+            # if not has_stock:
+            #     return jsonify({'error': 'Produto esgotado! Contate o suporte.'}), 409
 
             product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
             if not product:

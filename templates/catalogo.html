@@ -163,25 +163,10 @@
             </div>
 
             {% set display_price = product.promo_price or product.price %}
-            {% if (stock_map is defined and stock_map.get(product.id, 0) > 0) or (stock_map is not defined) %}
             <button onclick="openCheckout({{ product.id }}, '{{ product.name|replace('\'', '\\\'') }}', '{{ display_price }}', '{{ product.platform|default('') }}')"
                 class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 py-2 text-sm cursor-pointer mb-2">
                 <span>🛒 {{ _('buy', 'Comprar') }}</span>
             </button>
-            {% else %}
-            <div class="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-center">
-                <p class="text-amber-400 font-semibold mb-2">{{ _('no_stock_title', 'Sem estoque no momento.') }}</p>
-                <p class="text-gray-400 text-sm mb-3">{{ _('no_stock_description', 'Entre em contato com o administrador pelo WhatsApp para mais informações.') }}</p>
-                {% if whatsapp_contact %}
-                <a href="https://wa.me/{{ whatsapp_contact }}" target="_blank" rel="noopener"
-                    class="inline-flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors">
-                    📲 {{ _('contact_whatsapp', 'Contatar no WhatsApp') }}
-                </a>
-                {% else %}
-                <p class="text-gray-500 text-xs">{{ _('whatsapp_not_configured', 'WhatsApp não configurado. Contate o suporte.') }}</p>
-                {% endif %}
-            </div>
-            {% endif %}
         </div>
         {% endif %}
         {% endfor %}

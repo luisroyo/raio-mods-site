@@ -480,14 +480,14 @@ def sales_report():
     params_panel = []
     
     if date_start:
-        date_clause_orders += " AND date(o.created_at, '-3 hours') >= ?"
+        date_clause_orders += " AND date(COALESCE(o.updated_at, o.created_at), '-3 hours') >= ?"
         date_clause_manual += " AND date(ms.created_at, '-3 hours') >= ?"
         date_clause_panel += " AND date(created_at, '-3 hours') >= ?"
         params_orders.append(date_start)
         params_manual.append(date_start)
         params_panel.append(date_start)
     if date_end:
-        date_clause_orders += " AND date(o.created_at, '-3 hours') <= ?"
+        date_clause_orders += " AND date(COALESCE(o.updated_at, o.created_at), '-3 hours') <= ?"
         date_clause_manual += " AND date(ms.created_at, '-3 hours') <= ?"
         date_clause_panel += " AND date(created_at, '-3 hours') <= ?"
         params_orders.append(date_end)
@@ -510,7 +510,7 @@ def sales_report():
                COUNT(o.id) as count
         FROM orders o 
         JOIN products p ON o.product_id = p.id
-        WHERE o.status = 'approved' {date_clause_orders}
+        WHERE o.status IN ('approved', 'paid_no_key') {date_clause_orders}
     ''', params_orders).fetchone()
     
     online_revenue = float(approved_orders['total'] or 0) if approved_orders['total'] else 0
@@ -537,7 +537,7 @@ def sales_report():
             SUM({cost_expr}) as total_cost_brl
         FROM orders o
         JOIN products p ON o.product_id = p.id
-        WHERE o.status = 'approved' {date_clause_orders}
+        WHERE o.status IN ('approved', 'paid_no_key') {date_clause_orders}
     ''', params_orders).fetchone()
 
     total_usd_iof = float(online_costs['total_usd_iof'] or 0) if online_costs['total_usd_iof'] else 0
@@ -578,7 +578,7 @@ def sales_report():
                SUM(CAST(REPLACE(REPLACE(CAST(amount AS TEXT), 'R$', ''), ',', '.') AS REAL)) as total
         FROM orders o
         JOIN products p ON o.product_id = p.id
-        WHERE o.status = 'approved' {date_clause_orders}
+        WHERE o.status IN ('approved', 'paid_no_key') {date_clause_orders}
         GROUP BY p.name
     ''', params_orders).fetchall()
     
@@ -721,12 +721,12 @@ def sales_insights():
     params_manual = []
     
     if date_start:
-        date_clause_orders += " AND date(o.created_at, '-3 hours') >= ?"
+        date_clause_orders += " AND date(COALESCE(o.updated_at, o.created_at), '-3 hours') >= ?"
         date_clause_manual += " AND date(ms.created_at, '-3 hours') >= ?"
         params_orders.append(date_start)
         params_manual.append(date_start)
     if date_end:
-        date_clause_orders += " AND date(o.created_at, '-3 hours') <= ?"
+        date_clause_orders += " AND date(COALESCE(o.updated_at, o.created_at), '-3 hours') <= ?"
         date_clause_manual += " AND date(ms.created_at, '-3 hours') <= ?"
         params_orders.append(date_end)
         params_manual.append(date_end)
@@ -740,7 +740,7 @@ def sales_insights():
                 COUNT(*) as orders_count,
                 SUM(CAST(REPLACE(REPLACE(CAST(amount AS TEXT), 'R$', ''), ',', '.') AS REAL)) as total_spent
             FROM orders o
-            WHERE status = 'approved' {date_clause_orders}
+            WHERE status IN ('approved', 'paid_no_key') {date_clause_orders}
             GROUP BY customer_email, customer_name
 
             UNION ALL
@@ -794,11 +794,11 @@ def sales_insights():
     
     # 2. Vendas por Tempo
     time_query_online = f'''
-        SELECT date(o.created_at, '-3 hours') as data_venda, 
+        SELECT date(COALESCE(o.updated_at, o.created_at), '-3 hours') as data_venda, 
                SUM(CAST(REPLACE(REPLACE(CAST(amount AS TEXT), 'R$', ''), ',', '.') AS REAL)) as total_online
         FROM orders o
-        WHERE o.status = 'approved' {date_clause_orders}
-        GROUP BY date(o.created_at, '-3 hours')
+        WHERE o.status IN ('approved', 'paid_no_key') {date_clause_orders}
+        GROUP BY date(COALESCE(o.updated_at, o.created_at), '-3 hours')
     '''
     online_time = conn.execute(time_query_online, params_orders).fetchall()
     
@@ -835,7 +835,7 @@ def sales_insights():
                SUM(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END) as cost_brl
         FROM orders o
         JOIN products p ON o.product_id = p.id
-        WHERE o.status = 'approved' {date_clause_orders}
+        WHERE o.status IN ('approved', 'paid_no_key') {date_clause_orders}
         GROUP BY p.category
     '''
     cat_online = conn.execute(cat_query_online, params_orders).fetchall()
@@ -939,7 +939,7 @@ def sales_insights():
     # 5. Ticket Médio
     all_rev = sum(d['total'] for d in sales_over_time)
     
-    total_orders_online = conn.execute(f"SELECT COUNT(*) FROM orders o WHERE o.status = 'approved' {date_clause_orders}", params_orders).fetchone()[0]
+    total_orders_online = conn.execute(f"SELECT COUNT(*) FROM orders o WHERE o.status IN ('approved', 'paid_no_key') {date_clause_orders}", params_orders).fetchone()[0]
     total_orders_manual = conn.execute(f"SELECT COUNT(*) FROM manual_sales ms WHERE 1=1 {date_clause_manual}", params_manual).fetchone()[0]
     total_orders = total_orders_online + total_orders_manual
     

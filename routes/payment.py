@@ -372,7 +372,7 @@ def process_approved_payment(order_ref: str, p_id: str):
                         except Exception as e:
                             logger.error(f"Erro ao enviar e-mail de entrega de chave para o cliente: {e}")
 
-            threading.Thread(target=send_customer_email).start()
+                    threading.Thread(target=send_customer_email).start()
 
         except Exception as e:
             logger.error(f"Erro ao processar pedido {order_ref}: {e}")

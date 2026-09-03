@@ -161,6 +161,16 @@ function showApprovedCard(data) {
     if (typeof gtag === 'function') {
         gtag('event', 'purchase', { transaction_id: ORDER_REF });
     }
+    
+    if (data && data.status === 'paid_no_key') {
+        const keyUnrevealed = document.getElementById('key-unrevealed');
+        if (keyUnrevealed) {
+            keyUnrevealed.innerHTML = `
+                <p class="text-yellow-400 font-bold mb-3">Pagamento confirmado! Este produto é entregue manualmente.</p>
+                <p class="text-gray-300 text-sm">Por favor, clique no botão de Suporte via WhatsApp abaixo informando o número do seu pedido para receber seu produto.</p>
+            `;
+        }
+    }
 }
 
 // ─── Polling de status ───────────────────────────────────────────────────────

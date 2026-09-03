@@ -70,7 +70,7 @@ def _get_admin_data():
             SELECT amount, p.cost_usd, p.price, p.apply_iof
             FROM orders o
             JOIN products p ON o.product_id = p.id
-            WHERE o.status = 'approved' AND date(o.created_at, 'localtime') = date('now', 'localtime')
+            WHERE o.status IN ('approved', 'paid_no_key') AND date(o.created_at, 'localtime') = date('now', 'localtime')
         ''').fetchall()
     except sqlite3.OperationalError:
         approved_orders = []

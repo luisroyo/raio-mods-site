@@ -374,14 +374,22 @@ def edit_product(pid):
             description_es = existing.get('description_es', '')
         description_es = description_es.strip()
 
-        try:
-            p_brl = request.form.get('price_brl')
-            if p_brl is not None:
+        p_brl = request.form.get('price_brl')
+        if p_brl:
+            try:
                 price_brl = float(str(p_brl).replace(',', '.'))
-            else:
+            except:
                 price_brl = float(existing.get('price_brl', 0) or 0)
-        except:
-            price_brl = float(existing.get('price_brl', 0) or 0)
+        else:
+            cleaned = price.replace('R$', '').replace('$', '').strip()
+            if ',' in cleaned and '.' not in cleaned:
+                cleaned = cleaned.replace(',', '.')
+            elif ',' in cleaned and '.' in cleaned:
+                cleaned = cleaned.replace('.', '').replace(',', '.')
+            try:
+                price_brl = float(cleaned)
+            except:
+                price_brl = float(existing.get('price_brl', 0) or 0)
 
         try:
             p_usd = request.form.get('price_usd')

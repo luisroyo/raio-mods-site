@@ -94,7 +94,7 @@ def process_approved_payment(order_ref: str, p_id: str):
                         # Generate random password and unique username
                         import random
                         import string
-                        base_username = f"c_{order['id']}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
+                        base_username = f"raio_{order['id']}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
                         password = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) + "Aa1"
                         
                         # api_duration is usually in days for KOS. Ninja uses seconds.

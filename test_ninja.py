@@ -23,21 +23,25 @@ def test_ninja_api():
     
     # Vamos usar um jogo que (provavelmente) nao existe para testar a comunicacao
     # sem gastar o seu saldo (balance) real.
-    test_game = "jogo-inexistente-para-teste"
-    test_user = "test_user_api_connection"
+    import random
+    import string
+    
+    # Criando um usuario unico para evitar conflitos na API
+    test_user = "c_test_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
+    test_game = "8ball-pool"
     
     print(f"Token encontrado: {token[:8]}...{token[-4:]}")
-    print(f"Tentando criar um acesso para o jogo: '{test_game}'...")
+    print(f"Tentando criar um acesso REAL para o jogo: '{test_game}'...")
     
     try:
         response = api.create_customer(
             username=test_user,
-            password="TestPassword123",
+            password="TestPassword123Aa",
             game=test_game,
             mode="global",
-            duration_seconds=3600  # 1 hora
+            duration_seconds=259200  # 3 dias = 3 * 24 * 60 * 60
         )
-        print("[SUCESSO] A API conectou e, de forma surpreendente, criou o acesso!")
+        print("[SUCESSO] A API conectou e a chave/acesso foi CRIADA COM SUCESSO!")
         print(f"Resposta: {response}")
         
     except NinjaApiError as e:

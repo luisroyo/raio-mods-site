@@ -75,7 +75,7 @@ class NinjaSellerApi:
                     return json.loads(response_bytes.decode("utf-8"))
             except HTTPError as error:
                 payload = self._error_payload(error)
-                message = str(payload.get("message", "Request failed"))
+                message = str(payload.get("message") or payload.get("detail") or "Request failed")
                 errors = payload.get("errors")
 
                 if error.code == 429:

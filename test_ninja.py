@@ -36,7 +36,7 @@ def test_ninja_api():
     try:
         response = api.create_customer(
             username=test_user,
-            password="TestPassword123Aa",
+            password="TestPass12",
             game=test_game,
             mode="global",
             duration_seconds=259200  # 3 dias = 3 * 24 * 60 * 60
@@ -49,9 +49,11 @@ def test_ninja_api():
         if e.status == 401:
             print("[ERRO] O token da API esta invalido ou incorreto (Erro 401).")
         elif e.status == 422:
-            print("[OK] A API conectou e reconheceu o token.")
-            print(f"O servidor recusou criar o acesso (o que era esperado por usarmos um jogo teste), retornando erro de validacao.")
+            print("[ERRO DE VALIDACAO] A API recusou criar o acesso devido a um erro nos dados.")
             print(f"Mensagem da API: {e.message}")
+            if e.errors:
+                print(f"Erros detalhados: {e.errors}")
+            print("\nDICA: Verifique se o slug do jogo ('8ball-pool') esta correto e se voce tem saldo.")
         elif e.status == 404:
             print("[OK] A API conectou e reconheceu o token.")
             print(f"Mensagem da API (404): {e.message}")

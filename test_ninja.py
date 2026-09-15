@@ -28,7 +28,7 @@ def test_ninja_api():
     
     # Criando um usuario unico para evitar conflitos na API
     test_user = "c_test_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
-    test_game = "8ball-pool"
+    test_game = "8-ball-pool"
     
     print(f"Token encontrado: {token[:8]}...{token[-4:]}")
     print(f"Tentando criar um acesso REAL para o jogo: '{test_game}'...")

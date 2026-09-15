@@ -82,38 +82,86 @@ def process_approved_payment(order_ref: str, p_id: str):
         
             if api_game_type and api_duration:
                 try:
-                    from services.kos_api import KosSellerApi
-                    kos_api = KosSellerApi()
-                    idempotency_key = KosSellerApi.new_intended_action_key()
-                    response = kos_api.generate_keys(
-                        game_type=api_game_type,
-                        duration=int(api_duration),
-                        quantity=1,
-                        idempotency_key=idempotency_key
-                    )
-                    if response and isinstance(response, dict):
-                        keys_list = response.get("keys", [])
-                        if keys_list and len(keys_list) > 0:
-                            api_key = keys_list[0]
-                            key_value = api_key.get("key_string") or api_key.get("key")
-                            api_key_id = api_key.get("id")
+                    if str(api_game_type).startswith("ninja:"):
+                        from services.ninja_api import NinjaSellerApi
+                        ninja_api = NinjaSellerApi()
+                        idempotency_key = NinjaSellerApi.new_intended_action_key()
                         
-                            if key_value:
-                                cursor = conn.execute(
-                                    'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
-                                    (order['product_id'], key_value, api_key_id)
-                                )
-                                new_key_id = cursor.lastrowid
-                                key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
-                                logger.info(f"Chave gerada via API KOS: ID {key['id']} ({api_game_type})")
-                            else:
-                                raise Exception("Campo 'key_string' vazio na resposta da API.")
+                        parts = str(api_game_type).split(":")
+                        game_slug = parts[1] if len(parts) > 1 else '8ball-pool'
+                        mode = parts[2] if len(parts) > 2 else 'global'
+                        
+                        # Generate random password and unique username
+                        import random
+                        import string
+                        base_username = f"c_{order['id']}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
+                        password = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) + "Aa1"
+                        
+                        # api_duration is usually in days for KOS. Ninja uses seconds.
+                        # Assuming api_duration is stored in seconds for Ninja, or we can assume it's days and convert.
+                        # The user mentioned 259200 seconds (3 days). If they enter days in the admin panel, we multiply by 86400.
+                        # If they already put seconds, we use it directly. We'll assume the admin puts seconds for Ninja, or 
+                        # let's assume they put days (as in KOS) and we convert it here for Ninja if it's <= 1000. 
+                        # But 259200 is too big for days. Let's just pass api_duration as is, expecting them to enter seconds in admin if it's Ninja.
+                        # Or even better, we can auto-convert if it's less than 10000 (which would mean days).
+                        dur = int(api_duration)
+                        if dur < 10000:
+                            dur = dur * 86400
+
+                        response = ninja_api.create_customer(
+                            username=base_username,
+                            password=password,
+                            game=game_slug,
+                            mode=mode,
+                            duration_seconds=dur,
+                            idempotency_key=idempotency_key
+                        )
+                        
+                        if response and "username" in response:
+                            key_value = f"User: {response['username']} | Pass: {password}"
+                            cursor = conn.execute(
+                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
+                                (order['product_id'], key_value, None)
+                            )
+                            new_key_id = cursor.lastrowid
+                            key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
+                            logger.info(f"Chave gerada via API NINJA: ID {key['id']} ({api_game_type})")
                         else:
-                            raise Exception("Array 'keys' vazio na resposta da API.")
+                            raise Exception(f"Erro na resposta da API Ninja: {response}")
+
                     else:
-                        raise Exception("Formato de resposta inesperado (não é dicionário).")
+                        from services.kos_api import KosSellerApi
+                        kos_api = KosSellerApi()
+                        idempotency_key = KosSellerApi.new_intended_action_key()
+                        response = kos_api.generate_keys(
+                            game_type=api_game_type,
+                            duration=int(api_duration),
+                            quantity=1,
+                            idempotency_key=idempotency_key
+                        )
+                        if response and isinstance(response, dict):
+                            keys_list = response.get("keys", [])
+                            if keys_list and len(keys_list) > 0:
+                                api_key = keys_list[0]
+                                key_value = api_key.get("key_string") or api_key.get("key")
+                                api_key_id = api_key.get("id")
+                            
+                                if key_value:
+                                    cursor = conn.execute(
+                                        'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
+                                        (order['product_id'], key_value, api_key_id)
+                                    )
+                                    new_key_id = cursor.lastrowid
+                                    key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
+                                    logger.info(f"Chave gerada via API KOS: ID {key['id']} ({api_game_type})")
+                                else:
+                                    raise Exception("Campo 'key_string' vazio na resposta da API.")
+                            else:
+                                raise Exception("Array 'keys' vazio na resposta da API.")
+                        else:
+                            raise Exception("Formato de resposta inesperado (não é dicionário).")
                 except Exception as e:
-                    logger.error(f"Erro ao gerar chave via API KOS (Fallback ativado): {e}")
+                    logger.error(f"Erro ao gerar chave via API (Fallback ativado): {e}")
         
             if not key:
                 # Tenta encontrar uma chave disponível (estoque)

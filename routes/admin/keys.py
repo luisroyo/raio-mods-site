@@ -104,42 +104,86 @@ def redeem_key_admin():
         if client_email:
             used_by += f" - {client_email}"
             
-        # 2. Tentar gerar chave via API KOS
+        # 2. Tentar gerar chave via API (Ninja ou KOS)
         if api_game_type and api_duration:
             try:
-                from services.kos_api import KosSellerApi
-                kos_api = KosSellerApi()
-                idempotency_key = KosSellerApi.new_intended_action_key()
-                response = kos_api.generate_keys(
-                    game_type=api_game_type,
-                    duration=int(api_duration),
-                    quantity=1,
-                    idempotency_key=idempotency_key
-                )
-                if response and isinstance(response, dict):
-                    keys_list = response.get("keys", [])
-                    if keys_list and len(keys_list) > 0:
-                        api_key = keys_list[0]
-                        generated_key = api_key.get("key_string") or api_key.get("key")
-                        api_key_id = api_key.get("id")
+                if str(api_game_type).startswith("ninja:"):
+                    from services.ninja_api import NinjaSellerApi
+                    ninja_api = NinjaSellerApi()
+                    idempotency_key = NinjaSellerApi.new_intended_action_key()
+                    
+                    parts = str(api_game_type).split(":")
+                    game_slug = parts[1] if len(parts) > 1 else '8ball-pool'
+                    mode = parts[2] if len(parts) > 2 else 'global'
+                    
+                    import random
+                    import string
+                    # Usamos um random id já que aqui é um resgate manual e não há order_id
+                    rand_id = ''.join(random.choices(string.digits, k=4))
+                    base_username = f"raio_manual_{rand_id}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
+                    password = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) + "Aa1"
+                    
+                    dur = int(api_duration)
+                    if dur < 10000:
+                        dur = dur * 86400
+
+                    response = ninja_api.create_customer(
+                        username=base_username,
+                        password=password,
+                        game=game_slug,
+                        mode=mode,
+                        duration_seconds=dur,
+                        idempotency_key=idempotency_key
+                    )
+                    
+                    if response and "username" in response:
+                        generated_key = f"User: {response['username']} | Pass: {password}"
+                        api_key_id = None # Ninja doesn't return an ID like KOS
                         
-                        if generated_key:
-                            cursor = conn.execute(
-                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
-                                (product_id, generated_key, api_key_id, used_by)
-                            )
-                            key_id = cursor.lastrowid
-                            key_value = generated_key
-                        else:
-                            raise Exception(f"Chave 'key_string' não encontrada na resposta: {response}")
+                        cursor = conn.execute(
+                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                            (product_id, generated_key, api_key_id, used_by)
+                        )
+                        key_id = cursor.lastrowid
+                        key_value = generated_key
                     else:
-                        raise Exception(f"Array 'keys' vazio ou ausente na resposta: {response}")
+                        raise Exception(f"Erro na resposta da API Ninja: {response}")
+
                 else:
-                    raise Exception(f"Formato inesperado (não é um dicionário): {response}")
+                    from services.kos_api import KosSellerApi
+                    kos_api = KosSellerApi()
+                    idempotency_key = KosSellerApi.new_intended_action_key()
+                    response = kos_api.generate_keys(
+                        game_type=api_game_type,
+                        duration=int(api_duration),
+                        quantity=1,
+                        idempotency_key=idempotency_key
+                    )
+                    if response and isinstance(response, dict):
+                        keys_list = response.get("keys", [])
+                        if keys_list and len(keys_list) > 0:
+                            api_key = keys_list[0]
+                            generated_key = api_key.get("key_string") or api_key.get("key")
+                            api_key_id = api_key.get("id")
+                            
+                            if generated_key:
+                                cursor = conn.execute(
+                                    'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                                    (product_id, generated_key, api_key_id, used_by)
+                                )
+                                key_id = cursor.lastrowid
+                                key_value = generated_key
+                            else:
+                                raise Exception(f"Chave 'key_string' não encontrada na resposta: {response}")
+                        else:
+                            raise Exception(f"Array 'keys' vazio ou ausente na resposta: {response}")
+                    else:
+                        raise Exception(f"Formato inesperado (não é um dicionário): {response}")
             except Exception as e:
                 import traceback
                 traceback.print_exc()
                 api_error_msg = str(e)
+                api_error_name = "Ninja API" if str(api_game_type).startswith("ninja:") else "KOS API"
                 # Em caso de erro, continua para o fallback
         
         # 3. Fallback: Buscar uma chave disponível (is_used = 0) do estoque local
@@ -147,7 +191,8 @@ def redeem_key_admin():
             key_row = conn.execute('SELECT id, key_value FROM product_keys WHERE product_id = ? AND is_used = 0 LIMIT 1', (product_id,)).fetchone()
             if not key_row:
                 conn.close()
-                error_prefix = f"KOS API falhou ({api_error_msg}) e " if 'api_error_msg' in locals() else ""
+                api_name = api_error_name if 'api_error_name' in locals() else "KOS API"
+                error_prefix = f"A {api_name} falhou ({api_error_msg}) e " if 'api_error_msg' in locals() else ""
                 return jsonify({'error': f'{error_prefix}Sem chaves disponíveis em estoque local para este produto. Por favor, verifique a API ou adicione chaves manuais.'}), 400
                 
             key_id = key_row['id']
@@ -204,7 +249,8 @@ def redeem_key_admin():
 
         msg_success = 'Chave resgatada e venda registrada com sucesso!'
         if 'api_error_msg' in locals():
-            msg_success = f'Aviso: A KOS API falhou ({api_error_msg}). A chave foi retirada do estoque local.'
+            api_name = api_error_name if 'api_error_name' in locals() else "KOS API"
+            msg_success = f'Aviso: A {api_name} falhou ({api_error_msg}). A chave foi retirada do estoque local.'
 
         return jsonify({
             'success': True,

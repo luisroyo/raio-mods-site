@@ -119,7 +119,7 @@ def process_approved_payment(order_ref: str, p_id: str):
                         
                         if response and response.get("customer", {}).get("username"):
                             username = response["customer"]["username"]
-                            key_value = f"User: {username} | Pass: {password}"
+                            key_value = f"{username}:{password}"
                             cursor = conn.execute(
                                 'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
                                 (order['product_id'], key_value, None)

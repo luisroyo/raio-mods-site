@@ -120,7 +120,7 @@ def redeem_key_admin():
                     import string
                     # Usamos um random id já que aqui é um resgate manual e não há order_id
                     rand_id = ''.join(random.choices(string.digits, k=4))
-                    base_username = f"raio_manual_{rand_id}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
+                    base_username = f"raio_{rand_id}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
                     password = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) + "Aa1"
                     
                     dur = int(api_duration)
@@ -138,7 +138,7 @@ def redeem_key_admin():
                     
                     if response and response.get("customer", {}).get("username"):
                         username = response["customer"]["username"]
-                        generated_key = f"User: {username} | Pass: {password}"
+                        generated_key = f"{username}:{password}"
                         api_key_id = None # Ninja doesn't return an ID like KOS
                         
                         cursor = conn.execute(

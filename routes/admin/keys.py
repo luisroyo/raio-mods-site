@@ -136,8 +136,9 @@ def redeem_key_admin():
                         idempotency_key=idempotency_key
                     )
                     
-                    if response and "username" in response:
-                        generated_key = f"User: {response['username']} | Pass: {password}"
+                    if response and response.get("customer", {}).get("username"):
+                        username = response["customer"]["username"]
+                        generated_key = f"User: {username} | Pass: {password}"
                         api_key_id = None # Ninja doesn't return an ID like KOS
                         
                         cursor = conn.execute(

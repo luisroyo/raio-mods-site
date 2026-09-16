@@ -117,8 +117,9 @@ def process_approved_payment(order_ref: str, p_id: str):
                             idempotency_key=idempotency_key
                         )
                         
-                        if response and "username" in response:
-                            key_value = f"User: {response['username']} | Pass: {password}"
+                        if response and response.get("customer", {}).get("username"):
+                            username = response["customer"]["username"]
+                            key_value = f"User: {username} | Pass: {password}"
                             cursor = conn.execute(
                                 'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
                                 (order['product_id'], key_value, None)

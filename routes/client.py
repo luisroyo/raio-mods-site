@@ -213,7 +213,7 @@ def dashboard_page():
     
     orders = conn.execute('''
         SELECT o.id, o.external_reference, o.amount, o.status, o.created_at, o.qr_code, o.qr_code_base64,
-               p.name as product_name, p.image as product_image,
+               p.name as product_name, p.image as product_image, p.download_link,
                k.key_value
         FROM orders o
         LEFT JOIN products p ON o.product_id = p.id

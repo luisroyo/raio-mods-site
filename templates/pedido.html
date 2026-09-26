@@ -38,7 +38,7 @@
                 <p id="approved-product-name" class="text-gray-400 text-sm mt-1"></p>
             </div>
 
-            <!-- Seção de Download (será mostrada após revelar a chave) -->
+            <!-- Seção de Download (será mostrada assim que aprovado) -->
             <div id="section-download" class="hidden mt-4">
                 <div class="p-5 bg-gradient-to-b from-gray-900 to-black rounded-lg border border-gray-800 shadow-inner">
                     <div class="flex items-center gap-2 mb-3 justify-center">
@@ -53,7 +53,7 @@
                         </svg>
                         CLIQUE AQUI PARA BAIXAR
                     </a>
-                    <p class="text-gray-400 text-xs text-center mt-3">Copie a sua chave acima, ela será necessária para acesso.</p>
+                    <p class="text-gray-400 text-xs text-center mt-3">Copie a sua chave abaixo, ela será necessária para acesso.</p>
                 </div>
             </div>
 
@@ -155,7 +155,12 @@ function showApprovedCard(data) {
     const nameEl = document.getElementById('approved-product-name');
     if (nameEl && productName) nameEl.textContent = productName;
 
-    // O bloco de download não será exibido imediatamente, apenas após revelar a chave
+    // Exibe o link de download imediatamente se existir
+    if (hasDownload && downloadLink) {
+        const sectionDownload = document.getElementById('section-download');
+        sectionDownload.classList.remove('hidden');
+        document.getElementById('btn-download').href = downloadLink;
+    }
 
     // GA4: purchase event
     if (typeof gtag === 'function') {
@@ -221,9 +226,6 @@ async function revealKeyPage() {
             if (linkToUse && linkToUse.trim()) {
                 document.getElementById('section-download').classList.remove('hidden');
                 document.getElementById('btn-download').href = linkToUse;
-                // Move o download para dentro da seção da chave
-                const keySection = document.getElementById('key-revealed');
-                keySection.appendChild(document.getElementById('section-download'));
 
                 if (typeof gtag === 'function') {
                     gtag('event', 'download_link_shown', { order_ref: ORDER_REF });

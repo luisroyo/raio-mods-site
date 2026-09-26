@@ -1,0 +1,231 @@
+{% extends "admin/_base_admin.html" %}
+
+{% block title %}Analytics - Painel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-cyan-400">📊 Analytics do Site</h2>
+    <p class="text-sm text-gray-400">Acompanhe as visitas, origens e o tráfego do seu site.</p>
+</div>
+
+<!-- Grid de Resumo -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">Total Visitas (30d)</p>
+            <h3 class="text-2xl font-black text-white" id="stat-total-visits">0</h3>
+        </div>
+        <div class="text-3xl">👀</div>
+    </div>
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">Visitantes Únicos</p>
+            <h3 class="text-2xl font-black text-white" id="stat-unique-visitors">0</h3>
+        </div>
+        <div class="text-3xl">👤</div>
+    </div>
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">Mobile vs Desktop</p>
+            <h3 class="text-lg font-black text-white" id="stat-devices">0% / 0%</h3>
+        </div>
+        <div class="text-3xl">📱</div>
+    </div>
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">Página Mais Vista</p>
+            <h3 class="text-lg font-black text-white truncate w-32" id="stat-top-page">-</h3>
+        </div>
+        <div class="text-3xl">📄</div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Gráfico de Acessos Diários -->
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow">
+        <h3 class="text-lg font-bold text-white mb-4">Acessos Diários</h3>
+        <canvas id="chart-daily" height="250"></canvas>
+    </div>
+    
+    <!-- Gráfico de Dispositivos/Sistemas -->
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow">
+        <h3 class="text-lg font-bold text-white mb-4">Origem do Tráfego (Referrers)</h3>
+        <canvas id="chart-referrers" height="250"></canvas>
+    </div>
+</div>
+
+<!-- Tabela de Páginas Mais Vistas -->
+<div class="bg-gray-800 rounded border border-gray-700 shadow overflow-hidden mb-8">
+    <div class="p-4 border-b border-gray-700 bg-gray-900/50">
+        <h3 class="text-lg font-bold text-white">Top 10 Páginas</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-gray-700/50 text-xs uppercase font-bold text-gray-400">
+                <tr>
+                    <th class="px-4 py-3">Página (URL)</th>
+                    <th class="px-4 py-3 text-right">Visualizações</th>
+                </tr>
+            </thead>
+            <tbody id="table-pages" class="divide-y divide-gray-700">
+                <tr><td colspan="2" class="px-4 py-4 text-center text-gray-500">Carregando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Últimas 50 Visitas em Tempo Real -->
+<div class="bg-gray-800 rounded border border-gray-700 shadow overflow-hidden mb-8">
+    <div class="p-4 border-b border-gray-700 bg-gray-900/50 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-white">Últimas Visitas</h3>
+        <button onclick="loadAnalytics()" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-3 py-1 rounded">Atualizar</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-gray-700/50 text-xs uppercase font-bold text-gray-400">
+                <tr>
+                    <th class="px-4 py-3">Data/Hora</th>
+                    <th class="px-4 py-3">IP</th>
+                    <th class="px-4 py-3">Dispositivo / OS</th>
+                    <th class="px-4 py-3">Página Acessada</th>
+                    <th class="px-4 py-3">Origem</th>
+                </tr>
+            </thead>
+            <tbody id="table-latest" class="divide-y divide-gray-700">
+                <tr><td colspan="5" class="px-4 py-4 text-center text-gray-500">Carregando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let chartDaily = null;
+    let chartReferrers = null;
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleString('pt-BR');
+    }
+
+    async function loadAnalytics() {
+        try {
+            const res = await fetch('/admin/analytics/data');
+            const data = await res.json();
+            
+            // 1. Calcular Totais
+            let totalVisits = 0;
+            let uniqueVisits = 0;
+            data.daily.forEach(d => {
+                totalVisits += d.total;
+                uniqueVisits += d.unique_visits;
+            });
+            document.getElementById('stat-total-visits').innerText = totalVisits;
+            document.getElementById('stat-unique-visitors').innerText = uniqueVisits;
+
+            // 2. Mobile vs Desktop
+            let mobile = 0; let desktop = 0;
+            data.visits.forEach(v => {
+                if (v.device_type === 'Mobile') mobile++;
+                else desktop++;
+            });
+            const totalDevices = mobile + desktop;
+            if (totalDevices > 0) {
+                const pMobile = Math.round((mobile / totalDevices) * 100);
+                const pDesktop = Math.round((desktop / totalDevices) * 100);
+                document.getElementById('stat-devices').innerText = `${pMobile}% Mob / ${pDesktop}% Desk`;
+            }
+
+            // 3. Top Page
+            if (data.pages.length > 0) {
+                document.getElementById('stat-top-page').innerText = data.pages[0].path;
+                document.getElementById('stat-top-page').title = data.pages[0].path;
+            }
+
+            // 4. Renderizar Gráfico Diário
+            const ctxDaily = document.getElementById('chart-daily').getContext('2d');
+            if (chartDaily) chartDaily.destroy();
+            chartDaily = new Chart(ctxDaily, {
+                type: 'line',
+                data: {
+                    labels: data.daily.map(d => {
+                        const parts = d.day.split('-');
+                        return `${parts[2]}/${parts[1]}`;
+                    }),
+                    datasets: [
+                        {
+                            label: 'Pageviews',
+                            data: data.daily.map(d => d.total),
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Visitantes Únicos',
+                            data: data.daily.map(d => d.unique_visits),
+                            borderColor: '#8b5cf6',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 5. Renderizar Gráfico Referrers
+            const ctxRef = document.getElementById('chart-referrers').getContext('2d');
+            if (chartReferrers) chartReferrers.destroy();
+            chartReferrers = new Chart(ctxRef, {
+                type: 'doughnut',
+                data: {
+                    labels: data.referrers.map(r => {
+                        try { return new URL(r.referrer).hostname; } catch(e) { return r.referrer; }
+                    }),
+                    datasets: [{
+                        data: data.referrers.map(r => r.total),
+                        backgroundColor: ['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 6. Preencher Top Páginas
+            const tbodyPages = document.getElementById('table-pages');
+            tbodyPages.innerHTML = '';
+            data.pages.forEach(p => {
+                tbodyPages.innerHTML += `
+                    <tr class="hover:bg-gray-700/30">
+                        <td class="px-4 py-2 font-mono text-cyan-400">${p.path}</td>
+                        <td class="px-4 py-2 text-right font-bold text-white">${p.total}</td>
+                    </tr>
+                `;
+            });
+
+            // 7. Preencher Últimas Visitas
+            const tbodyLatest = document.getElementById('table-latest');
+            tbodyLatest.innerHTML = '';
+            data.visits.slice(0, 50).forEach(v => {
+                tbodyLatest.innerHTML += `
+                    <tr class="hover:bg-gray-700/30">
+                        <td class="px-4 py-2 text-xs">${formatDate(v.created_at)}</td>
+                        <td class="px-4 py-2 text-xs font-mono text-gray-400">${v.ip_address || '-'}</td>
+                        <td class="px-4 py-2 text-xs">${v.device_type} / ${v.os || '-'}</td>
+                        <td class="px-4 py-2 text-xs text-cyan-400 truncate max-w-[200px]" title="${v.path}">${v.path}</td>
+                        <td class="px-4 py-2 text-xs text-gray-400 truncate max-w-[200px]">${v.referrer || 'Direto'}</td>
+                    </tr>
+                `;
+            });
+
+        } catch (error) {
+            console.error("Erro ao carregar analytics", error);
+        }
+    }
+
+    // Load on start
+    document.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
+{% endblock %}

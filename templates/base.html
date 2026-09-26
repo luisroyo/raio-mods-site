@@ -76,6 +76,40 @@
             });
         }
     </script>
+    <script>
+        // Analytics Interno - Tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Parse UTMs
+                const urlParams = new URLSearchParams(window.location.search);
+                const trackData = {
+                    url: window.location.href,
+                    path: window.location.pathname,
+                    referrer: document.referrer || '',
+                    utm_source: urlParams.get('utm_source') || '',
+                    utm_medium: urlParams.get('utm_medium') || '',
+                    utm_campaign: urlParams.get('utm_campaign') || '',
+                    device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+                    browser: navigator.userAgent,
+                    os: navigator.platform,
+                    screen_resolution: window.screen.width + 'x' + window.screen.height,
+                    visitor_id: localStorage.getItem('visitor_id') || ''
+                };
+                
+                if (!trackData.visitor_id) {
+                    trackData.visitor_id = 'v_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+                    localStorage.setItem('visitor_id', trackData.visitor_id);
+                }
+
+                // Send silently
+                fetch('/api/track', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(trackData)
+                }).catch(e => {});
+            } catch(e) {}
+        });
+    </script>
 </head>
 
 <body class="circuit-pattern pb-20 sm:pb-0">

@@ -27,6 +27,7 @@ from .feedbacks import register_feedbacks_routes
 from .coupons import register_coupons_routes
 from .resellers import register_resellers_routes
 from .commissions import register_commissions_routes
+from .analytics import register_analytics_routes
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -41,6 +42,7 @@ register_feedbacks_routes(admin_bp)
 register_coupons_routes(admin_bp)
 register_resellers_routes(admin_bp)
 register_commissions_routes(admin_bp)
+register_analytics_routes(admin_bp)
 
 
 # --- FUNÇÃO AUXILIAR PARA DADOS ADMIN ---

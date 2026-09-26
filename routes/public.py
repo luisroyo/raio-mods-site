@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app, jsonify, session
 from database.models import get_db_connection
 from utils.promo import get_active_global_promo, apply_global_promo
 
@@ -636,3 +636,55 @@ def lucky_spin():
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
     finally:
         conn.close()
+
+import uuid
+from contextlib import closing
+
+def _get_client_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        return request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
+    return request.remote_addr
+
+@public_bp.route('/api/track', methods=['POST'])
+def track_visit():
+    data = request.json or {}
+    
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        
+    session_id = session['session_id']
+    visitor_id = data.get('visitor_id', '')
+    url = data.get('url', '')
+    path = data.get('path', '')
+    referrer = data.get('referrer', '')
+    utm_source = data.get('utm_source', '')
+    utm_medium = data.get('utm_medium', '')
+    utm_campaign = data.get('utm_campaign', '')
+    device_type = data.get('device_type', '')
+    browser = data.get('browser', '')
+    os_name = data.get('os', '')
+    screen = data.get('screen_resolution', '')
+    
+    user_agent = request.headers.get('User-Agent', '')
+    ip_address = _get_client_ip()
+    
+    try:
+        with closing(get_db_connection()) as conn:
+            conn.execute('''
+                INSERT INTO visits (
+                    session_id, visitor_id, url, path, referrer,
+                    utm_source, utm_medium, utm_campaign,
+                    user_agent, device_type, browser, os,
+                    screen_resolution, ip_address
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                session_id, visitor_id, url, path, referrer,
+                utm_source, utm_medium, utm_campaign,
+                user_agent, device_type, browser, os_name,
+                screen, ip_address
+            ))
+            conn.commit()
+    except Exception as e:
+        print(f"Tracking error: {e}")
+        
+    return jsonify({"status": "ok"})

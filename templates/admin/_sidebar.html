@@ -28,6 +28,12 @@
             📊 Dashboard
         </a>
         
+        <a href="{{ url_for('admin.analytics_page') }}" 
+           class="flex items-center gap-3 px-3 py-3 rounded-lg transition text-sm
+                  {% if request.endpoint == 'admin.analytics_page' %}bg-blue-500/20 text-blue-400 border border-blue-500{% else %}text-gray-300 hover:bg-gray-800{% endif %}">
+            📈 Analytics
+        </a>
+        
         <a href="{{ url_for('admin.admin_produtos') }}" 
            class="flex items-center gap-3 px-3 py-3 rounded-lg transition text-sm
                   {% if request.endpoint == 'admin.admin_produtos' %}bg-purple-500/20 text-purple-400 border border-purple-500{% else %}text-gray-300 hover:bg-gray-800{% endif %}">

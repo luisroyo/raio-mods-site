@@ -370,3 +370,29 @@ def run_schema_migrations(cursor, is_real_postgres):
         print("--> Tabela commissions verificada/criada com sucesso.")
     except Exception as e:
         print(f"[BD] Erro ao criar tabela commissions: {e}")
+
+    try:
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS visits (
+                id {pk_type},
+                session_id TEXT,
+                visitor_id TEXT,
+                url TEXT,
+                path TEXT,
+                referrer TEXT,
+                utm_source TEXT,
+                utm_medium TEXT,
+                utm_campaign TEXT,
+                user_agent TEXT,
+                device_type TEXT,
+                browser TEXT,
+                os TEXT,
+                screen_resolution TEXT,
+                ip_address TEXT,
+                country TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        print("--> Tabela visits verificada/criada com sucesso.")
+    except Exception as e:
+        print(f"[BD] Erro ao criar tabela visits: {e}")

@@ -254,3 +254,26 @@ def create_tables(cursor):
             FOREIGN KEY (reseller_id) REFERENCES clients (id)
         )
     ''')
+
+    # 14. Tabela de Visitas (Analytics)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS visits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT,
+            visitor_id TEXT,
+            url TEXT,
+            path TEXT,
+            referrer TEXT,
+            utm_source TEXT,
+            utm_medium TEXT,
+            utm_campaign TEXT,
+            user_agent TEXT,
+            device_type TEXT,
+            browser TEXT,
+            os TEXT,
+            screen_resolution TEXT,
+            ip_address TEXT,
+            country TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')

@@ -1,0 +1,66 @@
+from flask import request, jsonify, session, render_template, redirect, url_for
+from database.models import get_db_connection
+
+def get_analytics_data():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    conn = get_db_connection()
+    # Pega ultimas 500 visitas
+    visits = conn.execute('''
+        SELECT * FROM visits 
+        ORDER BY created_at DESC 
+        LIMIT 1000
+    ''').fetchall()
+    
+    # Sumariza pageviews por dia (ultimos 30 dias)
+    daily_views = conn.execute('''
+        SELECT date(created_at) as day, count(*) as total, count(DISTINCT session_id) as unique_visits
+        FROM visits
+        WHERE created_at >= date('now', '-30 days')
+        GROUP BY day
+        ORDER BY day ASC
+    ''').fetchall()
+    
+    # Top referrers
+    top_referrers = conn.execute('''
+        SELECT referrer, count(*) as total
+        FROM visits
+        WHERE referrer != '' AND referrer IS NOT NULL
+        GROUP BY referrer
+        ORDER BY total DESC
+        LIMIT 10
+    ''').fetchall()
+    
+    # Top pages
+    top_pages = conn.execute('''
+        SELECT path, count(*) as total
+        FROM visits
+        GROUP BY path
+        ORDER BY total DESC
+        LIMIT 10
+    ''').fetchall()
+
+    conn.close()
+    
+    return jsonify({
+        'visits': [dict(v) for v in visits],
+        'daily': [dict(d) for d in daily_views],
+        'referrers': [dict(r) for r in top_referrers],
+        'pages': [dict(p) for p in top_pages]
+    })
+
+def register_analytics_routes(bp):
+    @bp.route('/analytics')
+    def analytics_page():
+        if not session.get('admin_logged_in'):
+            return redirect(url_for('public.admin_login'))
+        
+        # O base admin precisa de algumas variáveis, mas vamos tentar renderizar direto
+        # Caso quebre algo, precisaremos importar _get_admin_data ou passar vars básicas
+        from .__init__ import _get_admin_data
+        admin_data = _get_admin_data()
+        
+        return render_template('admin/analytics.html', **admin_data)
+
+    bp.add_url_rule('/analytics/data', view_func=get_analytics_data, methods=['GET'])

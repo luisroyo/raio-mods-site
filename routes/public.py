@@ -405,7 +405,7 @@ def pedido_status(order_ref):
     whatsapp_contact = _get_whatsapp_from_config(conn)
     
     order = conn.execute('''
-        SELECT p.name as product_name, p.download_link
+        SELECT p.name as product_name, p.download_link, p.download_link_ios
         FROM orders o
         JOIN products p ON o.product_id = p.id
         WHERE o.external_reference = ?
@@ -413,10 +413,12 @@ def pedido_status(order_ref):
     
     product_name = order['product_name'] if order else "Produto"
     download_link = order['download_link'] if order and 'download_link' in order.keys() else ""
+    download_link_ios = order['download_link_ios'] if order and 'download_link_ios' in order.keys() else ""
     conn.close()
     
     return render_template('pedido.html', order_ref=order_ref, mp_status=mp_status, 
-                           whatsapp_contact=whatsapp_contact, product_name=product_name, download_link=download_link)
+                           whatsapp_contact=whatsapp_contact, product_name=product_name, 
+                           download_link=download_link, download_link_ios=download_link_ios)
 
 @public_bp.route('/seguranca')
 def seguranca():

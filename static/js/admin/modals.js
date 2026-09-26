@@ -37,7 +37,7 @@ function openEditModal(
     tagline, sort, pid, isCat,
     payUrl, promoPrice, promoLabel, costUsd, costBrl, applyIoF, isActive, supplier, resellerPrice, downloadLink, linkId,
     namePt, nameEn, nameEs, descPt, descEn, descEs, priceBrl, priceUsd, defaultCurrency, translationStatus, platform,
-    apiGameType, apiDuration
+    apiGameType, apiDuration, downloadLinkIos
 ) {
     setVal('edit_id', id);
     setVal('edit_name', name);
@@ -49,6 +49,7 @@ function openEditModal(
     setVal('edit_is_catalog', isCat);
     setVal('edit_payment_url', payUrl);
     setVal('edit_download_link', downloadLink || '');
+    setVal('edit_download_link_ios', downloadLinkIos || '');
     
     // Set link_id and update preview
     const linkSelect = document.getElementById('edit_link_id');

@@ -26,7 +26,9 @@ def create_tables(cursor):
             translation_status TEXT DEFAULT "draft",
             link_id INTEGER REFERENCES links(id),
             api_game_type TEXT DEFAULT "",
-            api_duration INTEGER
+            api_duration INTEGER,
+            download_link TEXT DEFAULT "",
+            download_link_ios TEXT DEFAULT ""
         )
     ''')
     

@@ -449,7 +449,10 @@
                     <div class="mt-auto space-y-3">
                         {% if o.status == 'approved' %}
                             {% if o.download_link %}
-                                <a href="{{ o.download_link }}" target="_blank" rel="noopener noreferrer" class="block w-full py-3 mb-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-black uppercase text-center rounded text-sm shadow-[0_0_15px_rgba(0,242,255,0.3)] transition">⬇️ Baixar Arquivo</a>
+                                <a href="{{ o.download_link }}" target="_blank" rel="noopener noreferrer" class="block w-full py-3 mb-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-black uppercase text-center rounded text-sm shadow-[0_0_15px_rgba(0,242,255,0.3)] transition">⬇️ Baixar para Android</a>
+                            {% endif %}
+                            {% if o.download_link_ios %}
+                                <a href="{{ o.download_link_ios }}" target="_blank" rel="noopener noreferrer" class="block w-full py-3 mb-2 bg-gradient-to-r from-gray-200 to-white hover:from-white hover:to-gray-100 text-black font-black uppercase text-center rounded text-sm shadow-[0_0_15px_rgba(255,255,255,0.2)] transition">🍎 Baixar para iOS</a>
                             {% endif %}
                             {% if o.key_value %}
                                 <div class="bg-black border border-cyan-500/30 p-3 rounded text-center">

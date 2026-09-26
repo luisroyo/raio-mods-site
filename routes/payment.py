@@ -794,6 +794,7 @@ def check_status(order_ref):
             SELECT o.status, o.key_assigned_id,
                    p.name AS product_name,
                    p.download_link,
+                   p.download_link_ios,
                    l.download_link AS linked_download_url
             FROM orders o
             LEFT JOIN products p ON o.product_id = p.id
@@ -814,11 +815,14 @@ def check_status(order_ref):
         else:
             download_link = download_link.strip()
             
+        download_link_ios = row_dict.get('download_link_ios') or ''
+            
         return jsonify({
             'status': 'ready_to_reveal',
             'product_name': row_dict.get('product_name') or '',
             'download_link': download_link,
-            'has_download': bool(download_link.strip())
+            'download_link_ios': download_link_ios,
+            'has_download': bool(download_link.strip() or download_link_ios.strip())
         })
 
     if row['status'] == 'approved':
@@ -864,7 +868,7 @@ def reveal_key(order_ref):
     """
     with closing(get_db_connection()) as conn:
         order = conn.execute('''
-            SELECT o.*, k.key_value, p.download_link, l.download_link AS linked_download_url
+            SELECT o.*, k.key_value, p.download_link, p.download_link_ios, l.download_link AS linked_download_url
             FROM orders o
             LEFT JOIN product_keys k ON o.key_assigned_id = k.id
             LEFT JOIN products p ON o.product_id = p.id
@@ -903,6 +907,13 @@ def reveal_key(order_ref):
         download_link = order_dict.get('download_link') or ''
     else:
         download_link = download_link.strip()
+        
+    download_link_ios = order_dict.get('download_link_ios') or ''
 
     # Retorna a chave e o link
-    return jsonify({'status': 'revealed', 'key': key_value, 'download_link': download_link})
+    return jsonify({
+        'status': 'revealed', 
+        'key': key_value, 
+        'download_link': download_link,
+        'download_link_ios': download_link_ios
+    })

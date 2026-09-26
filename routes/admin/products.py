@@ -24,6 +24,7 @@ def add_product():
     link_id_val = request.form.get('link_id', '').strip()
     link_id = int(link_id_val) if link_id_val and link_id_val.isdigit() else None
     download_link = (request.form.get('download_link') or '').strip()
+    download_link_ios = (request.form.get('download_link_ios') or '').strip()
     platform = (request.form.get('platform') or '').strip().lower()
     
     api_game_type = (request.form.get('api_game_type') or '').strip()
@@ -144,14 +145,14 @@ def add_product():
             '''INSERT INTO products (
                 name, description, price, image, category, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
-                reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
+                reseller_price, download_link, download_link_ios, name_pt, name_en, name_es, description_pt, description_en, 
                 description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
                 api_game_type, api_duration
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (
                 name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
-                reseller_price, download_link, name_pt, name_en, name_es, description_pt, description_en, 
+                reseller_price, download_link, download_link_ios, name_pt, name_en, name_es, description_pt, description_en, 
                 description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
                 api_game_type, api_duration
             )
@@ -237,6 +238,12 @@ def edit_product(pid):
             download_link = download_link.strip()
         else:
             download_link = existing.get('download_link', '')
+            
+        download_link_ios = request.form.get('download_link_ios')
+        if download_link_ios is not None:
+            download_link_ios = download_link_ios.strip()
+        else:
+            download_link_ios = existing.get('download_link_ios', '')
             
         link_id_val = request.form.get('link_id')
         if link_id_val is not None:
@@ -418,7 +425,7 @@ def edit_product(pid):
             '''UPDATE products SET 
                 name=?, description=?, price=?, image=?, category=?, tagline=?, sort_order=?, parent_id=?, 
                 is_catalog=?, payment_url=?, promo_price=?, promo_label=?, cost_usd=?, cost_brl=?, apply_iof=?, 
-                is_active=?, supplier=?, reseller_price=?, download_link=?,
+                is_active=?, supplier=?, reseller_price=?, download_link=?, download_link_ios=?,
                 name_pt=?, name_en=?, name_es=?, description_pt=?, description_en=?, description_es=?,
                 price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?, platform=?, pays_commission=?,
                 api_game_type=?, api_duration=?
@@ -426,7 +433,7 @@ def edit_product(pid):
             (
                 name, desc, price, img, cat, tagline, sort, pid_val, 
                 is_catalog, payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, 
-                is_active, supplier, reseller_price, download_link,
+                is_active, supplier, reseller_price, download_link, download_link_ios,
                 name_pt, name_en, name_es, description_pt, description_en, description_es,
                 price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
                 api_game_type, api_duration,

@@ -23,15 +23,32 @@ def get_analytics_data():
             ORDER BY day ASC
         ''').fetchall()
         
-        # Top referrers
-        top_referrers = conn.execute('''
-            SELECT referrer, count(*) as total
+        # Top referrers (Ignorando tráfego interno)
+        raw_referrers = conn.execute('''
+            SELECT referrer
             FROM visits
             WHERE referrer != '' AND referrer IS NOT NULL
-            GROUP BY referrer
-            ORDER BY total DESC
-            LIMIT 10
+              AND referrer NOT LIKE '%raiomodsgames.pythonanywhere.com%'
+              AND referrer NOT LIKE '%127.0.0.1%'
+              AND referrer NOT LIKE '%localhost%'
         ''').fetchall()
+        
+        from urllib.parse import urlparse
+        from collections import Counter
+        
+        domains = []
+        for r in raw_referrers:
+            try:
+                domain = urlparse(r['referrer']).hostname
+                if domain:
+                    domains.append(domain)
+                else:
+                    domains.append(r['referrer'])
+            except:
+                domains.append(r['referrer'])
+                
+        domain_counts = Counter(domains)
+        top_referrers = [{'referrer': k, 'total': v} for k, v in domain_counts.most_common(10)]
         
         # Top pages
         top_pages = conn.execute('''

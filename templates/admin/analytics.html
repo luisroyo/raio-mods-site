@@ -43,15 +43,19 @@
 <!-- Gráficos -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Gráfico de Acessos Diários -->
-    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow">
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow flex flex-col">
         <h3 class="text-lg font-bold text-white mb-4">Acessos Diários</h3>
-        <canvas id="chart-daily" height="250"></canvas>
+        <div class="relative w-full h-64 flex-1">
+            <canvas id="chart-daily"></canvas>
+        </div>
     </div>
     
     <!-- Gráfico de Dispositivos/Sistemas -->
-    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow">
+    <div class="bg-gray-800 p-4 rounded border border-gray-700 shadow flex flex-col">
         <h3 class="text-lg font-bold text-white mb-4">Origem do Tráfego (Referrers)</h3>
-        <canvas id="chart-referrers" height="250"></canvas>
+        <div class="relative w-full h-64 flex-1">
+            <canvas id="chart-referrers"></canvas>
+        </div>
     </div>
 </div>
 

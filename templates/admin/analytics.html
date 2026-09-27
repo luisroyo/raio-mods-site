@@ -109,6 +109,12 @@
     let chartReferrers = null;
 
     function formatDate(dateStr) {
+        // Garantir que a string seja lida como UTC para que o navegador converta pro horário local (Brasil)
+        if (dateStr && !dateStr.includes('T')) {
+            dateStr = dateStr.replace(' ', 'T') + 'Z';
+        } else if (dateStr && !dateStr.endsWith('Z') && !dateStr.includes('+')) {
+            dateStr = dateStr + 'Z';
+        }
         const d = new Date(dateStr);
         return d.toLocaleString('pt-BR');
     }

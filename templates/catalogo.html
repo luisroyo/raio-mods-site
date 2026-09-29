@@ -108,7 +108,7 @@
 
         {# LÓGICA DE PRODUTOS SIMPLES #}
         {% else %}
-        <div class="catalog-product-card group product-card-item relative p-3 sm:p-4 flex flex-col h-full" 
+        <div class="product-card-item relative h-full" 
             data-category="{{ product.category or 'Sem categoria' }}"
             data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
             
@@ -121,6 +121,8 @@
                 💰 ECONOMIZE [Valor]
             </div>
             {% endif %}
+
+            <div class="catalog-product-card group relative p-3 sm:p-4 flex flex-col h-full">
 
             <div class="badge-status absolute top-2 right-2 sm:top-4 sm:right-4 z-10 scale-75 sm:scale-100 origin-top-right">
                 <div class="dot"></div>
@@ -171,11 +173,12 @@
                 {% endif %}
             </div>
 
-            {% set display_price = product.promo_price or product.price %}
-            <button onclick="openCheckout({{ product.id }}, '{{ product.name|replace('\'', '\\\'') }}', '{{ display_price }}', '{{ product.platform|default('') }}')"
-                class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 py-2 text-sm cursor-pointer mb-2">
-                <span>🛒 {{ _('buy', 'Comprar') }}</span>
-            </button>
+                {% set display_price = product.promo_price or product.price %}
+                <button onclick="openCheckout({{ product.id }}, '{{ product.name|replace('\'', '\\\'') }}', '{{ display_price }}', '{{ product.platform|default('') }}')"
+                    class="catalog-btn-buy hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] transition-all w-full flex items-center justify-center gap-2 py-2 text-sm cursor-pointer mb-2">
+                    <span>🛒 {{ _('buy', 'Comprar') }}</span>
+                </button>
+            </div>
         </div>
         {% endif %}
         {% endfor %}

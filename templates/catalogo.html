@@ -112,17 +112,20 @@
             data-category="{{ product.category or 'Sem categoria' }}"
             data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
             
-            {% if '30 dias' in product.name.lower() or 'mensal' in product.name.lower() %}
-            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full z-20 whitespace-nowrap shadow-[0_0_8px_rgba(234,179,8,0.6)]">
-                🔥 MAIS POPULAR
-            </div>
-            {% elif '7 dias' in product.name.lower() or 'semanal' in product.name.lower() %}
-            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-500 text-black text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full z-20 whitespace-nowrap shadow-[0_0_8px_rgba(34,197,94,0.6)]">
-                💰 ECONOMIZE [Valor]
-            </div>
-            {% endif %}
-
-            <div class="catalog-product-card group relative p-3 sm:p-4 flex flex-col h-full">
+            <div class="catalog-product-card group relative p-3 sm:p-4 flex flex-col h-full overflow-hidden">
+                {% if '30 dias' in product.name.lower() or 'mensal' in product.name.lower() %}
+                <div class="absolute top-0 left-0 right-0 flex justify-center z-20">
+                    <div class="bg-yellow-500 text-black text-[9px] sm:text-[10px] font-bold px-3 py-0.5 rounded-b-lg shadow-[0_4px_10px_rgba(234,179,8,0.4)]">
+                        🔥 MAIS POPULAR
+                    </div>
+                </div>
+                {% elif '7 dias' in product.name.lower() or 'semanal' in product.name.lower() %}
+                <div class="absolute top-0 left-0 right-0 flex justify-center z-20">
+                    <div class="bg-green-500 text-black text-[9px] sm:text-[10px] font-bold px-3 py-0.5 rounded-b-lg shadow-[0_4px_10px_rgba(34,197,94,0.4)]">
+                        💰 ECONOMIZE [Valor]
+                    </div>
+                </div>
+                {% endif %}
 
             <div class="badge-status absolute top-2 right-2 sm:top-4 sm:right-4 z-10 scale-75 sm:scale-100 origin-top-right">
                 <div class="dot"></div>

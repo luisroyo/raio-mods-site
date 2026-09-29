@@ -330,10 +330,14 @@
                         class="absolute bottom-2 right-2 bg-neon-cyan text-black text-[10px] font-bold px-2 py-1 rounded hover:bg-white">COPIAR</button>
                 </div>
 
-                <div class="flex items-center justify-center gap-2 text-neon-green animate-pulse">
+                <div class="flex items-center justify-center gap-2 text-neon-green animate-pulse mb-6">
                     <div class="w-2 h-2 bg-neon-green rounded-full"></div>
                     <span class="text-sm font-bold">Aguardando pagamento...</span>
                 </div>
+
+                <button onclick="document.getElementById('step-payment').classList.add('hidden'); document.getElementById('step-email').classList.remove('hidden'); if(window.paymentCheckInterval){clearInterval(window.paymentCheckInterval); window.paymentCheckInterval=null;} const btnPix = document.getElementById('btnPayPix'); const btnCard = document.getElementById('btnPayCard'); if(btnPix){btnPix.disabled = false; btnPix.innerHTML = '<span>PIX (Com Desconto)</span><svg class=\'w-5 h-5 ml-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M13 10V3L4 14h7v7l9-11h-7z\'></path></svg>';} if(btnCard){btnCard.disabled = false; btnCard.innerHTML = '<span>Cartão / Outros</span><svg class=\'w-5 h-5 ml-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z\'></path></svg>';}" class="text-gray-400 hover:text-white text-xs underline decoration-gray-500 hover:decoration-white transition-all cursor-pointer">
+                    ← Voltar e escolher outra forma de pagamento
+                </button>
             </div>
 
             <!-- PASSO 2.5: REVELAR CHAVE (Prova de Consumo) -->

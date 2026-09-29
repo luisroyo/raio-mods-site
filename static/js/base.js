@@ -140,7 +140,19 @@ function openCheckout(id, name, price, platform = '') {
         btnCoupon.disabled = false;
         btnCoupon.innerText = 'Aplicar';
     }
-    
+
+    // Reseta botões de pagamento (caso tenha fechado o modal no meio do loading)
+    const btnPix = document.getElementById('btnPayPix');
+    const btnCard = document.getElementById('btnPayCard');
+    if(btnPix) {
+        btnPix.disabled = false;
+        btnPix.innerHTML = `<span>PIX (Com Desconto)</span><svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`;
+    }
+    if(btnCard) {
+        btnCard.disabled = false;
+        btnCard.innerHTML = `<span>Cartão / Outros</span><svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>`;
+    }
+
     // Configura o aviso de plataforma
     const warningDiv = document.getElementById('platformWarning');
     const warningText = document.getElementById('platformWarningText');

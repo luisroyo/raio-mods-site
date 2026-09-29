@@ -10,15 +10,21 @@ def get_analytics_data():
         # Pega ultimas 500 visitas
         visits = conn.execute('''
             SELECT * FROM visits 
+            WHERE user_agent NOT LIKE '%bot%' 
+              AND user_agent NOT LIKE '%spider%' 
+              AND user_agent NOT LIKE '%crawler%'
             ORDER BY created_at DESC 
             LIMIT 1000
         ''').fetchall()
         
         # Sumariza pageviews por dia (ultimos 30 dias)
         daily_views = conn.execute('''
-            SELECT date(created_at) as day, count(*) as total, count(DISTINCT session_id) as unique_visits
+            SELECT date(created_at) as day, count(*) as total, count(DISTINCT ip_address) as unique_visits
             FROM visits
             WHERE created_at >= date('now', '-30 days')
+              AND user_agent NOT LIKE '%bot%' 
+              AND user_agent NOT LIKE '%spider%' 
+              AND user_agent NOT LIKE '%crawler%'
             GROUP BY day
             ORDER BY day ASC
         ''').fetchall()
@@ -31,6 +37,9 @@ def get_analytics_data():
               AND referrer NOT LIKE '%raiomodsgames.pythonanywhere.com%'
               AND referrer NOT LIKE '%127.0.0.1%'
               AND referrer NOT LIKE '%localhost%'
+              AND user_agent NOT LIKE '%bot%' 
+              AND user_agent NOT LIKE '%spider%' 
+              AND user_agent NOT LIKE '%crawler%'
         ''').fetchall()
         
         from urllib.parse import urlparse
@@ -54,6 +63,9 @@ def get_analytics_data():
         top_pages = conn.execute('''
             SELECT path, count(*) as total
             FROM visits
+            WHERE user_agent NOT LIKE '%bot%' 
+              AND user_agent NOT LIKE '%spider%' 
+              AND user_agent NOT LIKE '%crawler%'
             GROUP BY path
             ORDER BY total DESC
             LIMIT 10

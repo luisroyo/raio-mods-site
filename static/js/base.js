@@ -260,9 +260,8 @@ async function startPayment(type) {
     const btnPix = document.getElementById('btnPayPix');
     const btnCard = document.getElementById('btnPayCard');
     
-    const nameParts = name.trim().split(/\s+/);
-    if (!name || nameParts.length < 2 || nameParts[0].length < 2 || nameParts[1].length < 2) {
-        showToast('Por favor, digite seu NOME e SOBRENOME corretamente. Apelidos ou apenas o primeiro nome não são aceitos.', 'warning');
+    if (!name) {
+        showToast('Por favor, preencha o seu nome.', 'warning');
         return;
     }
     if (!email || !email.includes('@')) {

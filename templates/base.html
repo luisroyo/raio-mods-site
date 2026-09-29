@@ -260,7 +260,7 @@
                 <div class="text-center mb-2">
                     <p class="text-gray-300 text-sm">Preencha seus dados para finalizar:</p>
                 </div>
-                <input type="text" id="customerName" placeholder="Nome Completo *"
+                <input type="text" id="customerName" placeholder="Nome / Apelido"
                     class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
                 <input type="email" id="customerEmail" placeholder="E-mail *"
                     class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:border-neon-cyan focus:outline-none transition-colors">
@@ -291,11 +291,7 @@
                     <input type="checkbox" id="customerTerms"
                         class="mt-1 accent-cyan-400 w-4 h-4 flex-shrink-0">
                     <span class="text-[11px] text-gray-400 leading-snug">
-                        Declaro que li e aceito os <a href="/termos" target="_blank" class="text-cyan-400 underline hover:text-white">Termos de Serviço</a>
-                        e a <a href="/privacidade" target="_blank" class="text-cyan-400 underline hover:text-white">Política de Privacidade</a>.
-                        Entendo que, por se tratar de um produto digital de entrega automática e imediata,
-                        <strong class="text-gray-300">não há possibilidade de devolução ou reembolso após a ativação</strong>.
-                        Confirmo ser o titular do cartão/conta e que os dados informados são verdadeiros.
+                        Declaro que li e aceito os <a href="/termos" target="_blank" class="text-cyan-400 underline hover:text-white">Termos de Serviço</a> e a <a href="/privacidade" target="_blank" class="text-cyan-400 underline hover:text-white">Política de Privacidade</a> (Sem reembolso para licenças digitais após a ativação).
                     </span>
                 </label>
 
@@ -303,7 +299,7 @@
                     <button onclick="startPayment('pix')" id="btnPayPix"
                         class="w-full btn-gradient flex justify-center items-center gap-2 py-3 rounded-xl font-bold">
                         <img src="https://logopng.com.br/logos/pix-106.svg" class="h-5 w-5" alt="Pix" style="filter: brightness(0);">
-                        <span class="text-black">PIX (Preço Normal)</span>
+                        <span class="text-black">PIX (Com Desconto)</span>
                     </button>
 
                     <button onclick="startPayment('card')" id="btnPayCard"
@@ -312,7 +308,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
-                        <span>Cartão / Outros (+7% Taxa)</span>
+                        <span>Cartão / Outros</span>
                     </button>
                 </div>
 

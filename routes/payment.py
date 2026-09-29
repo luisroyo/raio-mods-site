@@ -663,7 +663,6 @@ def create_payment():
                 qr_base64 = pix_res.get('qr_code_base64')
                 response_data.update(pix_res)
             else:
-                final_price = round(final_price * 1.07, 2)
                 card_payer = {
                     "email": email,
                     "name": first_name,

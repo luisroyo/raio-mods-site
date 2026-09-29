@@ -83,7 +83,7 @@
                     {% if product.platform == 'android' %}🤖 Android{% elif product.platform == 'ios' %}🍎 iOS{% elif product.platform == 'ambos' %}📱 Universal{% elif product.platform == 'pc' %}💻 PC{% else %}{{ product.platform }}{% endif %}
                 </span>
                 {% endif %}
-                <p class="text-gray-400 text-xs mb-4 min-h-[30px] leading-relaxed">{{ product.description }}</p>
+
                 <div class="catalog-btn py-1.5 px-4 text-xs">
                     <span>📂 {{ _('open_catalog', 'ABRIR CATÁLOGO') }}</span>
                 </div>
@@ -124,7 +124,7 @@
                 {% if product.platform == 'android' %}🤖 Android{% elif product.platform == 'ios' %}🍎 iOS{% elif product.platform == 'ambos' %}📱 Universal{% elif product.platform == 'pc' %}💻 PC{% else %}{{ product.platform }}{% endif %}
             </span>
             {% endif %}
-            <p class="text-gray-400 mb-4 text-xs flex-grow leading-relaxed">{{ product.description }}</p>
+
             <div class="mt-auto">
                 {% if product.promo_price %}
                 <p class="text-sm text-gray-500 line-through mb-0.5">{{ product.price }}</p>

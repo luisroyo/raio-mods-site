@@ -43,28 +43,7 @@ def _safe_page_param():
 from flask import session
 from utils.i18n import get_current_language, get_current_currency
 
-@public_bp.route('/set_locale')
-def set_locale():
-    lang = request.args.get('lang')
-    currency = request.args.get('currency')
-    next_url = request.args.get('next') or url_for('public.index')
-    
-    if lang in ['pt', 'en', 'es']:
-        session['lang'] = lang
-        if not currency:
-            session['currency'] = 'BRL' if lang == 'pt' else 'USD'
-            
-    if currency in ['BRL', 'USD']:
-        session['currency'] = currency
-        
-    response = redirect(next_url)
-    
-    if lang:
-        response.set_cookie('lang', lang, max_age=30*24*60*60)
-    if currency:
-        response.set_cookie('currency', currency, max_age=30*24*60*60)
-        
-    return response
+
 
 def localize_product(p_row):
     if not p_row:

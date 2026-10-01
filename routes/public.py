@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory, current_app, jsonify, session
 from database.models import get_db_connection
-from utils.promo import get_active_global_promo, apply_global_promo
+from utils.promo import get_active_global_promo, apply_global_promo, parse_price
 
 public_bp = Blueprint('public', __name__)
 
@@ -160,6 +160,42 @@ def index():
 
     legacy = conn.execute('SELECT parent_id FROM products WHERE parent_id IS NOT NULL').fetchall()
     for r in legacy: catalog_ids.add(r[0])
+
+    # Lógica de Starting Price (menor preço efetivo com promos para os catálogos)
+    displayed_catalog_ids = [p['id'] for p in products_list if p['id'] in catalog_ids]
+    if displayed_catalog_ids:
+        placeholders = ','.join('?' * len(displayed_catalog_ids))
+        children_query = f'''
+            SELECT *
+            FROM products 
+            WHERE parent_id IN ({placeholders}) AND is_active = 1
+        '''
+        children_rows = conn.execute(children_query, displayed_catalog_ids).fetchall()
+        
+        children_by_parent = {}
+        for row in children_rows:
+            pid = row['parent_id']
+            if pid not in children_by_parent:
+                children_by_parent[pid] = []
+            
+            # Formata igual o produto apareceria no frontend para achar o menor valor efetivo
+            child_formatted = localize_product(apply_global_promo(dict(row), promo))
+            
+            price_val = parse_price(child_formatted.get('price'))
+            promo_val = parse_price(child_formatted.get('promo_price')) if child_formatted.get('promo_price') else float('inf')
+            
+            effective_price = min(price_val, promo_val)
+            children_by_parent[pid].append(effective_price)
+            
+        for p in products_list:
+            if p['id'] in children_by_parent and children_by_parent[p['id']]:
+                min_price = min(children_by_parent[p['id']])
+                dummy = {
+                    "price_brl": min_price,
+                    "price_usd": 0,
+                    "price": f"R$ {min_price:.2f}".replace('.', ',')
+                }
+                p['starting_price'] = localize_product(dummy)['price']
 
     # Estoque só para produtos “soltos” (que têm botão Comprar)
     standalone_ids = [p['id'] for p in products_list if p['id'] not in catalog_ids]

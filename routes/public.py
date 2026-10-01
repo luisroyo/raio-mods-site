@@ -166,9 +166,10 @@ def index():
     if displayed_catalog_ids:
         placeholders = ','.join('?' * len(displayed_catalog_ids))
         children_query = f'''
-            SELECT *
-            FROM products 
-            WHERE parent_id IN ({placeholders}) AND is_active = 1
+            SELECT p.*
+            FROM products p
+            WHERE p.parent_id IN ({placeholders}) AND p.is_active = 1
+              AND (SELECT COUNT(*) FROM product_keys k WHERE k.product_id = p.id AND k.is_used = 0) > 0
         '''
         children_rows = conn.execute(children_query, displayed_catalog_ids).fetchall()
         

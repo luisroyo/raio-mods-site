@@ -560,6 +560,7 @@ async function revealKey() {
         }
     } catch (err) {
         console.error(err);
+        alert('Erro JS: ' + err.message);
         showToast('Erro ao conectar com o servidor.', 'error');
         btn.disabled = false;
         btn.innerHTML = '🔓 Revelar Minha Chave';

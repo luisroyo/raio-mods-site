@@ -430,7 +430,7 @@ function startPolling(orderId) {
             } else if (data.status === 'paid_no_key') {
                 // PAGAMENTO APROVADO SEM CHAVE (ENTREGA MANUAL)
                 clearInterval(paymentCheckInterval);
-                showNoKeyStep();
+                showNoKeyStep(data);
             }
         } catch (e) {
             console.error("Erro no polling", e);
@@ -447,7 +447,7 @@ function showRevealStep() {
 }
 
 // Mostra o passo de sucesso mas sem chave (contato manual)
-function showNoKeyStep() {
+function showNoKeyStep(data) {
     document.getElementById('step-payment').classList.add('hidden');
     document.getElementById('step-email').classList.add('hidden');
     document.getElementById('step-reveal').classList.add('hidden');
@@ -459,6 +459,44 @@ function showNoKeyStep() {
     
     const msgEl = document.querySelector('#step-success p');
     if(msgEl) msgEl.innerText = 'Pagamento aprovado! Produto será entregue manualmente.';
+
+    // Exibir links de download, se houver
+    const downloadContainer = document.getElementById('download-links-container');
+    const btnAndroid = document.getElementById('btn-download-android');
+    const btnIos = document.getElementById('btn-download-ios');
+    let hasDownload = false;
+    
+    if (data && data.download_link && data.download_link.trim() !== '') {
+        if (btnAndroid) {
+            btnAndroid.href = data.download_link;
+            btnAndroid.classList.remove('hidden');
+            btnAndroid.classList.add('block');
+        }
+        hasDownload = true;
+    } else if (btnAndroid) {
+        btnAndroid.classList.add('hidden');
+        btnAndroid.classList.remove('block');
+    }
+    
+    if (data && data.download_link_ios && data.download_link_ios.trim() !== '') {
+        if (btnIos) {
+            btnIos.href = data.download_link_ios;
+            btnIos.classList.remove('hidden');
+            btnIos.classList.add('block');
+        }
+        hasDownload = true;
+    } else if (btnIos) {
+        btnIos.classList.add('hidden');
+        btnIos.classList.remove('block');
+    }
+    
+    if (hasDownload && downloadContainer) {
+        downloadContainer.classList.remove('hidden');
+        downloadContainer.classList.add('flex');
+    } else if (downloadContainer) {
+        downloadContainer.classList.add('hidden');
+        downloadContainer.classList.remove('flex');
+    }
 }
 
 // Chama o backend para registrar prova de consumo e revelar a chave

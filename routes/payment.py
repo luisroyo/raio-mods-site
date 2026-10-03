@@ -804,7 +804,7 @@ def check_status(order_ref):
     if not row:
         return jsonify({'status': 'not_found'})
     
-    def _build_approved_response(row):
+    def _build_approved_response(row, status_override='ready_to_reveal'):
         """Monta o payload completo quando o pedido está aprovado."""
         row_dict = dict(row)
         # Prioriza a URL da tabela de links, com fallback para o link manual antigo
@@ -817,7 +817,7 @@ def check_status(order_ref):
         download_link_ios = row_dict.get('download_link_ios') or ''
             
         return jsonify({
-            'status': 'ready_to_reveal',
+            'status': status_override,
             'product_name': row_dict.get('product_name') or '',
             'download_link': download_link,
             'download_link_ios': download_link_ios,
@@ -828,7 +828,7 @@ def check_status(order_ref):
         if row['key_assigned_id']:
             return _build_approved_response(row)
         else:
-            return jsonify({'status': 'paid_no_key'})
+            return _build_approved_response(row, status_override='paid_no_key')
     
     # Fallback: se ainda está pendente, consulta o MP diretamente
     if row['status'] == 'pending':

@@ -478,6 +478,43 @@ async function revealKey() {
             document.getElementById('finalKey').innerText = data.key;
             document.getElementById('step-reveal').classList.add('hidden');
             document.getElementById('step-success').classList.remove('hidden');
+            
+            const downloadContainer = document.getElementById('download-links-container');
+            const btnAndroid = document.getElementById('btn-download-android');
+            const btnIos = document.getElementById('btn-download-ios');
+            let hasDownload = false;
+            
+            if (data.download_link && data.download_link.trim() !== '') {
+                if (btnAndroid) {
+                    btnAndroid.href = data.download_link;
+                    btnAndroid.classList.remove('hidden');
+                    btnAndroid.classList.add('block');
+                }
+                hasDownload = true;
+            } else if (btnAndroid) {
+                btnAndroid.classList.add('hidden');
+                btnAndroid.classList.remove('block');
+            }
+            
+            if (data.download_link_ios && data.download_link_ios.trim() !== '') {
+                if (btnIos) {
+                    btnIos.href = data.download_link_ios;
+                    btnIos.classList.remove('hidden');
+                    btnIos.classList.add('block');
+                }
+                hasDownload = true;
+            } else if (btnIos) {
+                btnIos.classList.add('hidden');
+                btnIos.classList.remove('block');
+            }
+            
+            if (hasDownload && downloadContainer) {
+                downloadContainer.classList.remove('hidden');
+                downloadContainer.classList.add('flex');
+            } else if (downloadContainer) {
+                downloadContainer.classList.add('hidden');
+                downloadContainer.classList.remove('flex');
+            }
         } else {
             showToast('Erro ao revelar a chave: ' + (data.error || 'Tente novamente.'), 'error');
             btn.disabled = false;

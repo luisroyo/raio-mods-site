@@ -232,7 +232,7 @@ def list_manual_sales():
                 (CASE WHEN o.customer_name IS NOT NULL AND o.customer_name != '' THEN o.customer_name || ' (' || o.customer_email || ')' ELSE o.customer_email END) as client_info,
                 'paid' as status,
                 {online_amount_clean} as paid_amount,
-                o.created_at,
+                COALESCE(o.updated_at, o.created_at) as created_at,
                 (CASE 
                     WHEN o.coupon_code IS NOT NULL AND o.coupon_code != '' AND o.seller_coupon IS NOT NULL AND o.seller_coupon != '' THEN o.coupon_code || ' + ' || o.seller_coupon
                     WHEN o.seller_coupon IS NOT NULL AND o.seller_coupon != '' THEN o.seller_coupon

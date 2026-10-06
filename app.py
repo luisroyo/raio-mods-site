@@ -87,8 +87,25 @@ def handle_exception(e):
     app.logger.error(f"Erro Interno do Servidor: {e}\n{traceback.format_exc()}")
     return render_template('500.html'), 500
 
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Content-Security-Policy'] = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
+    
+    if not response.headers.get('Content-Type'):
+        response.headers['Content-Type'] = 'text/html; charset=utf-8'
+        
+    return response
+
 if __name__ == '__main__':
     # 4. Roda a aplicação
     # O host='0.0.0.0' permite acessar pelo IP da rede (igual ao seu original)
     is_debug = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    
+    if not is_debug:
+        app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    
     app.run(debug=is_debug, host='0.0.0.0', port=5000)

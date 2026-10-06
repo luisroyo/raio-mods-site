@@ -3,8 +3,8 @@
 /* Botão Flutuante (FAB) */
 .lucky-spin-fab {
     position: fixed;
-    bottom: 85px; /* Evita conflito com nav bar mobile */
-    left: 24px;
+    bottom: 95px; /* Evita conflito com nav bar mobile */
+    right: 24px;
     z-index: 90;
     width: 60px;
     height: 60px;

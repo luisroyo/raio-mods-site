@@ -137,6 +137,8 @@
                             class="text-xs md:text-sm transition-colors {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">{{ _('nav_home', 'Início') }}</a>
                         <a href="{{ url_for('public.index') }}#produtos"
                             class="text-xs md:text-sm transition-colors text-gray-300 hover:text-neon-cyan">Produtos</a>
+                        <a href="{{ url_for('public.links') }}"
+                            class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">Downloads</a>
                         <a href="{{ url_for('public.seguranca') }}"
                             class="text-xs md:text-sm transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">{{ _('nav_security', 'Segurança') }}</a>
                         <a href="{{ url_for('client.login_page') }}"
@@ -177,6 +179,8 @@
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint in ('public.index', 'public.catalogo', 'public.busca') %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Início</a>
             <a href="{{ url_for('public.index') }}#produtos"
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan">Produtos</a>
+            <a href="{{ url_for('public.links') }}"
+                class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.links' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Downloads</a>
             <a href="{{ url_for('public.seguranca') }}"
                 class="nav-mobile-link py-4 px-4 rounded-lg text-base font-medium {% if request.endpoint == 'public.seguranca' %}neon-cyan bg-neon-cyan/10{% else %}text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan{% endif %}">Segurança</a>
             <a href="{{ url_for('client.login_page') }}"
@@ -207,6 +211,9 @@
                     <span class="text-gray-600">|</span>
                     <a href="{{ url_for('public.index') }}#produtos"
                         class="transition-colors text-gray-400 hover:text-neon-cyan">Produtos</a>
+                    <span class="text-gray-600">|</span>
+                    <a href="{{ url_for('public.links') }}"
+                        class="transition-colors {% if request.endpoint == 'public.links' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Downloads</a>
                     <span class="text-gray-600">|</span>
                     <a href="{{ url_for('public.seguranca') }}"
                         class="transition-colors {% if request.endpoint == 'public.seguranca' %}neon-cyan font-semibold{% else %}text-gray-400 hover:text-neon-cyan{% endif %}">Segurança</a>
@@ -364,6 +371,16 @@
                 </div>
 
                 <p class="text-xs text-gray-400">Salve essa chave agora! Tire um print.</p>
+                
+                <div id="download-links-container" class="mt-4 hidden flex-col gap-2">
+                    <a id="btn-download-android" href="#" target="_blank" class="hidden w-full py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-black uppercase text-center rounded-lg text-sm shadow-[0_0_15px_rgba(0,242,255,0.3)] transition">
+                        ⬇️ Baixar para Android
+                    </a>
+                    <a id="btn-download-ios" href="#" target="_blank" class="hidden w-full py-3 bg-gradient-to-r from-gray-200 to-white hover:from-white hover:to-gray-100 text-black font-black uppercase text-center rounded-lg text-sm shadow-[0_0_15px_rgba(255,255,255,0.2)] transition">
+                        🍎 Baixar para iOS
+                    </a>
+                </div>
+
                 <button onclick="closeCheckout()" class="mt-6 text-gray-400 hover:text-white text-sm underline">Fechar
                     janela</button>
             </div>
@@ -371,12 +388,26 @@
         </div>
     </div>
 
+    <!-- Botão Flutuante do WhatsApp -->
+    <a href="https://wa.me/5519989888909?text=Ol%C3%A1%21%20Preciso%20de%20ajuda%20na%20loja." target="_blank"
+       class="fixed right-5 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-300 z-[150] flex items-center justify-center group"
+       style="background-color: #25D366; bottom: 90px;"
+       title="Fale conosco no WhatsApp">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.286 5.286 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+        </svg>
+        <span class="absolute right-16 border text-xs font-bold py-1 px-2.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none hidden sm:block"
+              style="background-color: #0a0a0a; border-color: rgba(37,211,102,0.5); color: #25D366; box-shadow: 0 0 10px rgba(37,211,102,0.3);">
+              Dúvidas? Chame aqui!
+        </span>
+    </a>
+
     <!-- Botão Flutuante (FAB) do Giro da Sorte -->
     <div id="luckySpinFAB" class="lucky-spin-fab group" title="Giro da Sorte - Ganhe até 15% de Desconto">
         <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a2 2 0 10-2 2h2zm0 0h4m-4 0H8m12 3v7a2 2 0 01-2 2H6a2 2 0 01-2-2v-7m16 0V9a2 2 0 00-2-2h-3m-6 0H5a2 2 0 00-2 2v1m16 4H3" />
         </svg>
-        <span class="absolute left-16 bg-[#0a0a0a] border border-neon-cyan/50 text-neon-cyan text-xs font-bold py-1 px-2.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-[0_0_10px_rgba(6,182,212,0.3)]">🎰 Giro da Sorte!</span>
+        <span class="absolute right-16 bg-[#0a0a0a] border border-neon-cyan/50 text-neon-cyan text-xs font-bold py-1 px-2.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-[0_0_10px_rgba(6,182,212,0.3)]">🎰 Giro da Sorte!</span>
     </div>
 
     <!-- Modal do Giro da Sorte -->
@@ -451,6 +482,12 @@
             </svg>
             <span class="text-[10px] font-medium tracking-wide">Produtos</span>
         </a>
+        <a href="{{ url_for('public.links') }}" class="flex flex-col items-center justify-center flex-1 text-center py-1 transition-all duration-200 {% if request.endpoint == 'public.links' %}text-neon-cyan{% else %}text-gray-400 hover:text-white{% endif %}">
+            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            <span class="text-[10px] font-medium tracking-wide">Downloads</span>
+        </a>
         <a href="{{ url_for('public.seguranca') }}" class="flex flex-col items-center justify-center flex-1 text-center py-1 transition-all duration-200 {% if request.endpoint == 'public.seguranca' %}text-neon-cyan{% else %}text-gray-400 hover:text-white{% endif %}">
             <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -471,7 +508,7 @@
     <!-- Toast Container -->
     <div id="toast-container" class="fixed top-5 right-5 z-[300] flex flex-col gap-3 pointer-events-none w-[90%] max-w-sm sm:w-auto"></div>
 
-    <script src="{{ url_for('static', filename='js/base.js') }}?v=4"></script>
+    <script src="{{ url_for('static', filename='js/base.js') }}?v=5"></script>
     <script src="{{ url_for('static', filename='js/lucky_spin.js') }}?v=3"></script>
     <script src="{{ url_for('static', filename='js/social_proof.js') }}?v=2" defer></script>
     <script src="{{ url_for('static', filename='js/effects.js') }}" defer></script>

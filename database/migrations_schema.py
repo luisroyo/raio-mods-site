@@ -1,6 +1,6 @@
 import sqlite3
 
-def run_schema_migrations(cursor, is_real_postgres):
+def run_schema_migrations(cursor, is_real_postgres=False):
     """Executa apenas migrações estruturais (adicionando novas colunas e tabelas)."""
     
     # Lista de colunas para verificar/adicionar em PRODUCTS

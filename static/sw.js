@@ -34,7 +34,7 @@ self.addEventListener('activate', (event) => {
 // Fetch Event: Network first, fall back to cache
 self.addEventListener('fetch', (event) => {
   // Ignora requisições que não sejam GET ou que sejam para API/Admin
-  if (event.request.method !== 'GET' || event.request.url.includes('/admin')) {
+  if (event.request.method !== 'GET' || event.request.url.includes('/painel-mestre')) {
     return;
   }
 

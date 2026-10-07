@@ -1,7 +1,7 @@
 {
   "name": "PDV RAIO - Venda Rápida",
   "short_name": "PDV RAIO",
-  "start_url": "/admin/pdv",
+  "start_url": "/painel-mestre/pdv",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#050505",

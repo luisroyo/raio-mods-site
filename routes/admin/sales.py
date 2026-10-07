@@ -464,11 +464,9 @@ def delete_manual_sale(sale_id):
         return jsonify({'error': str(e)}), 500
 
 
-import traceback
 def sales_report():
-    try:
-        if not session.get('admin_logged_in'):
-            return jsonify({'error': '401'}), 401
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
     
     date_start = request.args.get('date_start', '')
     date_end = request.args.get('date_end', '')
@@ -657,9 +655,6 @@ def sales_report():
             'profit_margin': round((total_profit / total_revenue * 100) if total_revenue > 0 else 0, 2)
         }
     })
-    except Exception as e:
-        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
-
 
 def get_order_proof(order_id):
     """Retorna dossiê anti-fraude com todas as provas de uma venda online."""

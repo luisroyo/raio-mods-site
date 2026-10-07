@@ -144,8 +144,8 @@ def delete_panel_recharge(recharge_id):
 
 
 def register_recharges_routes(bp):
-    bp.route('/admin/panel/recharge', methods=['POST'])(add_panel_recharge)
-    bp.route('/admin/panel/recharge/list', methods=['GET'])(list_panel_recharges)
-    bp.route('/admin/panel/recharge/edit/<int:recharge_id>', methods=['POST'])(edit_panel_recharge)
-    bp.route('/admin/panel/recharge/delete/<int:recharge_id>', methods=['POST'])(delete_panel_recharge)
+    bp.route('/painel-mestre/panel/recharge', methods=['POST'])(add_panel_recharge)
+    bp.route('/painel-mestre/panel/recharge/list', methods=['GET'])(list_panel_recharges)
+    bp.route('/painel-mestre/panel/recharge/edit/<int:recharge_id>', methods=['POST'])(edit_panel_recharge)
+    bp.route('/painel-mestre/panel/recharge/delete/<int:recharge_id>', methods=['POST'])(delete_panel_recharge)
 

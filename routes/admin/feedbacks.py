@@ -55,8 +55,8 @@ def delete_feedback(fid):
 
 
 def register_feedbacks_routes(bp):
-    bp.route('/admin/feedbacks/list', methods=['GET'])(list_feedbacks)
-    bp.route('/admin/feedbacks/approve/<int:fid>', methods=['POST'])(approve_feedback)
-    bp.route('/admin/feedbacks/reject/<int:fid>', methods=['POST'])(reject_feedback)
-    bp.route('/admin/feedbacks/delete/<int:fid>', methods=['POST'])(delete_feedback)
+    bp.route('/painel-mestre/feedbacks/list', methods=['GET'])(list_feedbacks)
+    bp.route('/painel-mestre/feedbacks/approve/<int:fid>', methods=['POST'])(approve_feedback)
+    bp.route('/painel-mestre/feedbacks/reject/<int:fid>', methods=['POST'])(reject_feedback)
+    bp.route('/painel-mestre/feedbacks/delete/<int:fid>', methods=['POST'])(delete_feedback)
 

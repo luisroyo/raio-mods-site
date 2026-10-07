@@ -87,6 +87,6 @@ def backup_database():
 
 
 def register_config_routes(bp):
-    bp.route('/admin/config', methods=['POST'])(update_config)
-    bp.route('/admin/config/backup', methods=['GET'])(backup_database)
+    bp.route('/painel-mestre/config', methods=['POST'])(update_config)
+    bp.route('/painel-mestre/config/backup', methods=['GET'])(backup_database)
 

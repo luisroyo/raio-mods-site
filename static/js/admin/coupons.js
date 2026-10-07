@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadCoupons() {
     try {
-        const response = await fetch('/admin/coupons/list');
+        const response = await fetch('/painel-mestre/coupons/list');
         const coupons = await response.json();
         
         const tbody = document.getElementById('couponsList');
@@ -84,7 +84,7 @@ async function saveCoupon() {
     }
 
     try {
-        const res = await fetch('/admin/coupons/add', {
+        const res = await fetch('/painel-mestre/coupons/add', {
             method: 'POST',
             body: formData
         });
@@ -120,7 +120,7 @@ async function deleteCoupon(id) {
 
 async function loadSpins() {
     try {
-        const response = await fetch('/admin/spins/list');
+        const response = await fetch('/painel-mestre/spins/list');
         const spins = await response.json();
         
         const tbody = document.getElementById('spinsList');

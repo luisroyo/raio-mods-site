@@ -198,7 +198,7 @@ function setupPDVCheckoutForm() {
         const formData = new FormData(form);
 
         try {
-            const res = await fetch('/admin/keys/redeem', { method: 'POST', body: formData });
+            const res = await fetch('/painel-mestre/keys/redeem', { method: 'POST', body: formData });
             const data = await res.json();
 
             if (data.success) {

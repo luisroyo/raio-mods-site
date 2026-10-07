@@ -518,8 +518,8 @@ def product_info(pid):
 
 
 def register_products_routes(bp):
-    bp.route('/admin/add', methods=['POST'])(add_product)
-    bp.route('/admin/delete/<int:pid>', methods=['POST'])(delete_product)
-    bp.route('/admin/edit/<int:pid>', methods=['POST'])(edit_product)
-    bp.route('/admin/product/info/<int:pid>', methods=['GET'])(product_info)
+    bp.route('/painel-mestre/add', methods=['POST'])(add_product)
+    bp.route('/painel-mestre/delete/<int:pid>', methods=['POST'])(delete_product)
+    bp.route('/painel-mestre/edit/<int:pid>', methods=['POST'])(edit_product)
+    bp.route('/painel-mestre/product/info/<int:pid>', methods=['GET'])(product_info)
 

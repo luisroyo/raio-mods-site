@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadFeedbacks() {
     const container = document.getElementById('feedbacksContainer');
     try {
-        const res = await fetch('/admin/feedbacks/list');
+        const res = await fetch('/painel-mestre/feedbacks/list');
         if (!res.ok) throw new Error('Não foi possível carregar os feedbacks');
         allFeedbacks = await res.json();
         

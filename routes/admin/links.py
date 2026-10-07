@@ -85,7 +85,7 @@ def edit_link(lid):
 
 
 def register_links_routes(bp):
-    bp.route('/admin/links/add', methods=['POST'])(add_link)
-    bp.route('/admin/links/delete/<int:lid>', methods=['POST'])(delete_link)
-    bp.route('/admin/links/edit/<int:lid>', methods=['POST'])(edit_link)
+    bp.route('/painel-mestre/links/add', methods=['POST'])(add_link)
+    bp.route('/painel-mestre/links/delete/<int:lid>', methods=['POST'])(delete_link)
+    bp.route('/painel-mestre/links/edit/<int:lid>', methods=['POST'])(edit_link)
 

@@ -144,8 +144,6 @@
                         <a href="{{ url_for('client.login_page') }}"
                             class="text-xs md:text-sm transition-colors font-bold {% if request.endpoint in ('client.login_page', 'client.dashboard_page') %}neon-cyan{% else %}text-gray-300 hover:text-neon-cyan{% endif %}">{{ _('nav_client_portal', 'Portal do Cliente') }}</a>
                     </div>
-                    <a href="{{ url_for('admin.admin') }}"
-                        class="text-xs md:text-sm neon-green hover:text-white transition-colors px-2 py-1.5">Admin</a>
                     <button type="button" id="btn-menu-mobile"
                         class="sm:hidden p-2 -mr-2 text-gray-300 hover:text-neon-cyan touch-manipulation"
                         aria-label="Abrir menu">

@@ -22,7 +22,7 @@ function setupManualSaleForm() {
         e.preventDefault();
         const formData = new FormData(e.target);
         try {
-            const res = await fetch('/admin/sales/manual/add', { method: 'POST', body: formData });
+            const res = await fetch('/painel-mestre/sales/manual/add', { method: 'POST', body: formData });
             const data = await res.json();
             const msg = document.getElementById('manualSaleMessage');
             if (data.success) {
@@ -576,7 +576,7 @@ function setupKeyRedeemForm() {
         const formData = new FormData(form);
         
         try {
-            const res = await fetch('/admin/keys/redeem', { method: 'POST', body: formData });
+            const res = await fetch('/painel-mestre/keys/redeem', { method: 'POST', body: formData });
             const data = await res.json();
             
             if (data.success) {

@@ -1051,13 +1051,13 @@ def list_pending_orders():
 
 
 def register_sales_routes(bp):
-    bp.route('/admin/sales/manual/add', methods=['POST'])(add_manual_sale)
-    bp.route('/admin/sales/manual/list', methods=['GET'])(list_manual_sales)
-    bp.route('/admin/sales/manual/edit/<int:sale_id>', methods=['POST'])(edit_manual_sale)
-    bp.route('/admin/sales/manual/delete/<int:sale_id>', methods=['POST'])(delete_manual_sale)
-    bp.route('/admin/sales/report', methods=['GET'])(sales_report)
-    bp.route('/admin/sales/proof/<int:order_id>', methods=['GET'])(get_order_proof)
-    bp.route('/admin/sales/insights', methods=['GET'])(sales_insights)
-    bp.route('/admin/sales/manual/pay/<int:sale_id>', methods=['POST'])(pay_manual_sale)
-    bp.route('/admin/sales/pending/list', methods=['GET'])(list_pending_orders)
+    bp.route('/painel-mestre/sales/manual/add', methods=['POST'])(add_manual_sale)
+    bp.route('/painel-mestre/sales/manual/list', methods=['GET'])(list_manual_sales)
+    bp.route('/painel-mestre/sales/manual/edit/<int:sale_id>', methods=['POST'])(edit_manual_sale)
+    bp.route('/painel-mestre/sales/manual/delete/<int:sale_id>', methods=['POST'])(delete_manual_sale)
+    bp.route('/painel-mestre/sales/report', methods=['GET'])(sales_report)
+    bp.route('/painel-mestre/sales/proof/<int:order_id>', methods=['GET'])(get_order_proof)
+    bp.route('/painel-mestre/sales/insights', methods=['GET'])(sales_insights)
+    bp.route('/painel-mestre/sales/manual/pay/<int:sale_id>', methods=['POST'])(pay_manual_sale)
+    bp.route('/painel-mestre/sales/pending/list', methods=['GET'])(list_pending_orders)
 

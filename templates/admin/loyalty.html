@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const reason = document.getElementById("adjustReason").value;
         
         try {
-            const res = await fetch("/admin/api/loyalty/adjust", {
+            const res = await fetch("/painel-mestre/api/loyalty/adjust", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, points, reason })
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         
         try {
-            const res = await fetch("/admin/api/loyalty/coupons/add", {
+            const res = await fetch("/painel-mestre/api/loyalty/coupons/add", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code, points_value, max_uses_global, max_uses_per_client, valid_until })
@@ -244,7 +244,7 @@ document.addEventListener("DOMContentLoaded", function() {
 async function loadLoyaltyData() {
     const search = document.getElementById("loyaltySearch").value;
     try {
-        let url = "/admin/api/loyalty/list";
+        let url = "/painel-mestre/api/loyalty/list";
         if (search) url += `?search=${encodeURIComponent(search)}`;
         
         const res = await fetch(url);
@@ -320,7 +320,7 @@ async function loadLoyaltyData() {
 
 async function loadPointsCoupons() {
     try {
-        const res = await fetch("/admin/api/loyalty/coupons/list");
+        const res = await fetch("/painel-mestre/api/loyalty/coupons/list");
         const data = await res.json();
         const tbody = document.getElementById("pointsCouponsList");
         

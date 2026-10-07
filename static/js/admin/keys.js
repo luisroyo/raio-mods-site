@@ -30,7 +30,7 @@ function setupKeyForm() {
         e.preventDefault();
         const msg = document.getElementById('key_message');
         try {
-            const r = await fetch('/admin/keys/add', { method: 'POST', body: new FormData(newForm) });
+            const r = await fetch('/painel-mestre/keys/add', { method: 'POST', body: new FormData(newForm) });
             const d = await r.json();
             msg.innerText = d.success ? '✅ Salvo!' : '❌ ' + (d.error || 'Erro');
             msg.classList.remove('hidden');
@@ -138,7 +138,7 @@ async function checkKosStatus(keyValue) {
         const formData = new FormData();
         formData.append('key_value', keyValue);
         
-        const res = await fetch('/admin/keys/status', { method: 'POST', body: formData });
+        const res = await fetch('/painel-mestre/keys/status', { method: 'POST', body: formData });
         const data = await res.json();
         
         const content = document.getElementById('kosStatusContent');

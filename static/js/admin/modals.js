@@ -101,7 +101,7 @@ function openEditModal(
     }
     
     // Fetch info extra do produto (como pays_commission)
-    fetch('/admin/product/info/' + id)
+    fetch('/painel-mestre/product/info/' + id)
         .then(response => response.json())
         .then(data => {
             if (!data.error) {

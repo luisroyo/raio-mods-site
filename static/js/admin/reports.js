@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function updateSalesData() {
     try {
         const fetchReport = async (startId, endId) => {
-            let url = '/admin/sales/report';
+            let url = '/painel-mestre/sales/report';
             const start = document.getElementById(startId)?.value;
             const end = document.getElementById(endId)?.value;
             const params = new URLSearchParams();
@@ -431,7 +431,7 @@ async function updateSalesData() {
 async function loadInsights() {
     try {
         const fetchInsights = async (startId, endId) => {
-            let url = '/admin/sales/insights';
+            let url = '/painel-mestre/sales/insights';
             const start = document.getElementById(startId)?.value;
             const end = document.getElementById(endId)?.value;
             const params = new URLSearchParams();
@@ -1021,7 +1021,7 @@ function setupDollarRefresh() {
         btn.classList.add('animate-spin'); // Tailwind utility
 
         try {
-            const res = await fetch('/admin/debug/dolar');
+            const res = await fetch('/painel-mestre/debug/dolar');
             const data = await res.json();
 
             // Atualiza valor (mantendo o "R$ " que está no HTML fora do span)

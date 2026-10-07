@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadResellers() {
     try {
-        const res = await fetch('/admin/api/resellers/list');
+        const res = await fetch('/painel-mestre/api/resellers/list');
         const data = await res.json();
         if (data.resellers) {
             allClients = data.resellers;
@@ -82,7 +82,7 @@ function renderTable() {
 
 async function toggleReseller(id, isChecked) {
     try {
-        const res = await fetch('/admin/api/resellers/toggle', {
+        const res = await fetch('/painel-mestre/api/resellers/toggle', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id: id, is_reseller: isChecked ? 1 : 0})
@@ -157,7 +157,7 @@ async function submitBalance() {
     btn.innerText = 'Processando...';
     
     try {
-        const res = await fetch('/admin/api/resellers/balance', {
+        const res = await fetch('/painel-mestre/api/resellers/balance', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id, action, amount, description: desc})
@@ -272,7 +272,7 @@ async function submitAddReseller(event) {
     btn.innerText = 'Cadastrando...';
     
     try {
-        const res = await fetch('/admin/api/resellers/add', {
+        const res = await fetch('/painel-mestre/api/resellers/add', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({name, email, phone, password})
@@ -338,7 +338,7 @@ async function submitEditUser(event) {
     btn.innerText = 'Salvando...';
     
     try {
-        const res = await fetch('/admin/api/resellers/edit', {
+        const res = await fetch('/painel-mestre/api/resellers/edit', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id, name, email, phone, password})
@@ -369,7 +369,7 @@ async function deleteUser() {
     }
     
     try {
-        const res = await fetch('/admin/api/resellers/delete', {
+        const res = await fetch('/painel-mestre/api/resellers/delete', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id})

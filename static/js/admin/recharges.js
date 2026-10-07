@@ -7,7 +7,7 @@ function setupPanelRechargeForm() {
         e.preventDefault();
         const formData = new FormData(e.target);
         try {
-            const res = await fetch('/admin/panel/recharge', { method: 'POST', body: formData });
+            const res = await fetch('/painel-mestre/panel/recharge', { method: 'POST', body: formData });
             const data = await res.json();
             const msg = document.getElementById('panelRechargeMessage');
             if (data.success) {

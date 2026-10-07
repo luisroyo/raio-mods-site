@@ -84,7 +84,7 @@ def get_analytics_data():
         return jsonify({"error": str(e), "trace": traceback.format_exc()}), 200
 
 def register_analytics_routes(bp):
-    @bp.route('/admin/analytics')
+    @bp.route('/painel-mestre/analytics')
     def analytics_page():
         if not session.get('admin_logged_in'):
             return redirect(url_for('public.admin_login'))
@@ -96,4 +96,4 @@ def register_analytics_routes(bp):
         
         return render_template('admin/analytics.html', **admin_data)
 
-    bp.add_url_rule('/admin/analytics/data', view_func=get_analytics_data, methods=['GET'])
+    bp.add_url_rule('/painel-mestre/analytics/data', view_func=get_analytics_data, methods=['GET'])

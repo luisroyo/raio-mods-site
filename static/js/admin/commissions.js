@@ -17,7 +17,7 @@ function switchTab(tab) {
 
 async function loadCommissions() {
     try {
-        const response = await fetch('/admin/api/commissions/list');
+        const response = await fetch('/painel-mestre/api/commissions/list');
         const data = await response.json();
         
         if (data.error) {
@@ -109,7 +109,7 @@ async function payCommissions(sellerCoupon) {
     if(!confirm(`Confirma o pagamento de todas as comissões pendentes para o vendedor ${sellerCoupon}? (Você já enviou o dinheiro via PIX/Transferência?)`)) return;
     
     try {
-        const res = await fetch('/admin/api/commissions/pay', {
+        const res = await fetch('/painel-mestre/api/commissions/pay', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ seller_coupon: sellerCoupon })
@@ -140,7 +140,7 @@ async function debitCommissions(sellerCoupon) {
     if(!confirm(`Confirma o débito de R$ ${amount.toFixed(2)} do saldo pendente de ${sellerCoupon}?`)) return;
     
     try {
-        const res = await fetch('/admin/api/commissions/debit', {
+        const res = await fetch('/painel-mestre/api/commissions/debit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ seller_coupon: sellerCoupon, amount: amount })

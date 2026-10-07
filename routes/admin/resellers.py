@@ -5,7 +5,7 @@ import hashlib
 
 def register_resellers_routes(admin_bp):
 
-    @admin_bp.route('/admin/revendedores')
+    @admin_bp.route('/painel-mestre/revendedores')
     def admin_resellers():
         if not session.get('admin_logged_in'):
             return redirect(url_for('admin.admin'))
@@ -29,7 +29,7 @@ def register_resellers_routes(admin_bp):
         return render_template('admin/resellers.html', **data)
 
 
-    @admin_bp.route('/admin/api/resellers/toggle', methods=['POST'])
+    @admin_bp.route('/painel-mestre/api/resellers/toggle', methods=['POST'])
     def admin_api_resellers_toggle():
         if not session.get('admin_logged_in'):
             return jsonify({'error': '401'}), 401
@@ -51,7 +51,7 @@ def register_resellers_routes(admin_bp):
         finally:
             conn.close()
 
-    @admin_bp.route('/admin/api/resellers/add', methods=['POST'])
+    @admin_bp.route('/painel-mestre/api/resellers/add', methods=['POST'])
     def admin_api_resellers_add():
         if not session.get('admin_logged_in'):
             return jsonify({'error': '401'}), 401
@@ -98,7 +98,7 @@ def register_resellers_routes(admin_bp):
             conn.close()
 
 
-    @admin_bp.route('/admin/api/resellers/balance', methods=['POST'])
+    @admin_bp.route('/painel-mestre/api/resellers/balance', methods=['POST'])
     def admin_api_resellers_balance():
         if not session.get('admin_logged_in'):
             return jsonify({'error': '401'}), 401
@@ -148,7 +148,7 @@ def register_resellers_routes(admin_bp):
         finally:
             conn.close()
             
-    @admin_bp.route('/admin/api/resellers/history/<int:client_id>', methods=['GET'])
+    @admin_bp.route('/painel-mestre/api/resellers/history/<int:client_id>', methods=['GET'])
     def admin_api_resellers_history(client_id):
         if not session.get('admin_logged_in'):
             return jsonify({'error': '401'}), 401
@@ -165,7 +165,7 @@ def register_resellers_routes(admin_bp):
         finally:
             conn.close()
 
-    @admin_bp.route('/admin/api/resellers/list', methods=['GET'])
+    @admin_bp.route('/painel-mestre/api/resellers/list', methods=['GET'])
     def admin_api_resellers_list():
         if not session.get('admin_logged_in'):
             return jsonify({'error': '401'}), 401
@@ -179,7 +179,7 @@ def register_resellers_routes(admin_bp):
         finally:
             conn.close()
 
-    @admin_bp.route('/admin/api/resellers/edit', methods=['POST'])
+    @admin_bp.route('/painel-mestre/api/resellers/edit', methods=['POST'])
     def admin_api_resellers_edit():
         if not session.get('admin_logged_in'):
             return jsonify({'error': '401'}), 401
@@ -215,7 +215,7 @@ def register_resellers_routes(admin_bp):
         finally:
             conn.close()
 
-    @admin_bp.route('/admin/api/resellers/delete', methods=['POST'])
+    @admin_bp.route('/painel-mestre/api/resellers/delete', methods=['POST'])
     def admin_api_resellers_delete():
         if not session.get('admin_logged_in'):
             return jsonify({'error': '401'}), 401

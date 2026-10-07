@@ -317,10 +317,10 @@ def check_key_status():
 
 
 def register_keys_routes(bp):
-    bp.route('/admin/keys/add', methods=['POST'])(add_keys)
-    bp.route('/admin/keys/list/<int:product_id>', methods=['GET'])(list_keys)
-    bp.route('/admin/keys/delete/<int:key_id>', methods=['POST'])(delete_key)
-    bp.route('/admin/keys/redeem', methods=['POST'])(redeem_key_admin)
-    bp.route('/admin/keys/status', methods=['POST'])(check_key_status)
+    bp.route('/painel-mestre/keys/add', methods=['POST'])(add_keys)
+    bp.route('/painel-mestre/keys/list/<int:product_id>', methods=['GET'])(list_keys)
+    bp.route('/painel-mestre/keys/delete/<int:key_id>', methods=['POST'])(delete_key)
+    bp.route('/painel-mestre/keys/redeem', methods=['POST'])(redeem_key_admin)
+    bp.route('/painel-mestre/keys/status', methods=['POST'])(check_key_status)
 
 

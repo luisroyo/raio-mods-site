@@ -114,7 +114,7 @@ def debit_commissions():
         conn.close()
 
 def register_commissions_routes(bp):
-    bp.route('/admin/commissions')(admin_commissions_page)
-    bp.route('/admin/api/commissions/list', methods=['GET'])(list_commissions)
-    bp.route('/admin/api/commissions/pay', methods=['POST'])(pay_commissions)
-    bp.route('/admin/api/commissions/debit', methods=['POST'])(debit_commissions)
+    bp.route('/painel-mestre/commissions')(admin_commissions_page)
+    bp.route('/painel-mestre/api/commissions/list', methods=['GET'])(list_commissions)
+    bp.route('/painel-mestre/api/commissions/pay', methods=['POST'])(pay_commissions)
+    bp.route('/painel-mestre/api/commissions/debit', methods=['POST'])(debit_commissions)

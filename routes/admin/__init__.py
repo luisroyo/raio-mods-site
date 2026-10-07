@@ -280,7 +280,7 @@ def _get_admin_data():
 
 # --- ROTA PRINCIPAL (DASHBOARD) ---
 
-@admin_bp.route('/admin', methods=['GET', 'POST'])
+@admin_bp.route('/painel-mestre', methods=['GET', 'POST'])
 def admin():
     if request.method == 'GET' and session.get('admin_logged_in'):
         try:
@@ -302,7 +302,7 @@ def admin():
 
 # --- ROTA DE PRODUTOS ---
 
-@admin_bp.route('/admin/produtos')
+@admin_bp.route('/painel-mestre/produtos')
 def admin_produtos():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))
@@ -318,7 +318,7 @@ def admin_produtos():
 
 # --- ROTA DE VENDAS ---
 
-@admin_bp.route('/admin/vendas')
+@admin_bp.route('/painel-mestre/vendas')
 def admin_vendas():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))
@@ -332,7 +332,7 @@ def admin_vendas():
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
-@admin_bp.route('/admin/pendentes')
+@admin_bp.route('/painel-mestre/pendentes')
 def admin_pendentes():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))
@@ -348,7 +348,7 @@ def admin_pendentes():
 
 # --- ROTA DE LINKS ---
 
-@admin_bp.route('/admin/links')
+@admin_bp.route('/painel-mestre/links')
 def admin_links():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))
@@ -362,7 +362,7 @@ def admin_links():
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
-@admin_bp.route('/admin/cupons')
+@admin_bp.route('/painel-mestre/cupons')
 def admin_cupons():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))
@@ -376,13 +376,13 @@ def admin_cupons():
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
-@admin_bp.route('/admin/logout')
+@admin_bp.route('/painel-mestre/logout')
 def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('admin.admin'))
 
 
-@admin_bp.route('/admin/debug/dolar', methods=['GET'])
+@admin_bp.route('/painel-mestre/debug/dolar', methods=['GET'])
 def debug_dolar():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -393,7 +393,7 @@ def debug_dolar():
 
 
 # --- ROTAS DE FEEDBACKS ---
-@admin_bp.route('/admin/feedbacks')
+@admin_bp.route('/painel-mestre/feedbacks')
 def admin_feedbacks():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))
@@ -409,7 +409,7 @@ def admin_feedbacks():
 
 # --- ROTAS DE FIDELIDADE (LOYALTY) ---
 
-@admin_bp.route('/admin/loyalty')
+@admin_bp.route('/painel-mestre/loyalty')
 def admin_loyalty():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))
@@ -423,7 +423,7 @@ def admin_loyalty():
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 
-@admin_bp.route('/admin/api/loyalty/list', methods=['GET'])
+@admin_bp.route('/painel-mestre/api/loyalty/list', methods=['GET'])
 def admin_loyalty_list():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -467,7 +467,7 @@ def admin_loyalty_list():
         return jsonify({'error': str(e)}), 500
 
 
-@admin_bp.route('/admin/api/loyalty/adjust', methods=['POST'])
+@admin_bp.route('/painel-mestre/api/loyalty/adjust', methods=['POST'])
 def admin_loyalty_adjust():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -508,7 +508,7 @@ def admin_loyalty_adjust():
         return jsonify({'error': str(e)}), 500
 
 
-@admin_bp.route('/admin/api/loyalty/coupons/list', methods=['GET'])
+@admin_bp.route('/painel-mestre/api/loyalty/coupons/list', methods=['GET'])
 def admin_points_coupons_list():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -523,7 +523,7 @@ def admin_points_coupons_list():
         conn.close()
 
 
-@admin_bp.route('/admin/api/loyalty/coupons/add', methods=['POST'])
+@admin_bp.route('/painel-mestre/api/loyalty/coupons/add', methods=['POST'])
 def admin_points_coupons_add():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -559,7 +559,7 @@ def admin_points_coupons_add():
         return jsonify({'error': str(e)}), 500
 
 
-@admin_bp.route('/admin/api/loyalty/coupons/delete/<int:cid>', methods=['POST'])
+@admin_bp.route('/painel-mestre/api/loyalty/coupons/delete/<int:cid>', methods=['POST'])
 def admin_points_coupons_delete(cid):
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -576,7 +576,7 @@ def admin_points_coupons_delete(cid):
         conn.close()
 
 
-@admin_bp.route('/admin/api/clients/search', methods=['GET'])
+@admin_bp.route('/painel-mestre/api/clients/search', methods=['GET'])
 def admin_clients_search():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -683,7 +683,7 @@ def admin_clients_search():
         conn.close()
 
 
-@admin_bp.route('/admin/pdv')
+@admin_bp.route('/painel-mestre/pdv')
 def admin_pdv():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin.admin'))

@@ -80,8 +80,8 @@ def list_spins():
 
 
 def register_coupons_routes(bp):
-    bp.route('/admin/coupons/list', methods=['GET'])(list_coupons)
-    bp.route('/admin/coupons/add', methods=['POST'])(add_coupon)
-    bp.route('/admin/coupons/delete/<int:coupon_id>', methods=['POST'])(delete_coupon)
-    bp.route('/admin/spins/list', methods=['GET'])(list_spins)
+    bp.route('/painel-mestre/coupons/list', methods=['GET'])(list_coupons)
+    bp.route('/painel-mestre/coupons/add', methods=['POST'])(add_coupon)
+    bp.route('/painel-mestre/coupons/delete/<int:coupon_id>', methods=['POST'])(delete_coupon)
+    bp.route('/painel-mestre/spins/list', methods=['GET'])(list_spins)
 

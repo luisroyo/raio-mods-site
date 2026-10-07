@@ -121,7 +121,7 @@
 
     async function loadAnalytics() {
         try {
-            const res = await fetch('/admin/analytics/data');
+            const res = await fetch('/painel-mestre/analytics/data');
             const data = await res.json();
             
             // 1. Calcular Totais

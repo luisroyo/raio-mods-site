@@ -192,7 +192,7 @@ async function openHistoryModal(id) {
     list.innerHTML = '';
     
     try {
-        const res = await fetch(`/admin/api/resellers/history/${id}`);
+        const res = await fetch(`/painel-mestre/api/resellers/history/${id}`);
         const data = await res.json();
         
         if (data.history && data.history.length > 0) {

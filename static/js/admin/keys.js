@@ -65,7 +65,7 @@ async function loadKeysList() {
     loading.classList.remove('hidden');
 
     try {
-        const res = await fetch(`/admin/keys/list/${currentKeyProductId}`);
+        const res = await fetch(`/painel-mestre/keys/list/${currentKeyProductId}`);
         const keys = await res.json();
         loading.classList.add('hidden');
 
@@ -102,7 +102,7 @@ async function loadKeysList() {
 async function deleteKey(id) {
     if (!confirm('Excluir chave?')) return;
     try {
-        await fetch(`/admin/keys/delete/${id}`, { method: 'POST' });
+        await fetch(`/painel-mestre/keys/delete/${id}`, { method: 'POST' });
         loadKeysList(); // Recarrega a lista após excluir
     } catch {
         alert("Erro ao excluir chave");

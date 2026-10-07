@@ -157,7 +157,7 @@ function renderFeedbacks() {
 
 async function approveFeedback(id) {
     try {
-        const res = await fetch(`/admin/feedbacks/approve/${id}`, { method: 'POST' });
+        const res = await fetch(`/painel-mestre/feedbacks/approve/${id}`, { method: 'POST' });
         const data = await res.json();
         if (data.success) {
             loadFeedbacks();
@@ -171,7 +171,7 @@ async function approveFeedback(id) {
 
 async function rejectFeedback(id) {
     try {
-        const res = await fetch(`/admin/feedbacks/reject/${id}`, { method: 'POST' });
+        const res = await fetch(`/painel-mestre/feedbacks/reject/${id}`, { method: 'POST' });
         const data = await res.json();
         if (data.success) {
             loadFeedbacks();
@@ -186,7 +186,7 @@ async function rejectFeedback(id) {
 async function deleteFeedback(id) {
     if (!confirm('Tem certeza de que deseja excluir permanentemente este feedback?')) return;
     try {
-        const res = await fetch(`/admin/feedbacks/delete/${id}`, { method: 'POST' });
+        const res = await fetch(`/painel-mestre/feedbacks/delete/${id}`, { method: 'POST' });
         const data = await res.json();
         if (data.success) {
             loadFeedbacks();

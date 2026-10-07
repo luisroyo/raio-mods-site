@@ -86,7 +86,7 @@ function setupManualSaleForm() {
             }
 
             try {
-                const res = await fetch(`/admin/product/info/${pid}`);
+                const res = await fetch(`/painel-mestre/product/info/${pid}`);
                 if (!res.ok) return;
                 const info = await res.json();
                 if (info && typeof info.calculated_cost_brl !== 'undefined') {
@@ -117,7 +117,7 @@ function setupManualSaleForm() {
         const msg = document.getElementById('editManualSaleMessage');
 
         try {
-            const res = await fetch(`/admin/sales/manual/edit/${id}`, { method: 'POST', body: formData });
+            const res = await fetch(`/painel-mestre/sales/manual/edit/${id}`, { method: 'POST', body: formData });
             const data = await res.json();
 
             if (data.success) {
@@ -203,7 +203,7 @@ function clearSalesFilters() {
 
 async function loadManualSales() {
     try {
-        let url = `/admin/sales/manual/list?page=${salesPage}&limit=${salesLimit}`;
+        let url = `/painel-mestre/sales/manual/list?page=${salesPage}&limit=${salesLimit}`;
         if (salesCategory) url += `&category=${encodeURIComponent(salesCategory)}`;
         if (salesSupplier) url += `&supplier=${encodeURIComponent(salesSupplier)}`;
         if (salesStatus) url += `&status=${encodeURIComponent(salesStatus)}`;
@@ -379,7 +379,7 @@ function openEditManualSale(id, pid, qty, price, cost, notes, createdAt, status,
 async function deleteManualSale(id) {
     if (!confirm('Excluir esta venda?')) return;
     try {
-        const res = await fetch(`/admin/sales/manual/delete/${id}`, { method: 'POST' });
+        const res = await fetch(`/painel-mestre/sales/manual/delete/${id}`, { method: 'POST' });
         if (res.ok) {
             loadManualSales();
             if (typeof loadSalesReport === 'function') loadSalesReport();
@@ -401,7 +401,7 @@ async function payManualSale(id, total, paid) {
     }
     
     try {
-        const res = await fetch(`/admin/sales/manual/pay/${id}`, { method: 'POST', body: formData });
+        const res = await fetch(`/painel-mestre/sales/manual/pay/${id}`, { method: 'POST', body: formData });
         const data = await res.json();
         if (data.success) {
             alert('Pagamento atualizado com sucesso!');
@@ -418,7 +418,7 @@ async function payManualSale(id, total, paid) {
 // --- DOSSIÊ ANTI-FRAUDE ---
 async function viewOrderProof(orderId) {
     try {
-        const res = await fetch(`/admin/sales/proof/${orderId}`);
+        const res = await fetch(`/painel-mestre/sales/proof/${orderId}`);
         const data = await res.json();
         if (!data.success) {
             alert('Erro: ' + (data.error || 'Pedido não encontrado'));
@@ -516,7 +516,7 @@ async function onRedeemProductChange() {
     stockStatus.innerHTML = '<span class="text-gray-400">Verificando estoque...</span>';
     
     try {
-        const res = await fetch(`/admin/product/info/${pid}`);
+        const res = await fetch(`/painel-mestre/product/info/${pid}`);
         if (!res.ok) throw new Error('Falha ao buscar dados');
         const info = await res.json();
         

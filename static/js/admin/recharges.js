@@ -33,7 +33,7 @@ function setupPanelRechargeForm() {
         const msg = document.getElementById('editRechargeMessage');
 
         try {
-            const res = await fetch(`/admin/panel/recharge/edit/${id}`, { method: 'POST', body: formData });
+            const res = await fetch(`/painel-mestre/panel/recharge/edit/${id}`, { method: 'POST', body: formData });
             const data = await res.json();
 
             if (data.success) {
@@ -62,7 +62,7 @@ let totalRechargePages = 1;
 async function loadPanelRecharges(page = 1) {
     currentRechargePage = page;
     try {
-        const res = await fetch(`/admin/panel/recharge/list?page=${currentRechargePage}&limit=${rechargeLimit}`);
+        const res = await fetch(`/painel-mestre/panel/recharge/list?page=${currentRechargePage}&limit=${rechargeLimit}`);
         const result = await res.json();
 
         const tbody = document.getElementById('panelRechargesTable');
@@ -144,7 +144,7 @@ function changeRechargesLimit() {
 async function deletePanelRecharge(id) {
     if (!confirm('Excluir esta recarga?')) return;
     try {
-        const res = await fetch(`/admin/panel/recharge/delete/${id}`, { method: 'POST' });
+        const res = await fetch(`/painel-mestre/panel/recharge/delete/${id}`, { method: 'POST' });
         if (res.ok) {
             loadPanelRecharges(currentRechargePage);
             if (typeof loadSalesReport === 'function') loadSalesReport();

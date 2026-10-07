@@ -56,7 +56,7 @@ function setupFormListeners() {
     editProd && editProd.addEventListener('submit', e => {
         e.preventDefault();
         const id = document.getElementById('edit_id').value;
-        editProd.dataset.url = `/admin/edit/${id}`;
+        editProd.dataset.url = `/painel-mestre/edit/${id}`;
         sendData(e, 'edit_message');
     });
 
@@ -64,14 +64,14 @@ function setupFormListeners() {
     editLink && editLink.addEventListener('submit', e => {
         e.preventDefault();
         const id = document.getElementById('link_edit_id').value;
-        editLink.dataset.url = `/admin/links/edit/${id}`;
+        editLink.dataset.url = `/painel-mestre/links/edit/${id}`;
         sendData(e, 'link_edit_message');
     });
 }
 
 async function deleteProduct(id) {
     if (!confirm('Confirmar exclusão?')) return;
-    await fetch(`/admin/delete/${id}`, { method: 'POST' });
+    await fetch(`/painel-mestre/delete/${id}`, { method: 'POST' });
     location.reload();
 }
 

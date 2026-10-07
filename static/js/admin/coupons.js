@@ -106,7 +106,7 @@ async function deleteCoupon(id) {
     if(!confirm('Tem certeza que deseja apagar este cupom? Cuidado para não quebrar links divulgados.')) return;
     
     try {
-        const res = await fetch(`/admin/coupons/delete/${id}`, { method: 'POST' });
+        const res = await fetch(`/painel-mestre/coupons/delete/${id}`, { method: 'POST' });
         const data = await res.json();
         if(data.success) {
             loadCoupons();

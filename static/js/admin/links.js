@@ -19,6 +19,6 @@ function openEditLink(id, title, desc, img, down, vid, game) {
 
 async function deleteLink(id) {
     if (!confirm('Confirmar exclusão?')) return;
-    await fetch(`/admin/links/delete/${id}`, { method: 'POST' });
+    await fetch(`/painel-mestre/links/delete/${id}`, { method: 'POST' });
     location.reload();
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'raio-mods-v1';
+const CACHE_NAME = 'raio-mods-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/static/css/base.css',

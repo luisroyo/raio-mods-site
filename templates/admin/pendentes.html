@@ -45,7 +45,7 @@ let currentPage = 1;
 
 async function loadPendingSales(page = 1) {
     try {
-        const res = await fetch(`/admin/sales/pending/list?page=${page}&limit=20`);
+        const res = await fetch(`/painel-mestre/sales/pending/list?page=${page}&limit=20`);
         const data = await res.json();
         
         if (data.error) {

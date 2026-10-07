@@ -352,7 +352,7 @@ async function loadPointsCoupons() {
 async function deletePointsCoupon(id) {
     if (!confirm("Tem certeza que deseja excluir este cupom de pontos? Os clientes não conseguirão mais resgatá-lo.")) return;
     try {
-        const res = await fetch(`/admin/api/loyalty/coupons/delete/${id}`, { method: "POST" });
+        const res = await fetch(`/painel-mestre/api/loyalty/coupons/delete/${id}`, { method: "POST" });
         const data = await res.json();
         if (data.success) {
             alert("✅ Cupom excluído!");

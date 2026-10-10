@@ -276,7 +276,8 @@ async function loadManualSales() {
             if (sale.type === 'online') {
                 typeBadge = '<span class="px-2 py-1 bg-green-900/50 text-green-400 rounded text-xs border border-green-500/30">Online</span>';
                 clientInfo = `<span class="text-xs text-gray-300">${sale.client_info || 'N/A'}</span>`;
-                actions = `<button onclick="viewOrderProof(${sale.id})" class="text-cyan-400 hover:text-cyan-300" title="Dossiê Anti-Fraude">🛡️</button>`;
+                actions = `<button onclick="viewOrderProof(${sale.id})" class="text-cyan-400 hover:text-cyan-300 mr-2" title="Dossiê Anti-Fraude">🛡️</button>
+                           <button onclick="deleteOnlineSale(${sale.id})" class="text-red-400 hover:text-red-300" title="Cancelar/Excluir Venda Online">🗑️</button>`;
             } else {
                 typeBadge = '<span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs border border-purple-500/30">Manual</span>';
                 clientInfo = `<span class="text-xs text-gray-400 italic">${sale.client_info || '-'}</span>`;
@@ -386,6 +387,23 @@ async function deleteManualSale(id) {
         }
     } catch {
         alert('Erro ao excluir');
+    }
+}
+
+async function deleteOnlineSale(id) {
+    if (!confirm('Tem certeza que deseja cancelar/excluir esta venda online? Os dados serão removidos.')) return;
+    try {
+        const res = await fetch(`/painel-mestre/sales/online/delete/${id}`, { method: 'POST' });
+        if (res.ok) {
+            alert('Venda online excluída com sucesso!');
+            loadManualSales();
+            if (typeof loadSalesReport === 'function') loadSalesReport();
+        } else {
+            const data = await res.json();
+            alert('Erro: ' + (data.error || 'Não foi possível excluir'));
+        }
+    } catch {
+        alert('Erro ao excluir venda online');
     }
 }
 

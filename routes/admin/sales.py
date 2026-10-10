@@ -464,6 +464,54 @@ def delete_manual_sale(sale_id):
         return jsonify({'error': str(e)}), 500
 
 
+def delete_online_sale(order_id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        conn = get_db_connection()
+        order = conn.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+        if not order:
+            conn.close()
+            return jsonify({'error': 'Venda não encontrada'}), 404
+            
+        old_email = order['customer_email']
+        old_amount = order['amount']
+        
+        # Estornar pontos se houvesse e-mail
+        if old_email:
+            try:
+                old_points = int(float(str(old_amount).replace(',', '.')))
+            except:
+                old_points = 0
+                
+            if old_points > 0:
+                pts_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (old_email,)).fetchone()
+                if pts_row:
+                    new_pts = max(0, pts_row['points'] - old_points)
+                    conn.execute('UPDATE client_points SET points = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_pts, old_email))
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (old_email, -old_points, 'admin_rollback', f"Estorno da Venda Online #{order_id}")
+                )
+                
+        # Estornar Chave
+        if order['key_assigned_id']:
+            conn.execute('UPDATE product_keys SET is_used = 0, used_by_email = NULL WHERE id = ?', (order['key_assigned_id'],))
+            
+        # Remover Comissões
+        conn.execute('DELETE FROM commissions WHERE order_id = ?', (order_id,))
+        
+        # Remover Pedido
+        conn.execute('DELETE FROM orders WHERE id = ?', (order_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Venda online apagada com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 def sales_report():
     if not session.get('admin_logged_in'):
         return jsonify({'error': '401'}), 401
@@ -1059,4 +1107,5 @@ def register_sales_routes(bp):
     bp.route('/painel-mestre/sales/insights', methods=['GET'])(sales_insights)
     bp.route('/painel-mestre/sales/manual/pay/<int:sale_id>', methods=['POST'])(pay_manual_sale)
     bp.route('/painel-mestre/sales/pending/list', methods=['GET'])(list_pending_orders)
+    bp.route('/painel-mestre/sales/online/delete/<int:order_id>', methods=['POST'])(delete_online_sale)
 

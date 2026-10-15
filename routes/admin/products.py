@@ -69,6 +69,16 @@ def add_product():
     except:
         is_active = 1
         
+    # commission settings
+    commission_type = (request.form.get('commission_type') or 'default').strip().lower()
+    if commission_type not in ['default', 'percent', 'fixed', 'none']:
+        commission_type = 'default'
+    try:
+        c_val = request.form.get('commission_value')
+        commission_value = float(str(c_val).replace(',', '.') if c_val else 0.0)
+    except:
+        commission_value = 0.0
+
     # pays_commission checkbox
     try:
         vals_pays_comm = request.form.getlist('pays_commission')
@@ -78,6 +88,8 @@ def add_product():
             pays_commission = int(request.form.get('pays_commission', 1) or 1)
     except:
         pays_commission = 1
+    if commission_type == 'none':
+        pays_commission = 0
     
     try:
         is_catalog = int(request.form.get('is_catalog', 0))
@@ -147,13 +159,15 @@ def add_product():
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, download_link_ios, name_pt, name_en, name_es, description_pt, description_en, 
                 description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
+                commission_type, commission_value,
                 api_game_type, api_duration
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (
                 name, desc, price, image, cat, tagline, sort_order, parent_id, is_catalog, 
                 payment_url, promo_price, promo_label, cost_usd, cost_brl, apply_iof, is_active, supplier, 
                 reseller_price, download_link, download_link_ios, name_pt, name_en, name_es, description_pt, description_en, 
                 description_es, price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
+                commission_type, commission_value,
                 api_game_type, api_duration
             )
         )
@@ -318,6 +332,19 @@ def edit_product(pid):
         except:
             is_active = int(existing.get('is_active', 1) or 1)
             
+        # commission settings
+        commission_type = (request.form.get('commission_type') or existing.get('commission_type', 'default') or 'default').strip().lower()
+        if commission_type not in ['default', 'percent', 'fixed', 'none']:
+            commission_type = 'default'
+        try:
+            c_val = request.form.get('commission_value')
+            if c_val is not None and str(c_val).strip() != '':
+                commission_value = float(str(c_val).replace(',', '.'))
+            else:
+                commission_value = float(existing.get('commission_value', 0.0) or 0.0)
+        except:
+            commission_value = 0.0
+
         # pays_commission
         try:
             vals_pays_comm = request.form.getlist('pays_commission')
@@ -327,6 +354,8 @@ def edit_product(pid):
                 pays_commission = int(request.form.get('pays_commission', existing.get('pays_commission', 1)) or 1)
         except:
             pays_commission = int(existing.get('pays_commission', 1) or 1)
+        if commission_type == 'none':
+            pays_commission = 0
         
         try:
             is_catalog = int(request.form.get('is_catalog', existing.get('is_catalog', 0)))
@@ -428,6 +457,7 @@ def edit_product(pid):
                 is_active=?, supplier=?, reseller_price=?, download_link=?, download_link_ios=?,
                 name_pt=?, name_en=?, name_es=?, description_pt=?, description_en=?, description_es=?,
                 price_brl=?, price_usd=?, default_currency=?, translation_status=?, link_id=?, platform=?, pays_commission=?,
+                commission_type=?, commission_value=?,
                 api_game_type=?, api_duration=?
             WHERE id=?''',
             (
@@ -436,6 +466,7 @@ def edit_product(pid):
                 is_active, supplier, reseller_price, download_link, download_link_ios,
                 name_pt, name_en, name_es, description_pt, description_en, description_es,
                 price_brl, price_usd, default_currency, translation_status, link_id, platform, pays_commission,
+                commission_type, commission_value,
                 api_game_type, api_duration,
                 pid
             )
@@ -494,6 +525,8 @@ def product_info(pid):
             'apply_iof': apply_iof,
             'is_active': int(prod.is_active) if prod.is_active is not None else 1,
             'pays_commission': int(getattr(prod, 'pays_commission', 1) if getattr(prod, 'pays_commission', 1) is not None else 1),
+            'commission_type': getattr(prod, 'commission_type', 'default') or 'default',
+            'commission_value': float(getattr(prod, 'commission_value', 0.0) or 0.0),
             'dolar_rate': round(dolar_rate, 4),
             'calculated_cost_brl': calculated_cost_brl,
             'stock': stock_count,

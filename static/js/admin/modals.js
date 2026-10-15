@@ -100,12 +100,19 @@ function openEditModal(
         [...parentSel.options].forEach(o => o.disabled = o.value == id);
     }
     
-    // Fetch info extra do produto (como pays_commission)
+    // Fetch info extra do produto (como pays_commission, commission_type, commission_value)
     fetch('/painel-mestre/product/info/' + id)
         .then(response => response.json())
         .then(data => {
             if (!data.error) {
+                const commType = data.commission_type || (data.pays_commission === 0 ? 'none' : 'default');
+                const commVal = data.commission_value || 0;
+                setVal('edit_commission_type', commType);
+                setVal('edit_commission_value', commVal > 0 ? commVal : '');
                 setVal('edit_pays_commission', data.pays_commission !== undefined ? data.pays_commission : 1);
+                if (typeof updateCommissionInputs === 'function') {
+                    updateCommissionInputs('edit');
+                }
             }
         })
         .catch(e => console.error("Erro ao buscar detalhes extras do produto:", e));

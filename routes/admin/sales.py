@@ -103,20 +103,33 @@ def add_manual_sale():
             )
             sale_id = cursor.lastrowid
 
-        prod_row = conn.execute('SELECT name, download_link, pays_commission FROM products WHERE id = ?', (product_id,)).fetchone()
+        prod_row = conn.execute('SELECT name, download_link, pays_commission, commission_type, commission_value FROM products WHERE id = ?', (product_id,)).fetchone()
         prod_name = prod_row['name'] if prod_row else 'Produto'
         
         try:
-            pays_commission = int(prod_row['pays_commission']) if prod_row and 'pays_commission' in prod_row.keys() else 1
+            pays_commission = int(prod_row['pays_commission']) if prod_row and 'pays_commission' in prod_row.keys() and prod_row['pays_commission'] is not None else 1
+            prod_comm_type = str(prod_row['commission_type']).strip().lower() if prod_row and 'commission_type' in prod_row.keys() and prod_row['commission_type'] else 'default'
+            prod_comm_val = float(prod_row['commission_value']) if prod_row and 'commission_value' in prod_row.keys() and prod_row['commission_value'] is not None else 0.0
         except Exception:
             pays_commission = 1
+            prod_comm_type = 'default'
+            prod_comm_val = 0.0
 
-        if applied_coupon and com_perc > 0 and pays_commission == 1:
-            com_amt = round(total_price * (com_perc / 100.0), 2)
-            conn.execute('''
-                INSERT INTO commissions (seller_coupon, manual_sale_id, sale_amount, commission_amount, status)
-                VALUES (?, ?, ?, ?, 'pending')
-            ''', (applied_coupon, sale_id, total_price, com_amt))
+        if applied_coupon and pays_commission == 1 and prod_comm_type != 'none':
+            com_amt = 0.0
+            if prod_comm_type == 'fixed' and prod_comm_val > 0:
+                com_amt = round(prod_comm_val * quantity, 2)
+            elif prod_comm_type == 'percent' and prod_comm_val > 0:
+                com_amt = round(total_price * (prod_comm_val / 100.0), 2)
+            elif com_perc > 0:
+                com_amt = round(total_price * (com_perc / 100.0), 2)
+
+            if com_amt > 0:
+                note_desc = f"Venda Manual #{sale_id} - Regra: {prod_comm_type} ({'R$ ' + str(prod_comm_val) + '/un' if prod_comm_type == 'fixed' else str(prod_comm_val) + '%' if prod_comm_type == 'percent' else str(com_perc) + '% padrão'})"
+                conn.execute('''
+                    INSERT INTO commissions (seller_coupon, manual_sale_id, sale_amount, commission_amount, status, notes)
+                    VALUES (?, ?, ?, ?, 'pending', ?)
+                ''', (applied_coupon, sale_id, total_price, com_amt, note_desc))
         
         form_download_link = request.form.get('download_link')
         if form_download_link and form_download_link.strip():

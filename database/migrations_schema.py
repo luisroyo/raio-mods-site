@@ -21,6 +21,8 @@ def run_schema_migrations(cursor, is_real_postgres=False):
         ('download_link', 'TEXT DEFAULT ""'),
         ('download_link_ios', 'TEXT DEFAULT ""'),
         ('pays_commission', 'INTEGER DEFAULT 1'),
+        ('commission_type', 'TEXT DEFAULT "default"'),
+        ('commission_value', 'REAL DEFAULT 0.0'),
         ('api_game_type', 'TEXT DEFAULT ""'),
         ('api_duration', 'INTEGER NULL')
     ]
@@ -33,6 +35,15 @@ def run_schema_migrations(cursor, is_real_postgres=False):
                 print(f"--> Adicionando coluna {col_name} em products...")
                 cursor.execute(f'ALTER TABLE products ADD COLUMN {col_name} {col_type}')
             except: pass
+
+    # Migração commissions: coluna notes
+    try:
+        cursor.execute('SELECT notes FROM commissions LIMIT 1')
+    except sqlite3.OperationalError:
+        try:
+            print("--> Adicionando coluna notes em commissions...")
+            cursor.execute('ALTER TABLE commissions ADD COLUMN notes TEXT DEFAULT ""')
+        except: pass
 
     # Migração config: PIX Copia e Cola
     try:
@@ -363,6 +374,7 @@ def run_schema_migrations(cursor, is_real_postgres=False):
                 sale_amount REAL NOT NULL,
                 commission_amount REAL NOT NULL,
                 status TEXT DEFAULT 'pending',
+                notes TEXT DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 paid_at TIMESTAMP
             )

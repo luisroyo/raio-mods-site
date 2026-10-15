@@ -76,10 +76,31 @@
                     class="w-4 h-4 text-green-600">
                 <label for="add_is_active_cat" class="text-white text-sm">Visível na Loja?</label>
             </div>
-            <div class="flex items-center gap-2 border border-gray-700 p-2 rounded w-fit">
-                <input type="checkbox" id="add_pays_comm_cat" name="pays_commission" value="1" checked
-                    class="w-4 h-4 text-emerald-500">
-                <label for="add_pays_comm_cat" class="text-white text-sm">Paga Comissão p/ Afiliado?</label>
+            <div class="border border-emerald-500/30 bg-gray-900/80 p-3 rounded-lg w-full">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                        🤝 Regra de Comissão de Afiliados
+                    </label>
+                    <span class="text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">Por Jogo/Catálogo</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <select id="add_cat_commission_type" name="commission_type" onchange="updateCommissionInputs('add_cat')" class="w-full p-2 bg-gray-800 border border-emerald-500/50 rounded text-white text-xs focus:ring-1 focus:ring-emerald-500">
+                            <option value="default">⚪ Padrão do Vendedor (Taxa do cupom)</option>
+                            <option value="percent">📊 Porcentagem Própria (%)</option>
+                            <option value="fixed">💵 Valor Fixo em R$ (Por venda)</option>
+                            <option value="none">🚫 Não Paga Comissão</option>
+                        </select>
+                    </div>
+                    <div id="add_cat_commission_val_wrapper" class="hidden">
+                        <div class="relative">
+                            <span id="add_cat_commission_val_prefix" class="absolute left-2.5 top-2 text-xs text-gray-400">R$</span>
+                            <input type="number" step="0.01" min="0" id="add_cat_commission_value" name="commission_value" class="w-full pl-8 p-2 bg-gray-800 border border-emerald-500/50 rounded text-white text-xs font-bold" placeholder="0.00">
+                            <span id="add_cat_commission_val_suffix" class="absolute right-2.5 top-2 text-xs text-gray-400 hidden">%</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="pays_commission" id="add_cat_pays_commission" value="1">
             </div>
             <input type="text" name="image_url" placeholder="Ou URL da imagem"
                 class="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded text-white">
@@ -377,11 +398,32 @@
                         class="w-4 h-4 text-green-600">
                     <label for="add_is_active_prod" class="text-white text-sm">Visível na Loja?</label>
                 </div>
-                <div class="flex items-center gap-2 border border-gray-700 p-2 rounded w-fit">
-                    <input type="checkbox" id="add_pays_comm_prod" name="pays_commission" value="1" checked
-                        class="w-4 h-4 text-emerald-500">
-                    <label for="add_pays_comm_prod" class="text-white text-sm">Paga Comissão?</label>
+            <div class="border border-emerald-500/30 bg-gray-900/80 p-3 rounded-lg w-full mt-2">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                        🤝 Regra de Comissão de Afiliados
+                    </label>
+                    <span class="text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">Por Produto</span>
                 </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <select id="add_prod_commission_type" name="commission_type" onchange="updateCommissionInputs('add_prod')" class="w-full p-2 bg-gray-800 border border-emerald-500/50 rounded text-white text-xs focus:ring-1 focus:ring-emerald-500">
+                            <option value="default">⚪ Padrão do Vendedor (Taxa do cupom)</option>
+                            <option value="percent">📊 Porcentagem Própria (%)</option>
+                            <option value="fixed">💵 Valor Fixo em R$ (Por venda)</option>
+                            <option value="none">🚫 Não Paga Comissão</option>
+                        </select>
+                    </div>
+                    <div id="add_prod_commission_val_wrapper" class="hidden">
+                        <div class="relative">
+                            <span id="add_prod_commission_val_prefix" class="absolute left-2.5 top-2 text-xs text-gray-400">R$</span>
+                            <input type="number" step="0.01" min="0" id="add_prod_commission_value" name="commission_value" class="w-full pl-8 p-2 bg-gray-800 border border-emerald-500/50 rounded text-white text-xs font-bold" placeholder="0.00">
+                            <span id="add_prod_commission_val_suffix" class="absolute right-2.5 top-2 text-xs text-gray-400 hidden">%</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="pays_commission" id="add_prod_pays_commission" value="1">
+            </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" name="promo_price" placeholder="Preço promocional (opcional)"

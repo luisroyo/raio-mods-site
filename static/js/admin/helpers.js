@@ -88,3 +88,42 @@ function setupMobileMenu() {
         l.addEventListener('click', closeMenu)
     );
 }
+
+function updateCommissionInputs(prefix) {
+    const typeSelect = document.getElementById(`${prefix}_commission_type`);
+    const valWrapper = document.getElementById(`${prefix}_commission_val_wrapper`);
+    const valInput = document.getElementById(`${prefix}_commission_value`);
+    const prefixSpan = document.getElementById(`${prefix}_commission_val_prefix`);
+    const suffixSpan = document.getElementById(`${prefix}_commission_val_suffix`);
+    const paysCommInput = document.getElementById(`${prefix}_pays_commission`);
+    const helpP = document.getElementById(`${prefix}_commission_help`);
+
+    if (!typeSelect) return;
+    const type = typeSelect.value;
+
+    if (type === 'percent') {
+        if (valWrapper) valWrapper.classList.remove('hidden');
+        if (prefixSpan) prefixSpan.classList.add('hidden');
+        if (suffixSpan) suffixSpan.classList.remove('hidden');
+        if (valInput) valInput.placeholder = 'Ex: 15.00';
+        if (paysCommInput) paysCommInput.value = '1';
+        if (helpP) helpP.innerText = 'O vendedor receberá a porcentagem informada acima sobre o valor da venda deste produto.';
+    } else if (type === 'fixed') {
+        if (valWrapper) valWrapper.classList.remove('hidden');
+        if (prefixSpan) prefixSpan.classList.remove('hidden');
+        if (suffixSpan) suffixSpan.classList.add('hidden');
+        if (valInput) valInput.placeholder = 'Ex: 10.00';
+        if (paysCommInput) paysCommInput.value = '1';
+        if (helpP) helpP.innerText = 'O vendedor receberá o valor fixo em R$ informado acima por cada unidade vendida.';
+    } else if (type === 'none') {
+        if (valWrapper) valWrapper.classList.add('hidden');
+        if (paysCommInput) paysCommInput.value = '0';
+        if (helpP) helpP.innerText = 'Nenhuma comissão será gerada para os vendedores nas vendas deste produto.';
+    } else {
+        // default
+        if (valWrapper) valWrapper.classList.add('hidden');
+        if (paysCommInput) paysCommInput.value = '1';
+        if (helpP) helpP.innerText = 'O vendedor receberá a porcentagem padrão configurada no cupom dele (ex: 10%).';
+    }
+}
+

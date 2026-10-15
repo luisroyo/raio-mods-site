@@ -18,45 +18,66 @@ def recalculate_retroactive_commissions():
                 
                 # Vendas Manuais
                 manual_sales = conn.execute('''
-                    SELECT ms.id, ms.total_price, COALESCE(p.pays_commission, 1) as pays_commission
+                    SELECT ms.id, ms.total_price, ms.quantity, COALESCE(p.pays_commission, 1) as pays_commission,
+                           p.commission_type, p.commission_value
                     FROM manual_sales ms
                     LEFT JOIN products p ON ms.product_id = p.id
                     WHERE ms.coupon_code = ?
                 ''', (code,)).fetchall()
                 
                 for sale in manual_sales:
-                    if int(sale['pays_commission']) == 0:
+                    ctype = (sale['commission_type'] or 'default').lower()
+                    cval = float(sale['commission_value'] or 0.0)
+                    if int(sale['pays_commission']) == 0 or ctype == 'none':
                         continue
                     # Verifica se já existe comissão para não duplicar
                     exists = conn.execute('SELECT 1 FROM commissions WHERE manual_sale_id = ?', (sale['id'],)).fetchone()
                     if not exists:
-                        com_amt = round(sale['total_price'] * (perc / 100.0), 2)
-                        conn.execute('''
-                            INSERT INTO commissions (seller_coupon, manual_sale_id, sale_amount, commission_amount, status)
-                            VALUES (?, ?, ?, ?, 'pending')
-                        ''', (code, sale['id'], sale['total_price'], com_amt))
-                        print(f"Comissão gerada (Manual #{sale['id']}): R$ {com_amt}")
+                        qty = int(sale['quantity'] or 1)
+                        if ctype == 'fixed' and cval > 0:
+                            com_amt = round(cval * qty, 2)
+                        elif ctype == 'percent' and cval > 0:
+                            com_amt = round(sale['total_price'] * (cval / 100.0), 2)
+                        else:
+                            com_amt = round(sale['total_price'] * (perc / 100.0), 2)
+
+                        if com_amt > 0:
+                            conn.execute('''
+                                INSERT INTO commissions (seller_coupon, manual_sale_id, sale_amount, commission_amount, status)
+                                VALUES (?, ?, ?, ?, 'pending')
+                            ''', (code, sale['id'], sale['total_price'], com_amt))
+                            print(f"Comissão gerada (Manual #{sale['id']}): R$ {com_amt}")
                         
                 # Vendas Online
                 online_sales = conn.execute('''
-                    SELECT o.id, o.amount, COALESCE(p.pays_commission, 1) as pays_commission
+                    SELECT o.id, o.amount, COALESCE(p.pays_commission, 1) as pays_commission,
+                           p.commission_type, p.commission_value
                     FROM orders o
                     LEFT JOIN products p ON o.product_id = p.id
                     WHERE (o.seller_coupon = ? OR o.coupon_code = ?) AND o.status IN ('approved', 'paid_no_key')
                 ''', (code, code)).fetchall()
                 
                 for order in online_sales:
-                    if int(order['pays_commission']) == 0:
+                    ctype = (order['commission_type'] or 'default').lower()
+                    cval = float(order['commission_value'] or 0.0)
+                    if int(order['pays_commission']) == 0 or ctype == 'none':
                         continue
                     # Verifica se já existe comissão
                     exists = conn.execute('SELECT 1 FROM commissions WHERE order_id = ?', (order['id'],)).fetchone()
                     if not exists:
-                        com_amt = round(order['amount'] * (perc / 100.0), 2)
-                        conn.execute('''
-                            INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status)
-                            VALUES (?, ?, ?, ?, 'pending')
-                        ''', (code, order['id'], order['amount'], com_amt))
-                        print(f"Comissão gerada (Online #{order['id']}): R$ {com_amt}")
+                        if ctype == 'fixed' and cval > 0:
+                            com_amt = round(cval, 2)
+                        elif ctype == 'percent' and cval > 0:
+                            com_amt = round(order['amount'] * (cval / 100.0), 2)
+                        else:
+                            com_amt = round(order['amount'] * (perc / 100.0), 2)
+
+                        if com_amt > 0:
+                            conn.execute('''
+                                INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status)
+                                VALUES (?, ?, ?, ?, 'pending')
+                            ''', (code, order['id'], order['amount'], com_amt))
+                            print(f"Comissão gerada (Online #{order['id']}): R$ {com_amt}")
 
             print("\nProcesso de comissões retroativas finalizado!")
 

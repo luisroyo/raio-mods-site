@@ -23,6 +23,9 @@ class Product(db.Model):
     apply_iof = db.Column(db.Integer, default=1)
     supplier = db.Column(db.String, default="")
     download_link = db.Column(db.String, default="")
+    pays_commission = db.Column(db.Integer, default=1)
+    commission_type = db.Column(db.String, default="default")
+    commission_value = db.Column(db.Float, default=0.0)
     
     # Colunas de Internacionalizacao e Multi-Moeda
     name_pt = db.Column(db.String, default="")

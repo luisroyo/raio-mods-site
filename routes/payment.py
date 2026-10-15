@@ -220,14 +220,19 @@ def process_approved_payment(order_ref: str, p_id: str):
                     logger.error(f"Erro ao atualizar uso do cupom no pedido {order['id']}: {e}")
 
             # Processar comissão de vendedor (se houver)
-            # Verifica se o produto paga comissão
+            # Verifica as regras de comissão do produto
             try:
-                prod_info = conn.execute('SELECT pays_commission FROM products WHERE id = ?', (order['product_id'],)).fetchone()
-                pays_commission = int(prod_info['pays_commission']) if prod_info and 'pays_commission' in prod_info.keys() else 1
-            except Exception:
+                prod_info = conn.execute('SELECT pays_commission, commission_type, commission_value FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+                pays_commission = int(prod_info['pays_commission']) if prod_info and 'pays_commission' in prod_info.keys() and prod_info['pays_commission'] is not None else 1
+                prod_comm_type = str(prod_info['commission_type']).strip().lower() if prod_info and 'commission_type' in prod_info.keys() and prod_info['commission_type'] else 'default'
+                prod_comm_val = float(prod_info['commission_value']) if prod_info and 'commission_value' in prod_info.keys() and prod_info['commission_value'] is not None else 0.0
+            except Exception as e:
+                logger.error(f"Erro ao obter regras de comissão do produto {order['product_id']}: {e}")
                 pays_commission = 1
+                prod_comm_type = 'default'
+                prod_comm_val = 0.0
 
-            if pays_commission == 1:
+            if pays_commission == 1 and prod_comm_type != 'none':
                 possible_sellers = []
                 order_dict = dict(order)
                 if order_dict.get('seller_coupon'):
@@ -243,21 +248,33 @@ def process_approved_payment(order_ref: str, p_id: str):
                     try:
                         # Busca os dados do vendedor no banco de cupons
                         seller_data = conn.execute('SELECT commission_percentage FROM coupons WHERE code = ? COLLATE NOCASE AND is_seller = TRUE', (sc,)).fetchone()
-                        if seller_data and seller_data['commission_percentage'] > 0:
-                            com_perc = seller_data['commission_percentage']
-                            sale_amt = order['amount']
-                            com_amt = round(sale_amt * (com_perc / 100.0), 2)
-                        
-                            conn.execute('''
-                                INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status)
-                                VALUES (?, ?, ?, ?, 'pending')
-                            ''', (sc.upper(), order['id'], sale_amt, com_amt))
-                            logger.info(f"Comissão gerada: R$ {com_amt} para {sc} no pedido {order['id']}")
+                        if seller_data:
+                            seller_perc = float(seller_data['commission_percentage'] or 0.0)
+                            sale_amt = float(order['amount'] or 0.0)
+                            com_amt = 0.0
+
+                            # 1. Valor Fixo do Produto (prevalece se definido)
+                            if prod_comm_type == 'fixed' and prod_comm_val > 0:
+                                com_amt = round(prod_comm_val, 2)
+                            # 2. Porcentagem Própria do Produto (prevalece sobre a do vendedor)
+                            elif prod_comm_type == 'percent' and prod_comm_val > 0:
+                                com_amt = round(sale_amt * (prod_comm_val / 100.0), 2)
+                            # 3. Padrão do Vendedor (taxa do cupom)
+                            elif seller_perc > 0:
+                                com_amt = round(sale_amt * (seller_perc / 100.0), 2)
+
+                            if com_amt > 0:
+                                note_desc = f"Regra: {prod_comm_type} ({'R$ ' + str(prod_comm_val) if prod_comm_type == 'fixed' else str(prod_comm_val) + '%' if prod_comm_type == 'percent' else str(seller_perc) + '% padrão'})"
+                                conn.execute('''
+                                    INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status, notes)
+                                    VALUES (?, ?, ?, ?, 'pending', ?)
+                                ''', (sc.upper(), order['id'], sale_amt, com_amt, note_desc))
+                                logger.info(f"Comissão gerada: R$ {com_amt} [{note_desc}] para {sc} no pedido {order['id']}")
                             processed_sellers.add(sc.upper())
                     except Exception as e:
                         logger.error(f"Erro ao gerar comissão do vendedor {sc} no pedido {order['id']}: {e}")
             else:
-                logger.info(f"Produto {order['product_id']} não paga comissão. Nenhuma comissão gerada para o pedido {order['id']}")
+                logger.info(f"Produto {order['product_id']} não paga comissão (pays_commission={pays_commission}, commission_type={prod_comm_type}). Nenhuma comissão gerada para o pedido {order['id']}")
 
             conn.commit()
 

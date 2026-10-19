@@ -555,12 +555,9 @@ def lucky_spin():
 
     conn = get_db_connection()
     try:
-        # Pegar o IP real do cliente
-        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-        if client_ip:
-            client_ip = client_ip.split(',')[0].strip()
-        else:
-            client_ip = 'unknown'
+        # Pegar o IP real do cliente (blindado contra spoofing de XFF)
+        from utils.security import get_real_client_ip
+        client_ip = get_real_client_ip()
 
         # Verificar se o IP já realizou um giro nas últimas 24 horas
         if client_ip != 'unknown' and client_ip != '127.0.0.1':
@@ -574,18 +571,13 @@ def lucky_spin():
                 return jsonify({'error': 'Limite atingido: Apenas 1 giro por conexão (IP) a cada 24 horas.'}), 400
 
         # Verificar também pelo Device ID gerado no frontend (que vem como email)
-        if email != 'luisroyo25@gmail.com':
-            row = conn.execute('''
-                SELECT 1 FROM lucky_spins 
-                WHERE email = ? AND datetime(created_at) > datetime('now', '-1 day')
-            ''', (email,)).fetchone()
+        row = conn.execute('''
+            SELECT 1 FROM lucky_spins 
+            WHERE email = ? AND datetime(created_at) > datetime('now', '-1 day')
+        ''', (email,)).fetchone()
 
-            if row:
-                return jsonify({'error': 'Este dispositivo já girou a roleta hoje.'}), 400
-
-        # Verificar se o cliente possui cadastro para o Clube de Fidelidade
-        client_row = conn.execute('SELECT 1 FROM clients WHERE email = ?', (email,)).fetchone()
-        client_exists = client_row is not None
+        if row:
+            return jsonify({'error': 'Este dispositivo já girou a roleta hoje.'}), 400
 
         # 3. Sorteio ponderado (Max 15%)
         # Índices: 0 = 5%, 1 = 8%, 2 = 10%, 3 = 12%, 4 = 15%
@@ -640,8 +632,7 @@ def lucky_spin():
             'success': True,
             'discount': discount_val,
             'index': winner_index,
-            'coupon_code': coupon_code,
-            'client_exists': client_exists
+            'coupon_code': coupon_code
         })
 
     except Exception as e:
@@ -657,9 +648,8 @@ import uuid
 from contextlib import closing
 
 def _get_client_ip():
-    if request.headers.getlist("X-Forwarded-For"):
-        return request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
-    return request.remote_addr
+    from utils.security import get_real_client_ip
+    return get_real_client_ip()
 
 @public_bp.route('/api/track', methods=['POST'])
 def track_visit():

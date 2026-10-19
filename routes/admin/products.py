@@ -541,7 +541,7 @@ def product_info(pid):
             'price_usd': float(prod.price_usd or 0.0),
             'default_currency': prod.default_currency or 'BRL',
             'translation_status': prod.translation_status or 'draft',
-            'link_id': prod.link_id,
+            'link_id': getattr(prod, 'link_id', None),
             'api_game_type': getattr(prod, 'api_game_type', ''),
             'api_duration': getattr(prod, 'api_duration', None)
         })

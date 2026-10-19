@@ -29,11 +29,9 @@ payment_bp = Blueprint('payment', __name__)
 # --- Funções Auxiliares ---
 
 def _get_client_ip() -> str:
-    """Captura o IP real do cliente, considerando proxies (PythonAnywhere, Render, etc)."""
-    forwarded = request.headers.get('X-Forwarded-For', '')
-    if forwarded:
-        return forwarded.split(',')[0].strip()
-    return request.remote_addr or 'unknown'
+    """Captura o IP real do cliente com protecao rigorosa contra spoofing de XFF."""
+    from utils.security import get_real_client_ip
+    return get_real_client_ip()
 
 def parse_price(price_str) -> float:
     """Converte strings de preço em float de forma segura e padronizada."""

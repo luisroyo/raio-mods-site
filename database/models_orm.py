@@ -23,6 +23,7 @@ class Product(db.Model):
     apply_iof = db.Column(db.Integer, default=1)
     supplier = db.Column(db.String, default="")
     download_link = db.Column(db.String, default="")
+    link_id = db.Column(db.Integer, nullable=True)
     pays_commission = db.Column(db.Integer, default=1)
     commission_type = db.Column(db.String, default="default")
     commission_value = db.Column(db.Float, default=0.0)

@@ -293,10 +293,20 @@ def admin():
             return jsonify({'error': f'Erro interno: {str(e)}'}), 500
     
     if request.method == 'POST':
+        from utils.security import get_real_client_ip, check_admin_login_rate_limit, record_admin_login_attempt
+        client_ip = get_real_client_ip()
+        allowed, err_msg = check_admin_login_rate_limit(client_ip)
+        if not allowed:
+            return render_template('admin_login.html', error=err_msg), 429
+
         if request.form.get('password') == current_app.config['ADMIN_PASSWORD']:
+            record_admin_login_attempt(client_ip, success=True)
             session['admin_logged_in'] = True
             return redirect(url_for('admin.admin'))
-        return render_template('admin_login.html', error='Senha incorreta!')
+
+        record_admin_login_attempt(client_ip, success=False)
+        _, err_msg = check_admin_login_rate_limit(client_ip)
+        return render_template('admin_login.html', error=err_msg or 'Senha incorreta!'), 401
     return render_template('admin_login.html')
 
 

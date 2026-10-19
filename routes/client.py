@@ -141,13 +141,26 @@ def login_page():
 
 @client_bp.route('/api/client/request-code', methods=['POST'])
 def request_code():
-    data = request.json
+    from utils.security import get_real_client_ip, check_otp_request_rate_limit
+    data = request.json or {}
     email = data.get('email', '').strip().lower()
     if not email:
-        return jsonify({'error': 'E-mail inválido.'}), 400
+        return jsonify({'error': 'E-mail invalido.'}), 400
+
+    client_ip = get_real_client_ip()
+    allowed, rate_err = check_otp_request_rate_limit(email, client_ip)
+    if not allowed:
+        return jsonify({'error': rate_err}), 429
 
     conn = get_db_connection()
     config = conn.execute('SELECT * FROM config WHERE id = 1').fetchone()
+
+    # Invalida codigos pendentes anteriores para evitar multiplos codigos ativos
+    try:
+        conn.execute('UPDATE otp_codes SET used = 1 WHERE email = ? AND used = 0', (email,))
+        conn.commit()
+    except Exception:
+        pass
     
     # Gera um código numérico de 6 dígitos
     code = f"{random.randint(100000, 999999)}"
@@ -173,9 +186,18 @@ def request_code():
 
 @client_bp.route('/api/client/verify-code', methods=['POST'])
 def verify_code():
-    data = request.json
+    from utils.security import get_real_client_ip, check_otp_verify_rate_limit, record_otp_verify_attempt
+    data = request.json or {}
     email = data.get('email', '').strip().lower()
     code = data.get('code', '').strip()
+
+    if not email or not code:
+        return jsonify({'error': 'E-mail e codigo sao obrigatorios.'}), 400
+
+    client_ip = get_real_client_ip()
+    allowed, rate_err = check_otp_verify_rate_limit(email, client_ip)
+    if not allowed:
+        return jsonify({'error': rate_err}), 429
 
     conn = get_db_connection()
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -188,10 +210,22 @@ def verify_code():
     ).fetchone()
 
     if not otp:
-        conn.close()
-        return jsonify({'error': 'Código inválido, expirado ou já utilizado.'}), 400
+        record_otp_verify_attempt(email, client_ip, success=False)
+        still_allowed, new_err = check_otp_verify_rate_limit(email, client_ip)
+        if not still_allowed:
+            try:
+                conn.execute('UPDATE otp_codes SET used = 1 WHERE email = ? AND used = 0', (email,))
+                conn.commit()
+            except Exception:
+                pass
+            conn.close()
+            return jsonify({'error': 'Limite de tentativas excedido. O codigo foi invalidado por seguranca.'}), 429
 
-    # Marcar como usado
+        conn.close()
+        return jsonify({'error': 'Codigo invalido, expirado ou ja utilizado.'}), 400
+
+    # Marcar como usado e resetar tentativas
+    record_otp_verify_attempt(email, client_ip, success=True)
     conn.execute('UPDATE otp_codes SET used = 1 WHERE id = ?', (otp['id'],))
     conn.commit()
     conn.close()

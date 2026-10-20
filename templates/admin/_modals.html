@@ -101,6 +101,28 @@
                     </div>
                 </div>
 
+                <!-- Afiliado e Comissão para Venda Manual -->
+                <div class="p-3 bg-amber-950/20 border border-amber-500/30 rounded-lg space-y-2">
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block">🤝 Afiliado & Comissão</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Vendedor / Cupom</label>
+                            <input type="text" id="edit_sale_seller_coupon" name="seller_coupon" placeholder="Ex: VENDEDOR1"
+                                class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-mono uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Comissão (R$)</label>
+                            <input type="text" id="edit_sale_commission_amount" name="commission_amount" placeholder="0.00"
+                                class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-bold">
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer pt-1">
+                        <input type="checkbox" id="edit_sale_remove_commission" name="remove_commission" value="1"
+                            onchange="if(this.checked){document.getElementById('edit_sale_commission_amount').value='0.00';}">
+                        <span class="text-xs text-red-400 font-semibold">❌ Remover / Zerar comissão desta venda</span>
+                    </label>
+                </div>
+
                 <button type="submit"
                     class="w-full py-2 bg-purple-600 text-white font-bold rounded hover:bg-purple-500">💾
                     Salvar Alterações</button>
@@ -110,7 +132,148 @@
     </div>
 </div>
 
+<!-- Edit Online Sale Modal -->
+<div id="editOnlineSaleModal"
+    class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden modal-hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-black border-2 border-emerald-500 rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/60">
+            <div>
+                <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                    <span>🌐</span> Editar Venda Online
+                </h3>
+                <p class="text-xs text-gray-400">Edite detalhes do pedido, cliente e gerencie/remova comissões.</p>
+            </div>
+            <button type="button" onclick="closeModal('editOnlineSaleModal')"
+                class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div class="p-4 md:p-6 overflow-y-auto">
+            <form id="editOnlineSaleForm" class="space-y-4">
+                <input type="hidden" id="edit_online_order_id" name="order_id">
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Produto</label>
+                    <select id="edit_online_product_id" name="product_id" required
+                        class="w-full px-4 py-2 bg-black border border-emerald-500/70 rounded text-white focus:border-emerald-400">
+                        <option value="">Selecione um Produto</option>
+                        {% for p in simple_products %}
+                        <option value="{{ p.id }}">{{ p.name }} - {{ p.price }}</option>
+                        {% endfor %}
+                        {% for c in parent_products %}
+                        <optgroup label="📁 {{ c.name }}">
+                            {% for sub in subproducts_by_parent.get(c.id, []) %}
+                            {% if not sub.is_folder %}
+                            <option value="{{ sub.id }}">&nbsp;&nbsp;{{ sub.name }} - {{ sub.price }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Valor Total Pago (R$)</label>
+                        <input type="text" id="edit_online_amount" name="amount" required
+                            class="w-full px-4 py-2 bg-black border border-green-500 rounded text-white font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1 font-bold">Status do Pedido</label>
+                        <select name="status" id="edit_online_status" class="w-full px-4 py-2 bg-black border border-yellow-500 rounded text-white text-sm">
+                            <option value="approved">✅ Aprovado (approved)</option>
+                            <option value="paid_no_key">🔑 Pago sem chave (paid_no_key)</option>
+                            <option value="pending">⏳ Pendente (pending)</option>
+                            <option value="refunded">↩️ Reembolsado (refunded)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Data da Venda</label>
+                    <input type="datetime-local" id="edit_online_created_at" name="created_at" step="1"
+                        class="w-full px-4 py-2 bg-black border border-gray-700 rounded text-white">
+                </div>
+
+                <!-- Dados do Cliente -->
+                <div class="p-3 bg-gray-900/60 border border-gray-800 rounded-lg space-y-3">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">👤 Dados do Cliente</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Nome</label>
+                            <input type="text" id="edit_online_customer_name" name="customer_name" placeholder="Nome do cliente"
+                                class="w-full px-3 py-1.5 bg-black border border-gray-700 rounded text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">E-mail</label>
+                            <input type="email" id="edit_online_customer_email" name="customer_email" placeholder="cliente@email.com"
+                                class="w-full px-3 py-1.5 bg-black border border-gray-700 rounded text-white text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">WhatsApp / Telefone</label>
+                        <input type="text" id="edit_online_customer_phone" name="customer_phone" placeholder="Ex: 11999998888"
+                            class="w-full px-3 py-1.5 bg-black border border-gray-700 rounded text-white text-sm">
+                    </div>
+                </div>
+
+                <!-- Gestão de Afiliado e Comissão -->
+                <div class="p-3 bg-amber-950/20 border border-amber-500/40 rounded-lg space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                            🤝 Afiliado & Comissão
+                        </span>
+                        <div id="edit_online_commission_badge"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Vendedor / Link de Afiliado</label>
+                            <input type="text" id="edit_online_seller_coupon" name="seller_coupon" placeholder="Ex: SEULINK"
+                                class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-mono uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Comissão (R$)</label>
+                            <input type="text" id="edit_online_commission_amount" name="commission_amount" placeholder="0.00"
+                                class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-bold">
+                        </div>
+                    </div>
+
+                    <!-- Caixa de Destaque: Remover Comissão -->
+                    <div class="bg-red-950/30 border border-red-500/40 rounded-md p-2.5">
+                        <label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="edit_online_remove_commission" name="remove_commission" value="1"
+                                onchange="toggleOnlineRemoveCommission(this.checked)"
+                                class="mt-0.5 rounded bg-black border-red-500 text-red-600 focus:ring-0">
+                            <div>
+                                <span class="text-xs font-bold text-red-400 block">❌ Remover / Zerar comissão desta venda</span>
+                                <span class="text-[11px] text-gray-400 leading-tight block mt-0.5">
+                                    Marque caso a venda tenha sido realizada com seu próprio link ou não deva pagar comissão. A comissão será excluída e não será descontada do seu lucro.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-2.5 bg-emerald-600 text-black font-extrabold rounded hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/30">
+                    💾 Salvar Alterações da Venda Online
+                </button>
+            </form>
+            <div id="editOnlineSaleMessage" class="mt-4 hidden text-center font-bold"></div>
+        </div>
+    </div>
+</div>
+
 <script>
+    function toggleOnlineRemoveCommission(checked) {
+        const commInput = document.getElementById('edit_online_commission_amount');
+        if (checked) {
+            commInput.dataset.savedVal = commInput.value;
+            commInput.value = '0.00';
+        } else {
+            commInput.value = commInput.dataset.savedVal || commInput.dataset.originalCommission || '0.00';
+        }
+    }
+
     function toggleEditPaidAmount() {
         const statusSelect = document.getElementById('edit_sale_status');
         const divPaid = document.getElementById('div_edit_paid_amount');

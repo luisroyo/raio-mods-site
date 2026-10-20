@@ -216,7 +216,7 @@ def list_manual_sales():
                 'pt' as language,
                 'BRL' as currency
             FROM manual_sales ms
-            JOIN products p ON ms.product_id = p.id
+            LEFT JOIN products p ON ms.product_id = p.id
         '''
         
         # Para online, calculamos o custo estimado com base no dólar de HOJE (como no relatório)
@@ -224,7 +224,7 @@ def list_manual_sales():
         # Assumindo cálculo dinâmico conforme regra do relatório.
         
         # Usar cost_brl se existir, senão calcular do cost_usd
-        cost_expr = f"(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END)"
+        cost_expr = f"COALESCE(CASE WHEN p.cost_brl > 0 THEN p.cost_brl ELSE p.cost_usd * {dolar_hoje} * (CASE WHEN p.apply_iof = 1 THEN {IOF} ELSE 1 END) END, 0.0)"
         
         # Safe cleaning of online amount to prevent NaN and float coercion issues in SQL/JS
         online_amount_clean = "CAST(REPLACE(REPLACE(CAST(o.amount AS TEXT), 'R$', ''), ',', '.') AS REAL)"
@@ -234,9 +234,9 @@ def list_manual_sales():
                 'online' as type,
                 o.id, 
                 o.product_id,
-                p.name as product_name,
-                p.category,
-                p.supplier as supplier,
+                COALESCE(p.name, 'Produto #' || o.product_id) as product_name,
+                COALESCE(p.category, 'Geral') as category,
+                COALESCE(p.supplier, '') as supplier,
                 1 as quantity,
                 {online_amount_clean} as unit_price,
                 {cost_expr} as cost_per_unit_brl,
@@ -257,7 +257,7 @@ def list_manual_sales():
                 o.language,
                 o.currency
             FROM orders o
-            JOIN products p ON o.product_id = p.id
+            LEFT JOIN products p ON o.product_id = p.id
             WHERE o.status IN ('approved', 'paid_no_key')
         '''
 
@@ -433,10 +433,71 @@ def edit_manual_sale(sale_id):
                     (client_email, new_points, 'earn_manual', f"Correção (Edição) da Venda manual #{sale_id} - {prod_name}")
                 )
         
+        # Tratar Comissões na Venda Manual
+        existing_comm = conn.execute('SELECT * FROM commissions WHERE manual_sale_id = ?', (sale_id,)).fetchone()
+        remove_comm = request.form.get('remove_commission') in ('1', 'true', 'on', 'yes')
+        raw_comm = request.form.get('commission_amount', '').strip()
+        seller_coupon = (request.form.get('seller_coupon') or request.form.get('coupon_code') or '').strip().upper()
+        
+        comm_val = 0.0
+        if raw_comm:
+            try:
+                comm_val = float(str(raw_comm).replace('R$', '').replace(',', '.').strip())
+            except Exception:
+                comm_val = 0.0
+                
+        if remove_comm or (raw_comm != '' and comm_val <= 0):
+            if existing_comm:
+                conn.execute('DELETE FROM commissions WHERE manual_sale_id = ?', (sale_id,))
+            if remove_comm:
+                conn.execute('UPDATE manual_sales SET coupon_code = "" WHERE id = ?', (sale_id,))
+        elif comm_val > 0:
+            eff_seller = seller_coupon or (existing_comm['seller_coupon'] if existing_comm else '') or (existing['coupon_code'] if 'coupon_code' in existing.keys() else '') or 'MANUAL'
+            if existing_comm:
+                conn.execute('''
+                    UPDATE commissions
+                    SET seller_coupon = ?, sale_amount = ?, commission_amount = ?, notes = ?
+                    WHERE id = ?
+                ''', (eff_seller, total_price, comm_val, 'Comissão editada manualmente pelo admin', existing_comm['id']))
+            else:
+                conn.execute('''
+                    INSERT INTO commissions (seller_coupon, manual_sale_id, sale_amount, commission_amount, status, notes)
+                    VALUES (?, ?, ?, ?, 'pending', ?)
+                ''', (eff_seller, sale_id, total_price, comm_val, 'Comissão adicionada manualmente pelo admin'))
+            conn.execute('UPDATE manual_sales SET coupon_code = ? WHERE id = ?', (eff_seller, sale_id))
+        
         conn.commit()
         conn.close()
         
-        return jsonify({'success': True, 'message': 'Venda updated com sucesso!'})
+        return jsonify({'success': True, 'message': 'Venda atualizada com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def get_manual_sale_info(sale_id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+        
+    try:
+        conn = get_db_connection()
+        sale = conn.execute('SELECT * FROM manual_sales WHERE id = ?', (sale_id,)).fetchone()
+        if not sale:
+            conn.close()
+            return jsonify({'error': 'Venda manual não encontrada'}), 404
+            
+        comm = conn.execute('SELECT * FROM commissions WHERE manual_sale_id = ? LIMIT 1', (sale_id,)).fetchone()
+        prod = conn.execute('SELECT id, name, price, cost_usd, cost_brl FROM products WHERE id = ?', (sale['product_id'],)).fetchone()
+        conn.close()
+        
+        sale_dict = dict(sale)
+        sale_dict['product_name'] = prod['name'] if prod else 'Produto Desconhecido'
+        sale_dict['cost_usd'] = prod['cost_usd'] if prod else 0.0
+        sale_dict['commission_amount'] = float(comm['commission_amount']) if comm and comm['commission_amount'] is not None else 0.0
+        sale_dict['commission_id'] = comm['id'] if comm else None
+        sale_dict['seller_coupon'] = comm['seller_coupon'] if comm else (sale_dict.get('coupon_code') or '')
+        sale_dict['has_commission'] = bool(comm and float(comm['commission_amount'] or 0) > 0)
+        
+        return jsonify({'success': True, 'sale': sale_dict})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -522,6 +583,185 @@ def delete_online_sale(order_id):
         
         return jsonify({'success': True, 'message': 'Venda online apagada com sucesso!'})
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def get_online_sale_info(order_id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        conn = get_db_connection()
+        order = conn.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+        if not order:
+            conn.close()
+            return jsonify({'error': 'Venda online não encontrada'}), 404
+            
+        comm = conn.execute('SELECT * FROM commissions WHERE order_id = ? LIMIT 1', (order_id,)).fetchone()
+        prod = conn.execute('SELECT id, name, price FROM products WHERE id = ?', (order['product_id'],)).fetchone()
+        
+        conn.close()
+        
+        order_dict = dict(order)
+        order_dict['product_name'] = prod['name'] if prod else 'Produto Desconhecido'
+        order_dict['commission_amount'] = float(comm['commission_amount']) if comm and comm['commission_amount'] is not None else 0.0
+        order_dict['commission_id'] = comm['id'] if comm else None
+        order_dict['commission_status'] = comm['status'] if comm else None
+        order_dict['has_commission'] = bool(comm and float(comm['commission_amount'] or 0) > 0)
+        
+        return jsonify({'success': True, 'order': order_dict})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def edit_online_sale(order_id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    
+    try:
+        conn = get_db_connection()
+        order = conn.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+        if not order:
+            conn.close()
+            return jsonify({'error': 'Venda não encontrada'}), 404
+            
+        product_id = request.form.get('product_id')
+        raw_amount = request.form.get('amount')
+        if not product_id or raw_amount is None or str(raw_amount).strip() == '':
+            conn.close()
+            return jsonify({'error': 'Produto e valor são obrigatórios'}), 400
+            
+        amount = float(str(raw_amount).replace('R$', '').replace(',', '.').strip())
+        if amount < 0:
+            conn.close()
+            return jsonify({'error': 'Valor não pode ser negativo'}), 400
+            
+        customer_name = (request.form.get('customer_name') or '').strip()
+        customer_email = (request.form.get('customer_email') or '').strip().lower()
+        customer_phone = (request.form.get('customer_phone') or '').strip()
+        status = (request.form.get('status') or order['status'] or 'approved').strip()
+        created_at = request.form.get('created_at')
+        seller_coupon = (request.form.get('seller_coupon') or '').strip().upper()
+        coupon_code = (request.form.get('coupon_code') or '').strip().upper()
+        
+        remove_commission = request.form.get('remove_commission') in ('1', 'true', 'on', 'yes')
+        raw_commission = request.form.get('commission_amount', '').strip()
+        
+        # 1. Tratar Fidelidade (Pontos) caso o e-mail ou valor tenha mudado
+        old_email = (order['customer_email'] or '').strip().lower()
+        old_amount = order['amount']
+        old_status = order['status']
+        
+        if old_email and old_status in ('approved', 'paid_no_key'):
+            try:
+                old_pts = int(float(str(old_amount or 0).replace(',', '.')))
+            except Exception:
+                old_pts = 0
+            if old_pts > 0:
+                pts_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (old_email,)).fetchone()
+                if pts_row:
+                    new_pts = max(0, pts_row['points'] - old_pts)
+                    conn.execute('UPDATE client_points SET points = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_pts, old_email))
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (old_email, -old_pts, 'admin_rollback', f"Estorno (Edição) da Venda Online #{order_id}")
+                )
+                
+        if customer_email and status in ('approved', 'paid_no_key'):
+            new_pts = int(amount)
+            if new_pts > 0:
+                client_row = conn.execute('SELECT points FROM client_points WHERE email = ?', (customer_email,)).fetchone()
+                if client_row:
+                    conn.execute('UPDATE client_points SET points = points + ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?', (new_pts, customer_email))
+                else:
+                    conn.execute('INSERT INTO client_points (email, points) VALUES (?, ?)', (customer_email, new_pts))
+                conn.execute(
+                    'INSERT INTO points_history (email, points_changed, action_type, description) VALUES (?, ?, ?, ?)',
+                    (customer_email, new_pts, 'earn_online', f"Correção (Edição) da Venda Online #{order_id}")
+                )
+                
+        # 2. Tratar Chave caso status mude para reembolsado / cancelado
+        if status in ('refunded', 'pending', 'cancelled') and old_status in ('approved', 'paid_no_key'):
+            if order['key_assigned_id']:
+                conn.execute('UPDATE product_keys SET is_used = 0, used_by_email = NULL WHERE id = ?', (order['key_assigned_id'],))
+
+        # 3. Tratar Comissões
+        existing_comm = conn.execute('SELECT * FROM commissions WHERE order_id = ?', (order_id,)).fetchone()
+        
+        comm_val = 0.0
+        if raw_commission:
+            try:
+                comm_val = float(str(raw_commission).replace('R$', '').replace(',', '.').strip())
+            except Exception:
+                comm_val = 0.0
+                
+        if remove_commission or comm_val <= 0 or not seller_coupon:
+            # Remover comissão se solicitado, se valor <= 0 ou se sem cupom de vendedor
+            if existing_comm:
+                conn.execute('DELETE FROM commissions WHERE order_id = ?', (order_id,))
+            if remove_commission:
+                seller_coupon = ''
+        else:
+            # Manter/atualizar comissão
+            if existing_comm:
+                conn.execute('''
+                    UPDATE commissions 
+                    SET seller_coupon = ?, sale_amount = ?, commission_amount = ?, notes = ?
+                    WHERE id = ?
+                ''', (seller_coupon, amount, comm_val, 'Comissão editada manualmente pelo admin', existing_comm['id']))
+            else:
+                conn.execute('''
+                    INSERT INTO commissions (seller_coupon, order_id, sale_amount, commission_amount, status, notes)
+                    VALUES (?, ?, ?, ?, 'pending', ?)
+                ''', (seller_coupon, order_id, amount, comm_val, 'Comissão adicionada manualmente pelo admin'))
+
+        # 4. Tratar Data / Horário
+        if created_at:
+            created_at = created_at.replace('T', ' ')
+            if len(created_at) == 10:
+                created_at += " 12:00:00"
+            elif len(created_at) == 16:
+                created_at += ":00"
+            conn.execute('''
+                UPDATE orders SET
+                    product_id = ?,
+                    amount = ?,
+                    subtotal = ?,
+                    total = ?,
+                    customer_name = ?,
+                    customer_email = ?,
+                    customer_phone = ?,
+                    status = ?,
+                    seller_coupon = ?,
+                    coupon_code = ?,
+                    created_at = ?,
+                    updated_at = ?
+                WHERE id = ?
+            ''', (product_id, amount, amount, amount, customer_name, customer_email, customer_phone, status, seller_coupon, coupon_code, created_at, created_at, order_id))
+        else:
+            conn.execute('''
+                UPDATE orders SET
+                    product_id = ?,
+                    amount = ?,
+                    subtotal = ?,
+                    total = ?,
+                    customer_name = ?,
+                    customer_email = ?,
+                    customer_phone = ?,
+                    status = ?,
+                    seller_coupon = ?,
+                    coupon_code = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (product_id, amount, amount, amount, customer_name, customer_email, customer_phone, status, seller_coupon, coupon_code, order_id))
+            
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Venda online atualizada com sucesso!'})
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 
@@ -1113,12 +1353,15 @@ def list_pending_orders():
 def register_sales_routes(bp):
     bp.route('/painel-mestre/sales/manual/add', methods=['POST'])(add_manual_sale)
     bp.route('/painel-mestre/sales/manual/list', methods=['GET'])(list_manual_sales)
+    bp.route('/painel-mestre/sales/manual/info/<int:sale_id>', methods=['GET'])(get_manual_sale_info)
     bp.route('/painel-mestre/sales/manual/edit/<int:sale_id>', methods=['POST'])(edit_manual_sale)
     bp.route('/painel-mestre/sales/manual/delete/<int:sale_id>', methods=['POST'])(delete_manual_sale)
+    bp.route('/painel-mestre/sales/online/info/<int:order_id>', methods=['GET'])(get_online_sale_info)
+    bp.route('/painel-mestre/sales/online/edit/<int:order_id>', methods=['POST'])(edit_online_sale)
+    bp.route('/painel-mestre/sales/online/delete/<int:order_id>', methods=['POST'])(delete_online_sale)
     bp.route('/painel-mestre/sales/report', methods=['GET'])(sales_report)
     bp.route('/painel-mestre/sales/proof/<int:order_id>', methods=['GET'])(get_order_proof)
     bp.route('/painel-mestre/sales/insights', methods=['GET'])(sales_insights)
     bp.route('/painel-mestre/sales/manual/pay/<int:sale_id>', methods=['POST'])(pay_manual_sale)
     bp.route('/painel-mestre/sales/pending/list', methods=['GET'])(list_pending_orders)
-    bp.route('/painel-mestre/sales/online/delete/<int:order_id>', methods=['POST'])(delete_online_sale)
 

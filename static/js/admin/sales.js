@@ -139,6 +139,37 @@ function setupManualSaleForm() {
             alert('Erro: ' + err);
         }
     });
+
+    // Event listener para o formulário de edição de venda online
+    document.getElementById('editOnlineSaleForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit_online_order_id').value;
+        const formData = new FormData(e.target);
+        const msg = document.getElementById('editOnlineSaleMessage');
+
+        try {
+            const res = await fetch(`/painel-mestre/sales/online/edit/${id}`, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (data.success) {
+                msg.textContent = '✅ ' + data.message;
+                msg.className = 'mt-4 p-2 bg-green-900/30 border border-green-500 text-green-400 rounded text-center font-bold';
+                setTimeout(() => {
+                    closeModal('editOnlineSaleModal');
+                    loadManualSales();
+                    if (typeof loadSalesReport === 'function') loadSalesReport();
+                    msg.textContent = '';
+                    msg.classList.add('hidden');
+                }, 1000);
+            } else {
+                msg.textContent = '❌ ' + (data.error || 'Erro ao atualizar venda online');
+                msg.className = 'mt-4 p-2 bg-red-900/30 border border-red-500 text-red-400 rounded text-center font-bold';
+            }
+            msg.classList.remove('hidden');
+        } catch (err) {
+            alert('Erro: ' + err);
+        }
+    });
 }
 
 function changeSalesLimit() {
@@ -276,8 +307,11 @@ async function loadManualSales() {
             if (sale.type === 'online') {
                 typeBadge = '<span class="px-2 py-1 bg-green-900/50 text-green-400 rounded text-xs border border-green-500/30">Online</span>';
                 clientInfo = `<span class="text-xs text-gray-300">${sale.client_info || 'N/A'}</span>`;
-                actions = `<button onclick="viewOrderProof(${sale.id})" class="text-cyan-400 hover:text-cyan-300 mr-2" title="Dossiê Anti-Fraude">🛡️</button>
-                           <button onclick="deleteOnlineSale(${sale.id})" class="text-red-400 hover:text-red-300" title="Cancelar/Excluir Venda Online">🗑️</button>`;
+                actions = `
+                    <button onclick="viewOrderProof(${sale.id})" class="text-cyan-400 hover:text-cyan-300 mr-2" title="Dossiê Anti-Fraude">🛡️</button>
+                    <button onclick="openEditOnlineSale(${sale.id})" class="text-blue-400 hover:text-blue-300 mr-2" title="Editar Venda Online">✏️</button>
+                    <button onclick="deleteOnlineSale(${sale.id})" class="text-red-400 hover:text-red-300" title="Cancelar/Excluir Venda Online">🗑️</button>
+                `;
             } else {
                 typeBadge = '<span class="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs border border-purple-500/30">Manual</span>';
                 clientInfo = `<span class="text-xs text-gray-400 italic">${sale.client_info || '-'}</span>`;
@@ -372,9 +406,89 @@ function openEditManualSale(id, pid, qty, price, cost, notes, createdAt, status,
         document.getElementById('edit_sale_created_at').value = '';
     }
     
+    // Carregar informações detalhadas da comissão e cupom
+    const commInput = document.getElementById('edit_sale_commission_amount');
+    const sellerInput = document.getElementById('edit_sale_seller_coupon');
+    const removeCheck = document.getElementById('edit_sale_remove_commission');
+    if (commInput) commInput.value = '';
+    if (sellerInput) sellerInput.value = '';
+    if (removeCheck) removeCheck.checked = false;
+
+    fetch(`/painel-mestre/sales/manual/info/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.sale) {
+                if (sellerInput) sellerInput.value = data.sale.seller_coupon || data.sale.coupon_code || '';
+                if (commInput) commInput.value = data.sale.commission_amount > 0 ? Number(data.sale.commission_amount).toFixed(2) : '0.00';
+            }
+        })
+        .catch(() => {});
+    
     const modal = document.getElementById('editManualSaleModal');
     modal?.classList.remove('hidden');
     modal?.classList.add('modal-active');
+}
+
+async function openEditOnlineSale(orderId) {
+    try {
+        const res = await fetch(`/painel-mestre/sales/online/info/${orderId}`);
+        const data = await res.json();
+        if (!data.success) {
+            alert('Erro ao carregar dados do pedido: ' + (data.error || 'Não encontrado'));
+            return;
+        }
+        const o = data.order;
+        document.getElementById('edit_online_order_id').value = o.id;
+        document.getElementById('edit_online_product_id').value = o.product_id;
+        document.getElementById('edit_online_amount').value = (o.amount !== null && o.amount !== undefined) ? Number(o.amount).toFixed(2) : '0.00';
+        document.getElementById('edit_online_status').value = o.status || 'approved';
+        
+        // Formatar data para o input datetime-local (YYYY-MM-DDTHH:MM:SS)
+        if (o.created_at) {
+            const date = new Date(o.created_at);
+            const pad = (n) => n.toString().padStart(2, '0');
+            const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+            document.getElementById('edit_online_created_at').value = formatted;
+        } else {
+            document.getElementById('edit_online_created_at').value = '';
+        }
+
+        document.getElementById('edit_online_customer_name').value = o.customer_name || '';
+        document.getElementById('edit_online_customer_email').value = o.customer_email || '';
+        document.getElementById('edit_online_customer_phone').value = o.customer_phone || '';
+        
+        document.getElementById('edit_online_seller_coupon').value = o.seller_coupon || '';
+        const commAmt = o.commission_amount || 0;
+        const commInput = document.getElementById('edit_online_commission_amount');
+        commInput.value = commAmt > 0 ? Number(commAmt).toFixed(2) : '0.00';
+        commInput.dataset.originalCommission = commInput.value;
+        commInput.dataset.savedVal = commInput.value;
+
+        const removeCommCheck = document.getElementById('edit_online_remove_commission');
+        if (removeCommCheck) removeCommCheck.checked = false;
+
+        const commBadge = document.getElementById('edit_online_commission_badge');
+        if (commBadge) {
+            if (commAmt > 0) {
+                commBadge.innerHTML = `<span class="px-2 py-0.5 bg-amber-900/60 text-amber-300 border border-amber-500/50 rounded text-xs font-semibold">Comissão ativa: R$ ${commAmt.toFixed(2)} (${o.seller_coupon || 'Afiliado'})</span>`;
+            } else {
+                commBadge.innerHTML = `<span class="px-2 py-0.5 bg-gray-800 text-gray-400 rounded text-xs">Sem comissão vinculada</span>`;
+            }
+        }
+
+        const msg = document.getElementById('editOnlineSaleMessage');
+        if (msg) {
+            msg.textContent = '';
+            msg.classList.add('hidden');
+        }
+
+        const modal = document.getElementById('editOnlineSaleModal');
+        modal?.classList.remove('hidden');
+        modal?.classList.add('modal-active');
+    } catch (err) {
+        console.error('Erro ao abrir edição de venda online:', err);
+        alert('Erro ao carregar dados da venda online.');
+    }
 }
 
 async function deleteManualSale(id) {

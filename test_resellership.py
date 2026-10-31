@@ -49,35 +49,23 @@ def test_resellership():
         balance_data = api.get_balance()
         print("   ✅ Resposta recebida com sucesso!")
         
-        # Pode vir direto ou dentro de 'data' ou 'wallet'
         balance = None
         currency = "USD"
         stats = None
 
         if isinstance(balance_data, dict):
-            # Tenta campos diretos
             balance = balance_data.get("balance") or balance_data.get("walletBalance") or balance_data.get("wallet_balance")
             currency = balance_data.get("currency") or "USD"
             stats = balance_data.get("stats")
             
-            # Se tiver sub-objeto 'data'
             if balance is None and isinstance(balance_data.get("data"), dict):
                 sub = balance_data["data"]
                 balance = sub.get("balance") or sub.get("walletBalance") or sub.get("wallet_balance")
                 currency = sub.get("currency") or currency
                 stats = sub.get("stats") or stats
 
-            # Se tiver sub-objeto 'wallet'
-            if balance is None and isinstance(balance_data.get("wallet"), dict):
-                sub = balance_data["wallet"]
-                balance = sub.get("balance")
-                currency = sub.get("currency") or currency
-
         if balance is not None:
             print(f"   💰 Saldo atual: {balance} {currency}")
-        else:
-            print(f"   ℹ️ Dados brutos de saldo: {json.dumps(balance_data, ensure_ascii=False)}")
-
         if stats:
             print(f"   📊 Estatísticas: {stats}")
 
@@ -92,58 +80,10 @@ def test_resellership():
         products_data = api.get_products(page=1, limit=50)
         print("   ✅ Catálogo consultado com sucesso!")
         
-        items = []
-        if isinstance(products_data, dict):
-            # Tenta extrair lista de produtos
-            raw_items = products_data.get("products") or products_data.get("data") or products_data.get("items") or []
-            if isinstance(raw_items, dict):
-                items = list(raw_items.values())
-            elif isinstance(raw_items, list):
-                items = raw_items
-            else:
-                items = [raw_items]
-        elif isinstance(products_data, list):
-            items = products_data
-
-        print(f"   📦 Total de produtos retornados nesta página: {len(items)}")
-
-        for idx, item in enumerate(items, 1):
-            if not isinstance(item, dict):
-                continue
-
-            pid = item.get("id") or item.get("productId")
-            pname = item.get("name") or item.get("title") or "Sem nome"
-            price = item.get("price") or item.get("unitPrice") or "N/A"
-            stock = item.get("available") or item.get("availableCodes") or item.get("stock")
-
-            stock_info = f" (Estoque: {stock})" if stock is not None else ""
-            print(f"\n      {idx}. [ID {pid}] {pname} — Preço: {price}{stock_info}")
-
-            # Opções / Variantes (ex: 1 dia, 7 dias, 30 dias)
-            opts_raw = item.get("options")
-            opts = []
-            if isinstance(opts_raw, dict):
-                opts = list(opts_raw.values())
-            elif isinstance(opts_raw, list):
-                opts = opts_raw
-
-            if opts:
-                for opt in opts:
-                    if isinstance(opt, dict):
-                        oid = opt.get("id") or opt.get("optionId")
-                        oname = opt.get("name") or opt.get("duration") or opt.get("title") or "Padrão"
-                        oprice = opt.get("price") or "N/A"
-                        ostock = opt.get("available") or opt.get("stock")
-                        st_text = f" [Estoque: {ostock}]" if ostock is not None else ""
-                        print(f"         └─ Opção ID {oid}: {oname} — Preço: {oprice}{st_text}")
-                        print(f"            👉 Configuração no Painel Admin: Game Type = resellership:{pid}:{oid}")
-            else:
-                print(f"         👉 Configuração no Painel Admin: Game Type = resellership:{pid}")
-
-        print("\n💡 Dica de configuração no Painel Admin:")
-        print("   No menu de Produtos do Painel Mestre, configure:")
-        print("   • Campo 'Game Type':  resellership:<ID_DO_PRODUTO>:<ID_DA_OPCAO>")
-        print("   • Ou sem opção:      resellership:<ID_DO_PRODUTO>")
+        # Mostra o formato real retornado pela API
+        print("\n--- [JSON BRUTO DOS PRODUTOS] ---")
+        print(json.dumps(products_data, indent=2, ensure_ascii=False)[:3000])
+        print("--- [FIM DO JSON] ---\n")
 
     except ResellershipApiError as e:
         print(f"   ❌ Erro ao consultar produtos: {e}")
@@ -156,32 +96,16 @@ def test_resellership():
         orders_data = api.get_orders(page=1, limit=5)
         print("   ✅ Histórico de pedidos consultado com sucesso!")
         
-        orders_list = []
-        if isinstance(orders_data, dict):
-            raw_orders = orders_data.get("orders") or orders_data.get("data") or []
-            if isinstance(raw_orders, dict):
-                orders_list = list(raw_orders.values())
-            elif isinstance(raw_orders, list):
-                orders_list = raw_orders
-        elif isinstance(orders_data, list):
-            orders_list = orders_data
-
-        print(f"   📋 Pedidos recentes encontrados: {len(orders_list)}")
-        for o in orders_list[:3]:
-            if isinstance(o, dict):
-                oid = o.get("id") or o.get("orderId")
-                ostatus = o.get("status") or "concluído"
-                oprod = o.get("productName") or o.get("productId")
-                ocodes = ResellershipApi.extract_delivered_codes(o)
-                codes_sample = f" (Chaves: {', '.join(ocodes[:2])})" if ocodes else ""
-                print(f"      • Pedido #{oid} — Status: {ostatus} — Produto: {oprod}{codes_sample}")
+        print("\n--- [JSON BRUTO DOS PEDIDOS] ---")
+        print(json.dumps(orders_data, indent=2, ensure_ascii=False)[:2000])
+        print("--- [FIM DO JSON PEDIDOS] ---\n")
 
     except ResellershipApiError as e:
         print(f"   ⚠️ Consulta de pedidos: {e}")
     except Exception as e:
         print(f"   ⚠️ Erro ao consultar pedidos: {e}")
 
-    print("\n" + "=" * 60)
+    print("=" * 60)
     print("🎉 Integração validada e pronta para uso!")
     print("=" * 60)
 

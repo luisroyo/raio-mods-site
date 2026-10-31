@@ -182,8 +182,7 @@ def redeem_key_admin():
                     delivered_codes = ResellershipApi.extract_delivered_codes(response)
                     if delivered_codes:
                         generated_key = "\n".join(delivered_codes)
-                        order_info = response.get("order") if isinstance(response.get("order"), dict) else response
-                        rs_order_id = order_info.get("id") or response.get("correlationId")
+                        rs_order_id = ResellershipApi.extract_order_id(response)
                         cursor = conn.execute(
                             'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
                             (product_id, generated_key, str(rs_order_id) if rs_order_id else None, used_by)

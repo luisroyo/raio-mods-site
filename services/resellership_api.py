@@ -209,7 +209,7 @@ class ResellershipApi:
     def get_products(
         self,
         page: int = 1,
-        limit: int = 20,
+        limit: int = 100,
         category_id: Optional[int] = None,
         search: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -284,20 +284,35 @@ class ResellershipApi:
     def extract_delivered_codes(order_response: Dict[str, Any]) -> List[str]:
         """
         Extrai de forma resiliente a lista de chaves/códigos entregues pela API.
+        Suporta respostas onde os dados estão na raiz ou encapsulados em 'data' ou 'order'.
         """
         codes: List[str] = []
         if not isinstance(order_response, dict):
             return codes
 
+        data = order_response.get("data") if isinstance(order_response.get("data"), dict) else {}
+        order = order_response.get("order") if isinstance(order_response.get("order"), dict) else {}
+        data_order = data.get("order") if isinstance(data.get("order"), dict) else {}
+
         raw_candidates = [
             order_response.get("codes"),
-            order_response.get("order", {}).get("codes") if isinstance(order_response.get("order"), dict) else None,
-            order_response.get("data", {}).get("codes") if isinstance(order_response.get("data"), dict) else None,
+            data.get("codes"),
+            order.get("codes"),
+            data_order.get("codes"),
             order_response.get("deliveredCodes"),
+            data.get("deliveredCodes"),
+            order.get("deliveredCodes"),
+            data_order.get("deliveredCodes"),
             order_response.get("delivered_codes"),
+            data.get("delivered_codes"),
+            order.get("delivered_codes"),
+            data_order.get("delivered_codes"),
             order_response.get("deliveredCode"),
+            data.get("deliveredCode"),
             order_response.get("code"),
-            order_response.get("order", {}).get("code") if isinstance(order_response.get("order"), dict) else None,
+            data.get("code"),
+            order.get("code"),
+            data_order.get("code"),
         ]
 
         for cand in raw_candidates:
@@ -345,3 +360,25 @@ class ResellershipApi:
 
         return codes
 
+    @staticmethod
+    def extract_order_id(order_response: Dict[str, Any]) -> Optional[Any]:
+        """
+        Extrai o ID do pedido retornado pela Resellership.
+        """
+        if not isinstance(order_response, dict):
+            return None
+
+        data = order_response.get("data") if isinstance(order_response.get("data"), dict) else {}
+        order = order_response.get("order") if isinstance(order_response.get("order"), dict) else {}
+        data_order = data.get("order") if isinstance(data.get("order"), dict) else {}
+
+        return (
+            order.get("id")
+            or data_order.get("id")
+            or order.get("orderNumber")
+            or data_order.get("orderNumber")
+            or data.get("id")
+            or data.get("orderId")
+            or order_response.get("id")
+            or order_response.get("correlationId")
+        )

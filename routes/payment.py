@@ -161,8 +161,7 @@ def process_approved_payment(order_ref: str, p_id: str):
                         delivered_codes = ResellershipApi.extract_delivered_codes(response)
                         if delivered_codes:
                             key_value = "\n".join(delivered_codes)
-                            order_info = response.get("order") if isinstance(response.get("order"), dict) else response
-                            rs_order_id = order_info.get("id") or response.get("correlationId")
+                            rs_order_id = ResellershipApi.extract_order_id(response)
                             cursor = conn.execute(
                                 'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
                                 (order['product_id'], key_value, str(rs_order_id) if rs_order_id else None)

@@ -78,7 +78,7 @@ def process_approved_payment(order_ref: str, p_id: str):
         
             key = None
         
-            if api_game_type and api_duration:
+            if api_game_type:
                 try:
                     if str(api_game_type).startswith("ninja:"):
                         from services.ninja_api import NinjaSellerApi
@@ -128,7 +128,52 @@ def process_approved_payment(order_ref: str, p_id: str):
                         else:
                             raise Exception(f"Erro na resposta da API Ninja: {response}")
 
-                    else:
+                    elif str(api_game_type).lower().startswith(("resellership:", "rs:")):
+                        from services.resellership_api import ResellershipApi
+                        rs_api = ResellershipApi()
+                        idempotency_key = ResellershipApi.new_intended_action_key()
+                        
+                        parts = str(api_game_type).split(":")
+                        # Formato: resellership:PRODUCT_ID ou resellership:PRODUCT_ID:OPTION_ID
+                        rs_product_id = int(parts[1]) if len(parts) > 1 and parts[1].strip() else None
+                        rs_option_id = None
+                        if len(parts) > 2 and parts[2].strip():
+                            try:
+                                rs_option_id = int(parts[2])
+                            except ValueError:
+                                rs_option_id = None
+                        elif api_duration:
+                            try:
+                                rs_option_id = int(api_duration)
+                            except ValueError:
+                                rs_option_id = None
+                        
+                        if not rs_product_id:
+                            raise ValueError(f"Product ID da Resellership não configurado em api_game_type: '{api_game_type}'")
+
+                        response = rs_api.create_order(
+                            product_id=rs_product_id,
+                            quantity=1,
+                            option_id=rs_option_id,
+                            idempotency_key=idempotency_key
+                        )
+
+                        delivered_codes = ResellershipApi.extract_delivered_codes(response)
+                        if delivered_codes:
+                            key_value = "\n".join(delivered_codes)
+                            order_info = response.get("order") if isinstance(response.get("order"), dict) else response
+                            rs_order_id = order_info.get("id") or response.get("correlationId")
+                            cursor = conn.execute(
+                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id) VALUES (?, ?, 1, ?)',
+                                (order['product_id'], key_value, str(rs_order_id) if rs_order_id else None)
+                            )
+                            new_key_id = cursor.lastrowid
+                            key = conn.execute('SELECT * FROM product_keys WHERE id = ?', (new_key_id,)).fetchone()
+                            logger.info(f"Chave gerada via API Resellership: ID {key['id']} (order {rs_order_id}, {api_game_type})")
+                        else:
+                            raise Exception(f"Nenhum código retornado pela API Resellership: {response}")
+
+                    elif api_duration:
                         from services.kos_api import KosSellerApi
                         kos_api = KosSellerApi()
                         idempotency_key = KosSellerApi.new_intended_action_key()

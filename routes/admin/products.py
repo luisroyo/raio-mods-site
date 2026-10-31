@@ -550,9 +550,37 @@ def product_info(pid):
         return jsonify({'error': str(e)}), 500
 
 
+def resellership_balance():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    try:
+        from services.resellership_api import ResellershipApi
+        api = ResellershipApi()
+        data = api.get_balance()
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+def resellership_products():
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '401'}), 401
+    try:
+        from services.resellership_api import ResellershipApi
+        api = ResellershipApi()
+        page = request.args.get('page', 1, type=int)
+        search = request.args.get('search')
+        data = api.get_products(page=page, limit=100, search=search)
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
 def register_products_routes(bp):
     bp.route('/painel-mestre/add', methods=['POST'])(add_product)
     bp.route('/painel-mestre/delete/<int:pid>', methods=['POST'])(delete_product)
     bp.route('/painel-mestre/edit/<int:pid>', methods=['POST'])(edit_product)
     bp.route('/painel-mestre/product/info/<int:pid>', methods=['GET'])(product_info)
+    bp.route('/painel-mestre/api/resellership/balance', methods=['GET'])(resellership_balance)
+    bp.route('/painel-mestre/api/resellership/products', methods=['GET'])(resellership_products)
 

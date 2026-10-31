@@ -105,7 +105,7 @@ def redeem_key_admin():
             used_by += f" - {client_email}"
             
         # 2. Tentar gerar chave via API (Ninja ou KOS)
-        if api_game_type and api_duration:
+        if api_game_type:
             try:
                 if str(api_game_type).startswith("ninja:"):
                     from services.ninja_api import NinjaSellerApi
@@ -150,7 +150,50 @@ def redeem_key_admin():
                     else:
                         raise Exception(f"Erro na resposta da API Ninja: {response}")
 
-                else:
+                elif str(api_game_type).lower().startswith(("resellership:", "rs:")):
+                    from services.resellership_api import ResellershipApi
+                    rs_api = ResellershipApi()
+                    idempotency_key = ResellershipApi.new_intended_action_key()
+                    
+                    parts = str(api_game_type).split(":")
+                    rs_product_id = int(parts[1]) if len(parts) > 1 and parts[1].strip() else None
+                    rs_option_id = None
+                    if len(parts) > 2 and parts[2].strip():
+                        try:
+                            rs_option_id = int(parts[2])
+                        except ValueError:
+                            rs_option_id = None
+                    elif api_duration:
+                        try:
+                            rs_option_id = int(api_duration)
+                        except ValueError:
+                            rs_option_id = None
+
+                    if not rs_product_id:
+                        raise ValueError(f"Product ID da Resellership não configurado em api_game_type: '{api_game_type}'")
+
+                    response = rs_api.create_order(
+                        product_id=rs_product_id,
+                        quantity=1,
+                        option_id=rs_option_id,
+                        idempotency_key=idempotency_key
+                    )
+
+                    delivered_codes = ResellershipApi.extract_delivered_codes(response)
+                    if delivered_codes:
+                        generated_key = "\n".join(delivered_codes)
+                        order_info = response.get("order") if isinstance(response.get("order"), dict) else response
+                        rs_order_id = order_info.get("id") or response.get("correlationId")
+                        cursor = conn.execute(
+                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                            (product_id, generated_key, str(rs_order_id) if rs_order_id else None, used_by)
+                        )
+                        key_id = cursor.lastrowid
+                        key_value = generated_key
+                    else:
+                        raise Exception(f"Nenhum código retornado pela API Resellership: {response}")
+
+                elif api_duration:
                     from services.kos_api import KosSellerApi
                     kos_api = KosSellerApi()
                     idempotency_key = KosSellerApi.new_intended_action_key()
@@ -184,7 +227,12 @@ def redeem_key_admin():
                 import traceback
                 traceback.print_exc()
                 api_error_msg = str(e)
-                api_error_name = "Ninja API" if str(api_game_type).startswith("ninja:") else "KOS API"
+                if str(api_game_type).startswith("ninja:"):
+                    api_error_name = "Ninja API"
+                elif str(api_game_type).lower().startswith(("resellership:", "rs:")):
+                    api_error_name = "Resellership API"
+                else:
+                    api_error_name = "KOS API"
                 # Em caso de erro, continua para o fallback
         
         # 3. Fallback: Buscar uma chave disponível (is_used = 0) do estoque local

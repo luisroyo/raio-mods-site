@@ -304,6 +304,10 @@ class ResellershipApi:
             if cand is None:
                 continue
 
+            # Se vier como dicionário com chaves numéricas ("0", "1", ...) típico de PHP
+            if isinstance(cand, dict) and not any(k in cand for k in ("code", "key", "license", "value", "key_string", "code_string")):
+                cand = list(cand.values())
+
             if isinstance(cand, list):
                 for item in cand:
                     if isinstance(item, str) and item.strip():

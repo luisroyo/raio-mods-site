@@ -67,20 +67,122 @@ def pay_commissions():
         return jsonify({'error': '401'}), 401
         
     data = request.json or {}
-    seller_coupon = data.get('seller_coupon')
+    seller_coupon = (data.get('seller_coupon') or '').strip().upper()
+    amount_val = data.get('amount')
+    notes = (data.get('notes') or '').strip()
     
     if not seller_coupon:
         return jsonify({'error': 'Vendedor não especificado'}), 400
         
     conn = get_db_connection()
     try:
-        conn.execute('''
-            UPDATE commissions 
-            SET status = 'paid', paid_at = CURRENT_TIMESTAMP
+        # Busca todas as comissões pendentes do vendedor
+        pending_rows = conn.execute('''
+            SELECT * FROM commissions 
             WHERE seller_coupon = ? AND status = 'pending'
-        ''', (seller_coupon,))
+            ORDER BY CASE WHEN commission_amount < 0 THEN 0 ELSE 1 END, id ASC
+        ''', (seller_coupon,)).fetchall()
+        
+        if not pending_rows:
+            return jsonify({'error': 'Nenhuma comissão pendente encontrada para este vendedor.'}), 400
+            
+        total_pending = round(sum(float(r['commission_amount'] or 0.0) for r in pending_rows), 2)
+        
+        # Se amount não foi informado, considera quitação total
+        if amount_val is None or str(amount_val).strip() == '':
+            amount_to_pay = total_pending
+        else:
+            try:
+                amount_to_pay = round(float(str(amount_val).replace(',', '.')), 2)
+            except ValueError:
+                return jsonify({'error': 'Valor de pagamento inválido'}), 400
+                
+        if amount_to_pay <= 0:
+            return jsonify({'error': 'O valor do pagamento deve ser maior que zero'}), 400
+            
+        if amount_to_pay > total_pending + 0.01:
+            return jsonify({'error': f'O valor informado (R$ {amount_to_pay:.2f}) é maior que o saldo pendente (R$ {total_pending:.2f})'}), 400
+
+        # Caso 1: Pagamento TOTAL (ou se o valor informado cobrir o saldo total)
+        if amount_to_pay >= total_pending - 0.01:
+            note_suffix = f" | {notes}" if notes else ""
+            conn.execute('''
+                UPDATE commissions 
+                SET status = 'paid', paid_at = CURRENT_TIMESTAMP,
+                    notes = CASE WHEN ? != '' THEN notes || ? ELSE notes END
+                WHERE seller_coupon = ? AND status = 'pending'
+            ''', (note_suffix, note_suffix, seller_coupon))
+            conn.commit()
+            return jsonify({
+                'success': True,
+                'message': f'Quitação total de R$ {total_pending:.2f} realizada com sucesso!'
+            })
+
+        # Caso 2: Pagamento PARCIAL (FIFO com divisão do último registro necessário)
+        remaining = amount_to_pay
+        
+        # 1. Primeiro processa registros negativos (descontos pendentes) se houver
+        for row in pending_rows:
+            comm_amt = float(row['commission_amount'] or 0.0)
+            if comm_amt < 0:
+                conn.execute('''
+                    UPDATE commissions 
+                    SET status = 'paid', paid_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ''', (row['id'],))
+                remaining = round(remaining + abs(comm_amt), 2)
+
+        # 2. Agora abate dos registros positivos
+        for row in pending_rows:
+            comm_amt = float(row['commission_amount'] or 0.0)
+            if comm_amt <= 0:
+                continue
+                
+            if remaining <= 0.001:
+                break
+                
+            if comm_amt <= remaining + 0.001:
+                # Cobre totalmente este lançamento
+                pay_note = f" (Pago: R$ {comm_amt:.2f}{' - ' + notes if notes else ''})"
+                conn.execute('''
+                    UPDATE commissions 
+                    SET status = 'paid', paid_at = CURRENT_TIMESTAMP,
+                        notes = notes || ?
+                    WHERE id = ?
+                ''', (pay_note, row['id']))
+                remaining = round(remaining - comm_amt, 2)
+            else:
+                # Cobre parcialmente este lançamento: divide em dois
+                paid_part = remaining
+                leftover = round(comm_amt - paid_part, 2)
+                
+                note_paid = f"Pagamento parcial de R$ {paid_part:.2f} (original: R$ {comm_amt:.2f})"
+                if notes:
+                    note_paid += f" - {notes}"
+                    
+                conn.execute('''
+                    UPDATE commissions 
+                    SET commission_amount = ?, status = 'paid', paid_at = CURRENT_TIMESTAMP,
+                        notes = CASE WHEN notes != '' THEN notes || ' | ' || ? ELSE ? END
+                    WHERE id = ?
+                ''', (paid_part, note_paid, note_paid, row['id']))
+                
+                note_leftover = f"Saldo restante de comissão (original: R$ {comm_amt:.2f})"
+                conn.execute('''
+                    INSERT INTO commissions (seller_coupon, order_id, manual_sale_id, sale_amount, commission_amount, status, notes)
+                    VALUES (?, ?, ?, 0, ?, 'pending', ?)
+                ''', (seller_coupon, row['order_id'], row['manual_sale_id'], leftover, note_leftover))
+                
+                remaining = 0.0
+                break
+                
         conn.commit()
-        return jsonify({'success': True, 'message': 'Comissões marcadas como pagas!'})
+        restante_saldo = round(total_pending - amount_to_pay, 2)
+        return jsonify({
+            'success': True,
+            'message': f'Pagamento parcial de R$ {amount_to_pay:.2f} registrado com sucesso! Saldo restante: R$ {restante_saldo:.2f}'
+        })
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:

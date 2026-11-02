@@ -42,7 +42,7 @@ async function loadCoupons() {
                     <div class="font-mono font-bold text-amber-400">${c.code}</div>
                     <div class="mt-1 flex items-center gap-1 flex-wrap">
                         ${statusBadge}
-                        ${c.is_seller ? `<span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs" title="Cupom exclusivo para vendedores">Vendedor (${c.commission_percentage || 0}%)</span>` : ''}
+                        ${c.is_seller ? `<a href="/painel-mestre/commissions" class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-2 py-1 rounded text-xs transition inline-flex items-center gap-1" title="Clique para ver e pagar comissões deste vendedor">Vendedor (${c.commission_percentage || 0}%) ↗</a>` : ''}
                     </div>
                 </td>
                 <td class="p-4 text-white">${discount}</td>

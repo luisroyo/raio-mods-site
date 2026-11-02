@@ -70,7 +70,7 @@ function renderSummary() {
         
         const isPending = s.total_pending > 0;
         const btnClass = isPending ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-gray-700 text-gray-500 cursor-not-allowed';
-        const onClickPay = isPending ? `onclick="payCommissions('${s.seller_coupon}')"` : '';
+        const onClickPay = isPending ? `onclick="openPayModal('${s.seller_coupon}', ${parseFloat(s.total_pending || 0)})"` : '';
         const currentRate = parseFloat(s.commission_percentage || 0);
         
         tr.innerHTML = `
@@ -188,26 +188,149 @@ function renderHistory() {
    AÇÕES: Pagar, Excluir, Modais
    ======================================================== */
 
-async function payCommissions(sellerCoupon) {
-    if (!confirm(`Confirma a quitação de todas as comissões pendentes para o vendedor ${sellerCoupon}?\n\n(Certifique-se de já ter realizado a transferência via Pix)`)) return;
-    
+let currentPaySeller = '';
+let currentTotalPending = 0;
+
+function openPayModal(sellerCoupon, totalPending) {
+    currentPaySeller = sellerCoupon;
+    currentTotalPending = parseFloat(totalPending || 0);
+
+    const inputSeller = document.getElementById('pay_seller');
+    if (inputSeller) inputSeller.value = sellerCoupon;
+
+    const labelSeller = document.getElementById('pay_seller_label');
+    if (labelSeller) labelSeller.innerText = sellerCoupon;
+
+    const totalEl = document.getElementById('pay_total_pending');
+    if (totalEl) totalEl.innerText = `R$ ${currentTotalPending.toFixed(2).replace('.', ',')}`;
+
+    const totalDesc = document.getElementById('pay_type_total_desc');
+    if (totalDesc) totalDesc.innerText = `R$ ${currentTotalPending.toFixed(2).replace('.', ',')}`;
+
+    const notesInput = document.getElementById('pay_notes');
+    if (notesInput) notesInput.value = '';
+
+    // Inicializa marcando Quitar Total
+    selectPayType('total');
+
+    document.getElementById('payModal')?.classList.remove('hidden');
+}
+
+function closePayModal() {
+    document.getElementById('payModal')?.classList.add('hidden');
+}
+
+function selectPayType(type) {
+    const totalBtn = document.getElementById('pay_type_total_btn');
+    const partialBtn = document.getElementById('pay_type_partial_btn');
+    const amountInput = document.getElementById('pay_amount');
+
+    if (type === 'total') {
+        if (totalBtn) totalBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-emerald-600/20 border-emerald-500 text-emerald-300';
+        if (partialBtn) partialBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-white';
+        if (amountInput) amountInput.value = currentTotalPending.toFixed(2);
+    } else {
+        if (totalBtn) totalBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-white';
+        if (partialBtn) partialBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-cyan-600/20 border-cyan-500 text-cyan-300';
+        if (amountInput) {
+            amountInput.focus();
+            amountInput.select();
+        }
+    }
+    onPayAmountChange();
+}
+
+function fillFullPayAmount() {
+    selectPayType('total');
+}
+
+function onPayAmountChange() {
+    const amountInput = document.getElementById('pay_amount');
+    const rawVal = parseFloat(amountInput ? amountInput.value : 0) || 0;
+    const remaining = Math.max(0, currentTotalPending - rawVal);
+
+    const remainingEl = document.getElementById('pay_remaining_val');
+    if (remainingEl) {
+        remainingEl.innerText = `R$ ${remaining.toFixed(2).replace('.', ',')}`;
+        if (remaining === 0) {
+            remainingEl.className = 'text-emerald-400 font-mono font-bold';
+        } else {
+            remainingEl.className = 'text-amber-400 font-mono font-bold';
+        }
+    }
+
+    const totalBtn = document.getElementById('pay_type_total_btn');
+    const partialBtn = document.getElementById('pay_type_partial_btn');
+    if (Math.abs(rawVal - currentTotalPending) < 0.01) {
+        if (totalBtn) totalBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-emerald-600/20 border-emerald-500 text-emerald-300';
+        if (partialBtn) partialBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-white';
+    } else {
+        if (totalBtn) totalBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-white';
+        if (partialBtn) partialBtn.className = 'p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition bg-cyan-600/20 border-cyan-500 text-cyan-300';
+    }
+}
+
+async function submitPayCommissions(e) {
+    e.preventDefault();
+    const seller = document.getElementById('pay_seller').value.trim();
+    const amountVal = parseFloat(document.getElementById('pay_amount').value || 0);
+    const notes = document.getElementById('pay_notes').value.trim();
+
+    if (amountVal <= 0) {
+        alert('O valor a pagar deve ser maior que zero.');
+        return;
+    }
+
+    if (amountVal > currentTotalPending + 0.01) {
+        alert(`O valor (R$ ${amountVal.toFixed(2)}) não pode ser superior ao saldo pendente total (R$ ${currentTotalPending.toFixed(2)}).`);
+        return;
+    }
+
+    const isPartial = Math.abs(amountVal - currentTotalPending) >= 0.01;
+    const msg = isPartial 
+        ? `Confirma o PAGAMENTO PARCIAL de R$ ${amountVal.toFixed(2).replace('.', ',')} para o vendedor ${seller}?\n\nSaldo que continuará pendente: R$ ${(currentTotalPending - amountVal).toFixed(2).replace('.', ',')}`
+        : `Confirma a QUITAÇÃO TOTAL de R$ ${amountVal.toFixed(2).replace('.', ',')} para o vendedor ${seller}?`;
+
+    if (!confirm(msg)) return;
+
+    const submitBtn = document.getElementById('pay_submit_btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Processando...';
+    }
+
     try {
         const res = await fetch('/painel-mestre/api/commissions/pay', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ seller_coupon: sellerCoupon })
+            body: JSON.stringify({
+                seller_coupon: seller,
+                amount: amountVal,
+                notes: notes
+            })
         });
         const data = await res.json();
-        
+
         if (data.success) {
-            alert('✅ Sucesso! As comissões foram marcadas como pagas.');
+            alert(`✅ ${data.message || 'Pagamento registrado com sucesso!'}`);
+            closePayModal();
             loadCommissions();
         } else {
-            alert(data.error || 'Erro ao processar');
+            alert(`❌ ${data.error || 'Erro ao registrar pagamento'}`);
         }
-    } catch (e) {
+    } catch (err) {
         alert('Erro de conexão ao processar pagamento.');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>💳</span> Confirmar Pagamento';
+        }
     }
+}
+
+// Mantém compatibilidade com chamada direta caso seja usada em outro lugar
+async function payCommissions(sellerCoupon) {
+    openPayModal(sellerCoupon, 0);
 }
 
 async function deleteCommission(commId) {

@@ -104,135 +104,147 @@ def redeem_key_admin():
         if client_email:
             used_by += f" - {client_email}"
             
-        # 2. Tentar gerar chave via API (Ninja ou KOS)
-        if api_game_type:
-            try:
-                if str(api_game_type).startswith("ninja:"):
-                    from services.ninja_api import NinjaSellerApi
-                    ninja_api = NinjaSellerApi()
-                    idempotency_key = NinjaSellerApi.new_intended_action_key()
-                    
-                    parts = str(api_game_type).split(":")
-                    game_slug = parts[1] if len(parts) > 1 else '8ball-pool'
-                    mode = parts[2] if len(parts) > 2 else 'global'
-                    
-                    import random
-                    import string
-                    # Usamos um random id já que aqui é um resgate manual e não há order_id
-                    rand_id = ''.join(random.choices(string.digits, k=4))
-                    base_username = f"raio_{rand_id}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
-                    password = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) + "Aa1"
-                    
-                    dur = int(api_duration)
-                    if dur < 10000:
-                        dur = dur * 86400
+        # 2. Tentar gerar chave via API (Ninja, Resellership ou KOS) com suporte a múltiplas fontes
+        if api_game_type or api_duration:
+            from services.resellership_api import ResellershipApi
+            targets = ResellershipApi.parse_targets(api_game_type)
+            if not targets and (api_game_type or api_duration):
+                targets = [api_game_type] if api_game_type else [""]
 
-                    response = ninja_api.create_customer(
-                        username=base_username,
-                        password=password,
-                        game=game_slug,
-                        mode=mode,
-                        duration_seconds=dur,
-                        idempotency_key=idempotency_key
-                    )
-                    
-                    if response and response.get("customer", {}).get("username"):
-                        username = response["customer"]["username"]
-                        generated_key = f"{username}:{password}"
-                        api_key_id = None # Ninja doesn't return an ID like KOS
+            for target in targets:
+                target_str = str(target or '').strip()
+                if not target_str and not api_duration:
+                    continue
+
+                try:
+                    if target_str.startswith("ninja:"):
+                        from services.ninja_api import NinjaSellerApi
+                        ninja_api = NinjaSellerApi()
+                        idempotency_key = NinjaSellerApi.new_intended_action_key()
                         
-                        cursor = conn.execute(
-                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
-                            (product_id, generated_key, api_key_id, used_by)
+                        parts = target_str.split(":")
+                        game_slug = parts[1] if len(parts) > 1 else '8ball-pool'
+                        mode = parts[2] if len(parts) > 2 else 'global'
+                        
+                        import random
+                        import string
+                        # Usamos um random id já que aqui é um resgate manual e não há order_id
+                        rand_id = ''.join(random.choices(string.digits, k=4))
+                        base_username = f"raio_{rand_id}_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"
+                        password = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) + "Aa1"
+                        
+                        dur = int(api_duration) if api_duration else 86400
+                        if dur < 10000:
+                            dur = dur * 86400
+
+                        response = ninja_api.create_customer(
+                            username=base_username,
+                            password=password,
+                            game=game_slug,
+                            mode=mode,
+                            duration_seconds=dur,
+                            idempotency_key=idempotency_key
                         )
-                        key_id = cursor.lastrowid
-                        key_value = generated_key
-                    else:
-                        raise Exception(f"Erro na resposta da API Ninja: {response}")
-
-                elif str(api_game_type).lower().startswith(("resellership:", "rs:")):
-                    from services.resellership_api import ResellershipApi
-                    rs_api = ResellershipApi()
-                    idempotency_key = ResellershipApi.new_intended_action_key()
-                    
-                    parts = str(api_game_type).split(":")
-                    rs_product_id = int(parts[1]) if len(parts) > 1 and parts[1].strip() else None
-                    rs_option_id = None
-                    if len(parts) > 2 and parts[2].strip():
-                        try:
-                            rs_option_id = int(parts[2])
-                        except ValueError:
-                            rs_option_id = None
-                    elif api_duration:
-                        try:
-                            rs_option_id = int(api_duration)
-                        except ValueError:
-                            rs_option_id = None
-
-                    if not rs_product_id:
-                        raise ValueError(f"Product ID da Resellership não configurado em api_game_type: '{api_game_type}'")
-
-                    response = rs_api.create_order(
-                        product_id=rs_product_id,
-                        quantity=1,
-                        option_id=rs_option_id,
-                        idempotency_key=idempotency_key
-                    )
-
-                    delivered_codes = ResellershipApi.extract_delivered_codes(response)
-                    if delivered_codes:
-                        generated_key = "\n".join(delivered_codes)
-                        rs_order_id = ResellershipApi.extract_order_id(response)
-                        cursor = conn.execute(
-                            'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
-                            (product_id, generated_key, str(rs_order_id) if rs_order_id else None, used_by)
-                        )
-                        key_id = cursor.lastrowid
-                        key_value = generated_key
-                    else:
-                        raise Exception(f"Nenhum código retornado pela API Resellership: {response}")
-
-                elif api_duration:
-                    from services.kos_api import KosSellerApi
-                    kos_api = KosSellerApi()
-                    idempotency_key = KosSellerApi.new_intended_action_key()
-                    response = kos_api.generate_keys(
-                        game_type=api_game_type,
-                        duration=int(api_duration),
-                        quantity=1,
-                        idempotency_key=idempotency_key
-                    )
-                    if response and isinstance(response, dict):
-                        keys_list = response.get("keys", [])
-                        if keys_list and len(keys_list) > 0:
-                            api_key = keys_list[0]
-                            generated_key = api_key.get("key_string") or api_key.get("key")
-                            api_key_id = api_key.get("id")
+                        
+                        if response and response.get("customer", {}).get("username"):
+                            username = response["customer"]["username"]
+                            generated_key = f"{username}:{password}"
+                            api_key_id = None # Ninja doesn't return an ID like KOS
                             
-                            if generated_key:
-                                cursor = conn.execute(
-                                    'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
-                                    (product_id, generated_key, api_key_id, used_by)
-                                )
-                                key_id = cursor.lastrowid
-                                key_value = generated_key
-                            else:
-                                raise Exception(f"Chave 'key_string' não encontrada na resposta: {response}")
+                            cursor = conn.execute(
+                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                                (product_id, generated_key, api_key_id, used_by)
+                            )
+                            key_id = cursor.lastrowid
+                            key_value = generated_key
+                            break
                         else:
-                            raise Exception(f"Array 'keys' vazio ou ausente na resposta: {response}")
+                            raise Exception(f"Erro na resposta da API Ninja: {response}")
+
+                    elif target_str.lower().startswith(("resellership:", "rs:")):
+                        rs_api = ResellershipApi()
+                        idempotency_key = ResellershipApi.new_intended_action_key()
+                        
+                        parts = target_str.split(":")
+                        rs_product_id = int(parts[1]) if len(parts) > 1 and parts[1].strip() else None
+                        rs_option_id = None
+                        if len(parts) > 2 and parts[2].strip():
+                            try:
+                                rs_option_id = int(parts[2])
+                            except ValueError:
+                                rs_option_id = None
+                        elif api_duration:
+                            try:
+                                rs_option_id = int(api_duration)
+                            except ValueError:
+                                rs_option_id = None
+
+                        if not rs_product_id:
+                            raise ValueError(f"Product ID da Resellership não configurado em '{target_str}'")
+
+                        response = rs_api.create_order(
+                            product_id=rs_product_id,
+                            quantity=1,
+                            option_id=rs_option_id,
+                            idempotency_key=idempotency_key
+                        )
+
+                        delivered_codes = ResellershipApi.extract_delivered_codes(response)
+                        if delivered_codes:
+                            generated_key = "\n".join(delivered_codes)
+                            rs_order_id = ResellershipApi.extract_order_id(response)
+                            cursor = conn.execute(
+                                'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                                (product_id, generated_key, str(rs_order_id) if rs_order_id else None, used_by)
+                            )
+                            key_id = cursor.lastrowid
+                            key_value = generated_key
+                            break
+                        else:
+                            raise Exception(f"Nenhum código retornado pela API Resellership: {response}")
+
+                    elif api_duration and target_str:
+                        from services.kos_api import KosSellerApi
+                        kos_api = KosSellerApi()
+                        idempotency_key = KosSellerApi.new_intended_action_key()
+                        response = kos_api.generate_keys(
+                            game_type=target_str,
+                            duration=int(api_duration),
+                            quantity=1,
+                            idempotency_key=idempotency_key
+                        )
+                        if response and isinstance(response, dict):
+                            keys_list = response.get("keys", [])
+                            if keys_list and len(keys_list) > 0:
+                                api_key = keys_list[0]
+                                generated_key = api_key.get("key_string") or api_key.get("key")
+                                api_key_id = api_key.get("id")
+                                
+                                if generated_key:
+                                    cursor = conn.execute(
+                                        'INSERT INTO product_keys (product_id, key_value, is_used, api_key_id, used_by_email) VALUES (?, ?, 1, ?, ?)',
+                                        (product_id, generated_key, api_key_id, used_by)
+                                    )
+                                    key_id = cursor.lastrowid
+                                    key_value = generated_key
+                                    break
+                                else:
+                                    raise Exception(f"Chave 'key_string' não encontrada na resposta: {response}")
+                            else:
+                                raise Exception(f"Array 'keys' vazio ou ausente na resposta: {response}")
+                        else:
+                            raise Exception(f"Formato inesperado (não é um dicionário): {response}")
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    api_error_msg = str(e)
+                    if target_str.startswith("ninja:"):
+                        api_error_name = "Ninja API"
+                    elif target_str.lower().startswith(("resellership:", "rs:")):
+                        api_error_name = "Resellership API"
                     else:
-                        raise Exception(f"Formato inesperado (não é um dicionário): {response}")
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                api_error_msg = str(e)
-                if str(api_game_type).startswith("ninja:"):
-                    api_error_name = "Ninja API"
-                elif str(api_game_type).lower().startswith(("resellership:", "rs:")):
-                    api_error_name = "Resellership API"
-                else:
-                    api_error_name = "KOS API"
-                # Em caso de erro, continua para o fallback
+                        api_error_name = "KOS API"
+                    # Continua para o próximo alvo configurado
         
         # 3. Fallback: Buscar uma chave disponível (is_used = 0) do estoque local
         if not key_value:

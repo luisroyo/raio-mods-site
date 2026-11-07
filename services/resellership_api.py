@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import secrets
 import socket
 import time
@@ -382,3 +383,69 @@ class ResellershipApi:
             or order_response.get("id")
             or order_response.get("correlationId")
         )
+
+    @staticmethod
+    def parse_targets(raw_game_type: Optional[str]) -> List[str]:
+        """
+        Interpreta uma configuração de múltiplos provedores/fontes de chaves com fallback.
+        Exemplos suportados:
+          - "resellership:59:83 | resellership:59:84" (tenta 83, se falhar tenta 84)
+          - "resellership:59:83 ; resellership:60:92"
+          - "resellership:59:83, resellership:60:92"
+          - "resellership:59:83,84" ou "resellership:59:83/84" (mesmo produto 59, opções 83 e 84)
+          - "resellership:59:83 | ninja:8ball:global"
+          - "resellership:59:83 | bypass"
+          - "resellership:59:83"
+        """
+        if not raw_game_type:
+            return []
+
+        raw = str(raw_game_type).strip()
+        if not raw:
+            return []
+
+        # 1. Pipeline com '|' ou ';'
+        if "|" in raw or ";" in raw:
+            tokens = [t.strip() for t in re.split(r"[|;]", raw) if t.strip()]
+            results: List[str] = []
+            for tok in tokens:
+                results.extend(ResellershipApi._expand_single_target(tok))
+            return results
+
+        # 2. Separado por vírgula (ex: "resellership:59:83, resellership:59:84" ou "resellership:59:83, 84")
+        if "," in raw:
+            tokens = [t.strip() for t in raw.split(",") if t.strip()]
+            results: List[str] = []
+            last_prefix = ""
+            for tok in tokens:
+                if ":" in tok:
+                    parts = tok.split(":")
+                    if len(parts) >= 2:
+                        last_prefix = f"{parts[0]}:{parts[1]}"
+                    results.extend(ResellershipApi._expand_single_target(tok))
+                else:
+                    if last_prefix:
+                        results.append(f"{last_prefix}:{tok}")
+                    else:
+                        results.append(tok)
+            return results
+
+        # 3. Alvo único (com ou sem opções com barra, ex: resellership:59:83/84)
+        return ResellershipApi._expand_single_target(raw)
+
+    @staticmethod
+    def _expand_single_target(target: str) -> List[str]:
+        target = target.strip()
+        if not target:
+            return []
+
+        # Caso: resellership:59:83/84 ou resellership:59:83|84 ou resellership:59:83,84
+        if target.lower().startswith(("resellership:", "rs:")):
+            parts = target.split(":")
+            if len(parts) >= 3:
+                opt_str = parts[2].strip()
+                if re.search(r"[/,\|]", opt_str):
+                    sub_opts = [o.strip() for o in re.split(r"[/,\|]", opt_str) if o.strip()]
+                    prefix = f"{parts[0]}:{parts[1]}"
+                    return [f"{prefix}:{opt}" for opt in sub_opts]
+        return [target]

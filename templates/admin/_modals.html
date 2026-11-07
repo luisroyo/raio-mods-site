@@ -76,7 +76,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-gray-400 mb-1 font-bold">Status do Pagamento</label>
-                        <select name="status" id="edit_sale_status" onchange="toggleEditPaidAmount()" class="w-full px-4 py-2 bg-black border border-yellow-500 rounded text-white text-sm">
+                        <select name="status" id="edit_sale_status" onchange="toggleEditPaidAmount()"
+                            class="w-full px-4 py-2 bg-black border border-yellow-500 rounded text-white text-sm">
                             <option value="paid">✅ Pago (Valor Integral)</option>
                             <option value="pending">⏳ Fiado (Pendente)</option>
                             <option value="partial">💰 Pago Parcialmente</option>
@@ -84,7 +85,8 @@
                     </div>
                     <div id="div_edit_paid_amount" class="hidden">
                         <label class="block text-sm text-gray-400 mb-1">Valor Recebido (R$)</label>
-                        <input type="text" name="paid_amount" id="edit_sale_paid_amount" placeholder="Ex: 10.00" class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
+                        <input type="text" name="paid_amount" id="edit_sale_paid_amount" placeholder="Ex: 10.00"
+                            class="w-full px-4 py-2 bg-black border border-orange-500 rounded text-white">
                     </div>
                 </div>
 
@@ -96,23 +98,27 @@
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-1">E-mail do Cliente (Opcional)</label>
-                        <input type="email" id="edit_sale_client_email" name="client_email" placeholder="Ex: cliente@email.com"
+                        <input type="email" id="edit_sale_client_email" name="client_email"
+                            placeholder="Ex: cliente@email.com"
                             class="w-full px-4 py-2 bg-black border border-purple-500 rounded text-white">
                     </div>
                 </div>
 
                 <!-- Afiliado e Comissão para Venda Manual -->
                 <div class="p-3 bg-amber-950/20 border border-amber-500/30 rounded-lg space-y-2">
-                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block">🤝 Afiliado & Comissão</span>
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block">🤝 Afiliado &
+                        Comissão</span>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Vendedor / Cupom</label>
-                            <input type="text" id="edit_sale_seller_coupon" name="seller_coupon" placeholder="Ex: VENDEDOR1"
+                            <input type="text" id="edit_sale_seller_coupon" name="seller_coupon"
+                                placeholder="Ex: VENDEDOR1"
                                 class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-mono uppercase">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Comissão (R$)</label>
-                            <input type="text" id="edit_sale_commission_amount" name="commission_amount" placeholder="0.00"
+                            <input type="text" id="edit_sale_commission_amount" name="commission_amount"
+                                placeholder="0.00"
                                 class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-bold">
                         </div>
                     </div>
@@ -178,7 +184,8 @@
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-1 font-bold">Status do Pedido</label>
-                        <select name="status" id="edit_online_status" class="w-full px-4 py-2 bg-black border border-yellow-500 rounded text-white text-sm">
+                        <select name="status" id="edit_online_status"
+                            class="w-full px-4 py-2 bg-black border border-yellow-500 rounded text-white text-sm">
                             <option value="approved">✅ Aprovado (approved)</option>
                             <option value="paid_no_key">🔑 Pago sem chave (paid_no_key)</option>
                             <option value="pending">⏳ Pendente (pending)</option>
@@ -195,22 +202,26 @@
 
                 <!-- Dados do Cliente -->
                 <div class="p-3 bg-gray-900/60 border border-gray-800 rounded-lg space-y-3">
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">👤 Dados do Cliente</span>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">👤 Dados do
+                        Cliente</span>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Nome</label>
-                            <input type="text" id="edit_online_customer_name" name="customer_name" placeholder="Nome do cliente"
+                            <input type="text" id="edit_online_customer_name" name="customer_name"
+                                placeholder="Nome do cliente"
                                 class="w-full px-3 py-1.5 bg-black border border-gray-700 rounded text-white text-sm">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">E-mail</label>
-                            <input type="email" id="edit_online_customer_email" name="customer_email" placeholder="cliente@email.com"
+                            <input type="email" id="edit_online_customer_email" name="customer_email"
+                                placeholder="cliente@email.com"
                                 class="w-full px-3 py-1.5 bg-black border border-gray-700 rounded text-white text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">WhatsApp / Telefone</label>
-                        <input type="text" id="edit_online_customer_phone" name="customer_phone" placeholder="Ex: 11999998888"
+                        <input type="text" id="edit_online_customer_phone" name="customer_phone"
+                            placeholder="Ex: 11999998888"
                             class="w-full px-3 py-1.5 bg-black border border-gray-700 rounded text-white text-sm">
                     </div>
                 </div>
@@ -218,7 +229,8 @@
                 <!-- Gestão de Afiliado e Comissão -->
                 <div class="p-3 bg-amber-950/20 border border-amber-500/40 rounded-lg space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span
+                            class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                             🤝 Afiliado & Comissão
                         </span>
                         <div id="edit_online_commission_badge"></div>
@@ -227,12 +239,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Vendedor / Link de Afiliado</label>
-                            <input type="text" id="edit_online_seller_coupon" name="seller_coupon" placeholder="Ex: SEULINK"
+                            <input type="text" id="edit_online_seller_coupon" name="seller_coupon"
+                                placeholder="Ex: SEULINK"
                                 class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-mono uppercase">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Comissão (R$)</label>
-                            <input type="text" id="edit_online_commission_amount" name="commission_amount" placeholder="0.00"
+                            <input type="text" id="edit_online_commission_amount" name="commission_amount"
+                                placeholder="0.00"
                                 class="w-full px-3 py-1.5 bg-black border border-amber-500/50 rounded text-white text-sm font-bold">
                         </div>
                     </div>
@@ -244,9 +258,11 @@
                                 onchange="toggleOnlineRemoveCommission(this.checked)"
                                 class="mt-0.5 rounded bg-black border-red-500 text-red-600 focus:ring-0">
                             <div>
-                                <span class="text-xs font-bold text-red-400 block">❌ Remover / Zerar comissão desta venda</span>
+                                <span class="text-xs font-bold text-red-400 block">❌ Remover / Zerar comissão desta
+                                    venda</span>
                                 <span class="text-[11px] text-gray-400 leading-tight block mt-0.5">
-                                    Marque caso a venda tenha sido realizada com seu próprio link ou não deva pagar comissão. A comissão será excluída e não será descontada do seu lucro.
+                                    Marque caso a venda tenha sido realizada com seu próprio link ou não deva pagar
+                                    comissão. A comissão será excluída e não será descontada do seu lucro.
                                 </span>
                             </div>
                         </label>
@@ -370,14 +386,12 @@
                 <div class="flex items-center gap-3 text-sm text-gray-200">
                     <label class="inline-flex items-center gap-1">
                         <input type="radio" name="sub_item_type" value="product" checked
-                            onclick="setSubproductType('product')"
-                            class="w-4 h-4 text-green-500">
+                            onclick="setSubproductType('product')" class="w-4 h-4 text-green-500">
                         <span>Produto (entrega chaves)</span>
                     </label>
                     <label class="inline-flex items-center gap-1">
                         <input type="radio" name="sub_item_type" value="category"
-                            onclick="setSubproductType('category')"
-                            class="w-4 h-4 text-green-500">
+                            onclick="setSubproductType('category')" class="w-4 h-4 text-green-500">
                         <span>Subcategoria (pasta)</span>
                     </label>
                 </div>
@@ -401,8 +415,8 @@
                 <input type="text" name="category" required placeholder="Categoria (ex: Key)"
                     class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
                 <input type="number" name="cost_brl" step="0.01" placeholder="Custo (R$)"
-                       class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white" 
-                       title="Seu custo pelo produto">
+                    class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white"
+                    title="Seu custo pelo produto">
             </div>
             <div class="flex items-center gap-2 border border-gray-700 p-2 rounded">
                 <input type="checkbox" id="add_is_active_sub" name="is_active" value="1" checked
@@ -415,23 +429,30 @@
                 <input type="text" name="supplier" placeholder="Fornecedor (Fornecimento)"
                     class="w-full p-2 bg-gray-900 border border-green-500 rounded text-white">
             </div>
-            
+
             <div class="border border-green-500/30 p-2 rounded bg-green-950/20 mb-2">
-                <p class="text-xs text-green-400 font-bold mb-2">🔌 Configuração KOS / Ninja / Resellership API (Opcional)</p>
+                <p class="text-xs text-green-400 font-bold mb-2">🔌 Configuração KOS / Ninja / Resellership API
+                    (Opcional)</p>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="text-[10px] text-gray-400 block mb-1">Game Type / Provedores (Múltiplas fontes com fallback: ex: 'resellership:59:83 | resellership:59:84')</label>
-                        <input type="text" name="api_game_type" class="w-full p-2 bg-gray-900 border border-green-500/50 rounded text-white text-sm" placeholder="Ex: resellership:59:83 | resellership:59:84">
+                        <label class="text-[10px] text-gray-400 block mb-1">Game Type / Provedores (Múltiplas fontes com
+                            fallback: ex: 'resellership:59:83 | resellership:59:84')</label>
+                        <input type="text" name="api_game_type"
+                            class="w-full p-2 bg-gray-900 border border-green-500/50 rounded text-white text-sm"
+                            placeholder="Ex: resellership:59:83 | resellership:59:84">
                     </div>
                     <div>
                         <label class="text-[10px] text-gray-400 block mb-1">Duração (Dias)</label>
-                        <input type="number" name="api_duration" class="w-full p-2 bg-gray-900 border border-green-500/50 rounded text-white text-sm" placeholder="Ex: 30">
+                        <input type="number" name="api_duration"
+                            class="w-full p-2 bg-gray-900 border border-green-500/50 rounded text-white text-sm"
+                            placeholder="Ex: 30">
                     </div>
                 </div>
             </div>
             <div>
                 <label class="text-[10px] text-gray-400 block mb-1">🔗 Vínculo de Link (Download)</label>
-                <select name="link_id" class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white text-sm" onchange="updateLinkPreview(this)">
+                <select name="link_id" class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white text-sm"
+                    onchange="updateLinkPreview(this)">
                     <option value="">-- Nenhum Link Vinculado --</option>
                     {% for lk in links %}
                     <option value="{{ lk.id }}" data-url="{{ lk.download_link }}">{{ lk.title }}</option>
@@ -440,7 +461,7 @@
                 <p class="text-[10px] text-gray-500 mt-1 link-preview-text">Nenhum link selecionado</p>
                 <input type="hidden" name="download_link" value="">
             </div>
-            
+
             <div>
                 <label class="text-[10px] text-gray-400 block mb-1">🍎 Link Download iOS (Se houver)</label>
                 <input type="text" name="download_link_ios"
@@ -481,9 +502,10 @@
                 <!-- Configurações do Sistema -->
                 <div id="view-config-system">
                     <div class="space-y-4">
-                        
+
                         <div class="border-b border-gray-800 pb-4 mb-2">
-                            <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado Pago):</label>
+                            <label class="block text-sm text-neon-green font-bold mb-1">🤖 Automação (Mercado
+                                Pago):</label>
                             <input type="password" name="mercado_pago_token"
                                 value="{{ config.mercado_pago_token if config and config.mercado_pago_token else '' }}"
                                 class="w-full p-2 bg-gray-900 border border-neon-green rounded text-white placeholder-gray-600"
@@ -511,14 +533,19 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs text-gray-400 mb-1">Tipo de Desconto</label>
-                                    <select name="global_discount_type" class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
-                                        <option value="percent" {% if config and 'global_discount_type' in config.keys() and config.global_discount_type == 'percent' %}selected{% endif %}>Porcentagem (%)</option>
-                                        <option value="fixed" {% if config and 'global_discount_type' in config.keys() and config.global_discount_type == 'fixed' %}selected{% endif %}>Valor Fixo (R$)</option>
+                                    <select name="global_discount_type"
+                                        class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
+                                        <option value="percent" {% if config and 'global_discount_type' in config.keys()
+                                            and config.global_discount_type=='percent' %}selected{% endif %}>Porcentagem
+                                            (%)</option>
+                                        <option value="fixed" {% if config and 'global_discount_type' in config.keys()
+                                            and config.global_discount_type=='fixed' %}selected{% endif %}>Valor Fixo
+                                            (R$)</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-400 mb-1">Valor do Desconto</label>
-                                    <input type="number" step="0.01" name="global_discount_value" 
+                                    <input type="number" step="0.01" name="global_discount_value"
                                         value="{{ config.global_discount_value if config and 'global_discount_value' in config.keys() else 0.0 }}"
                                         placeholder="Ex: 10 ou 5.50"
                                         class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
@@ -527,43 +554,51 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs text-gray-400 mb-1">Data/Hora Expiração</label>
-                                    <input type="datetime-local" name="global_discount_expiry" 
+                                    <input type="datetime-local" name="global_discount_expiry"
                                         value="{{ config.global_discount_expiry if config and 'global_discount_expiry' in config.keys() else '' }}"
                                         class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-xs">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-400 mb-1">Etiqueta da Promo</label>
-                                    <input type="text" name="global_discount_label" 
+                                    <input type="text" name="global_discount_label"
                                         value="{{ config.global_discount_label if config and 'global_discount_label' in config.keys() else 'PROMO' }}"
                                         placeholder="Ex: BLACK FRIDAY"
                                         class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
                                 </div>
                             </div>
-                            <p class="text-[10px] text-gray-500">Defina o valor como 0 para desativar a promoção global. A promoção será ignorada em produtos com promoção individual ativa.</p>
+                            <p class="text-[10px] text-gray-500">Defina o valor como 0 para desativar a promoção global.
+                                A promoção será ignorada em produtos com promoção individual ativa.</p>
                         </div>
 
                         <div class="mt-4 pt-4 border-t border-gray-800 space-y-3">
                             <p class="text-sm text-neon-green font-bold">📧 E-mail (SMTP - Carrinho Abandonado)</p>
                             <div>
                                 <label class="block text-xs text-gray-400 mb-1">Servidor SMTP</label>
-                                <input type="text" name="smtp_server" value="{{ config.smtp_server if config and 'smtp_server' in config.keys() else '' }}" placeholder="smtp.gmail.com"
+                                <input type="text" name="smtp_server"
+                                    value="{{ config.smtp_server if config and 'smtp_server' in config.keys() else '' }}"
+                                    placeholder="smtp.gmail.com"
                                     class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs text-gray-400 mb-1">Porta</label>
-                                    <input type="number" name="smtp_port" value="{{ config.smtp_port if config and 'smtp_port' in config.keys() else 587 }}" placeholder="587"
+                                    <input type="number" name="smtp_port"
+                                        value="{{ config.smtp_port if config and 'smtp_port' in config.keys() else 587 }}"
+                                        placeholder="587"
                                         class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-400 mb-1">Usuário / Email</label>
-                                    <input type="email" name="smtp_user" value="{{ config.smtp_user if config and 'smtp_user' in config.keys() else '' }}" placeholder="email@gmail.com"
+                                    <input type="email" name="smtp_user"
+                                        value="{{ config.smtp_user if config and 'smtp_user' in config.keys() else '' }}"
+                                        placeholder="email@gmail.com"
                                         class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-400 mb-1">Senha (App Password)</label>
-                                <input type="password" name="smtp_password" placeholder="Deixe em branco para manter a atual"
+                                <input type="password" name="smtp_password"
+                                    placeholder="Deixe em branco para manter a atual"
                                     class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm">
                             </div>
                         </div>
@@ -632,8 +667,7 @@
             <div>
                 <label class="text-xs text-gray-400 block mb-1">💸 Custo em R$</label>
                 <input type="number" id="edit_cost_brl" name="cost_brl" step="0.01"
-                    class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white"
-                    placeholder="Ex: 50.00">
+                    class="w-full p-2 bg-gray-900 border border-purple-500 rounded text-white" placeholder="Ex: 50.00">
             </div>
 
             <div class="border border-gray-700 p-2 rounded flex flex-col gap-2">
@@ -648,11 +682,15 @@
                         <label class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
                             🤝 Regra de Comissão de Afiliados
                         </label>
-                        <span class="text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">Por Produto</span>
+                        <span
+                            class="text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">Por
+                            Produto</span>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                            <select id="edit_commission_type" name="commission_type" onchange="updateCommissionInputs('edit')" class="w-full p-2 bg-gray-900 border border-emerald-500/50 rounded text-white text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                            <select id="edit_commission_type" name="commission_type"
+                                onchange="updateCommissionInputs('edit')"
+                                class="w-full p-2 bg-gray-900 border border-emerald-500/50 rounded text-white text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
                                 <option value="default">⚪ Padrão do Vendedor (Taxa do cupom)</option>
                                 <option value="percent">📊 Porcentagem Própria (%)</option>
                                 <option value="fixed">💵 Valor Fixo em R$ (Por venda)</option>
@@ -661,9 +699,14 @@
                         </div>
                         <div id="edit_commission_val_wrapper" class="hidden">
                             <div class="relative">
-                                <span id="edit_commission_val_prefix" class="absolute left-2.5 top-2 text-xs text-gray-400">R$</span>
-                                <input type="number" step="0.01" min="0" id="edit_commission_value" name="commission_value" class="w-full pl-8 p-2 bg-gray-900 border border-emerald-500/50 rounded text-white text-xs font-bold" placeholder="0.00">
-                                <span id="edit_commission_val_suffix" class="absolute right-2.5 top-2 text-xs text-gray-400 hidden">%</span>
+                                <span id="edit_commission_val_prefix"
+                                    class="absolute left-2.5 top-2 text-xs text-gray-400">R$</span>
+                                <input type="number" step="0.01" min="0" id="edit_commission_value"
+                                    name="commission_value"
+                                    class="w-full pl-8 p-2 bg-gray-900 border border-emerald-500/50 rounded text-white text-xs font-bold"
+                                    placeholder="0.00">
+                                <span id="edit_commission_val_suffix"
+                                    class="absolute right-2.5 top-2 text-xs text-gray-400 hidden">%</span>
                             </div>
                         </div>
                     </div>
@@ -674,7 +717,7 @@
                 </div>
             </div>
 
-             <div>
+            <div>
                 <label class="text-xs text-gray-400 block mb-1">📁 Categoria</label>
                 <input type="text" id="edit_category" name="category"
                     class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white"
@@ -683,7 +726,8 @@
 
             <div>
                 <label class="text-xs text-gray-400 block mb-1">📱 Plataforma (Opcional)</label>
-                <select id="edit_platform" name="platform" class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
+                <select id="edit_platform" name="platform"
+                    class="w-full p-2 bg-gray-900 border border-blue-500 rounded text-white">
                     <option value="">-- Nenhuma / Genérico --</option>
                     <option value="android">🤖 Android</option>
                     <option value="ios">🍎 iOS (iPhone)</option>
@@ -693,18 +737,26 @@
             </div>
 
             <div class="border border-blue-500/30 p-2 rounded bg-blue-950/20 mb-2 mt-2">
-                <p class="text-xs text-blue-400 font-bold mb-2">🔌 Configuração KOS / Ninja / Resellership API (Opcional)</p>
+                <p class="text-xs text-blue-400 font-bold mb-2">🔌 Configuração KOS / Ninja / Resellership API
+                    (Opcional)</p>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="text-[10px] text-gray-400 block mb-1">Game Type / Provedores (Múltiplas fontes com fallback: ex: 'resellership:59:83 | resellership:59:84')</label>
-                        <input type="text" id="edit_api_game_type" name="api_game_type" class="w-full p-2 bg-gray-900 border border-blue-500/50 rounded text-white text-sm" placeholder="Ex: resellership:59:83 | resellership:59:84">
+                        <label class="text-[10px] text-gray-400 block mb-1">Game Type / Provedores (Múltiplas fontes com
+                            fallback: ex: 'resellership:59:83 | resellership:59:84')</label>
+                        <input type="text" id="edit_api_game_type" name="api_game_type"
+                            class="w-full p-2 bg-gray-900 border border-blue-500/50 rounded text-white text-sm"
+                            placeholder="Ex: resellership:59:83 | resellership:59:84">
                     </div>
                     <div>
                         <label class="text-[10px] text-gray-400 block mb-1">Duração (Dias)</label>
-                        <input type="number" id="edit_api_duration" name="api_duration" class="w-full p-2 bg-gray-900 border border-blue-500/50 rounded text-white text-sm" placeholder="Ex: 30">
+                        <input type="number" id="edit_api_duration" name="api_duration"
+                            class="w-full p-2 bg-gray-900 border border-blue-500/50 rounded text-white text-sm"
+                            placeholder="Ex: 30">
                     </div>
                 </div>
-                <p class="text-[10px] text-gray-500 mt-1">Se preenchido, gerará chaves em tempo real. Suporta múltiplas fontes separadas por barra vertical '|' ou vírgula (ex: <code>resellership:59:83 | resellership:59:84</code>).</p>
+                <p class="text-[10px] text-gray-500 mt-1">Se preenchido, gerará chaves em tempo real. Suporta múltiplas
+                    fontes separadas por barra vertical '|' ou vírgula (ex:
+                    <code>resellership:59:83 | resellership:59:84</code>).</p>
             </div>
 
             <div>
@@ -730,7 +782,9 @@
 
             <div>
                 <label class="text-xs text-gray-400 block mb-1">🔗 Vínculo de Link (Download)</label>
-                <select id="edit_link_id" name="link_id" class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white text-sm" onchange="updateLinkPreview(this)">
+                <select id="edit_link_id" name="link_id"
+                    class="w-full p-2 bg-gray-900 border border-blue-400 rounded text-white text-sm"
+                    onchange="updateLinkPreview(this)">
                     <option value="">-- Nenhum Link Vinculado --</option>
                     {% for lk in links %}
                     <option value="{{ lk.id }}" data-url="{{ lk.download_link }}">{{ lk.title }}</option>
@@ -897,17 +951,17 @@
 
 <!-- Inline Scripts -->
 <script>
-function updateLinkPreview(selectElement) {
-    const previewEl = selectElement.nextElementSibling;
-    if (!previewEl || !previewEl.classList.contains('link-preview-text')) return;
-    
-    const selectedOption = selectElement.options[selectElement.selectedIndex];
-    const url = selectedOption.getAttribute('data-url');
-    
-    if (url && url.trim() !== '') {
-        previewEl.innerHTML = '<span class="text-blue-400">URL:</span> ' + url;
-    } else {
-        previewEl.innerText = 'Nenhum link selecionado ou link não possui URL';
+    function updateLinkPreview(selectElement) {
+        const previewEl = selectElement.nextElementSibling;
+        if (!previewEl || !previewEl.classList.contains('link-preview-text')) return;
+
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const url = selectedOption.getAttribute('data-url');
+
+        if (url && url.trim() !== '') {
+            previewEl.innerHTML = '<span class="text-blue-400">URL:</span> ' + url;
+        } else {
+            previewEl.innerText = 'Nenhum link selecionado ou link não possui URL';
+        }
     }
-}
 </script>
